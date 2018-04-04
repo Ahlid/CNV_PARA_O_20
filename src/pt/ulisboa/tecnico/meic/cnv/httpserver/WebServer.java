@@ -18,6 +18,7 @@ import pt.ulisboa.tecnico.meic.cnv.mazerunner.maze.*;
 public class WebServer {
 
     private static final int port = 8000;
+    private static final int responseCode_OK = 200;
     private static final List<Long> threads = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
@@ -34,6 +35,7 @@ public class WebServer {
     static class MyHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange t) throws IOException {
+
             String response = "This was the query:" + t.getRequestURI().getQuery() 
                                + "##";
             t.sendResponseHeaders(200, response.length());
@@ -63,20 +65,32 @@ public class WebServer {
             // Get Thread Id and add it to Threads so we can keep track of threads running.
             Long threadId = Thread.currentThread().getId();
             threads.add(threadId);
+            System.out.println("boing");
+            System.out.println(threadId);
+            
+            String mazeNameOut = "maze" + timeStamp + ".html";
 
             try{
                 //Maze mazerunner = new Maze.Main(3,9,28,39,50,"astar","Maze50.maze","Maze50.html");
                 //Maze mazerun = null;
-
+                
+                time = new Timestamp(System.currentTimeMillis());
+                System.out.println(String.valueOf(time.getTime()));
+                Main.main(new String[] {x0,y0,x1,y1,v,s,f,mazeNameOut});
+                time = new Timestamp(System.currentTimeMillis());
+                System.out.println(String.valueOf(time.getTime()));
             }
             catch(Exception e){
                 System.out.println(e.toString());
             }
 
-            //t.sendResponseHeaders(200, response.length());
-            //OutputStream os = t.getResponseBody();
-            //os.write(response.getBytes());
-            //os.close();
+            String response = "<html><title>hello </title><br><body>" +
+                    "<a href=http://localhost:8000/" + mazeNameOut  + ">hello </a>" +
+                    "</body></html>";
+            t.sendResponseHeaders(responseCode_OK, response.length());
+            OutputStream os = t.getResponseBody();
+            os.write(response.getBytes());
+            os.close();
         }
     }
 
