@@ -13,7 +13,7 @@ import BIT.highBIT.Routine;
 import pt.ulisboa.tecnico.meic.cnv.httpserver.WebServer;
 
 public class InstrumentationTool {
-    final static Logger logger = Logger.getLogger(InstrumentationTool.class);
+    final static com.sun.javafx.logging.Logger logger = Logger.getLogger(InstrumentationTool.class);
     private static final int METRIC = 20000;
 
     private static final String itPackage = "pt/ulisboa/tecnico/meic/cnv/instrumentation/InstrumentationTool";
@@ -27,6 +27,8 @@ public class InstrumentationTool {
             + "\nLogging is written to log4j-metrics.log";
 
     public static void main(String args[]) {
+        logger.addMessage("starting");
+        //logger.newInput(name);
         try {
             if (args.length < 1) {
                 System.err.println(usage);
@@ -36,6 +38,7 @@ public class InstrumentationTool {
             File file_in = new File(args[0]);
             String path = new String(file_in.getAbsolutePath());
             assert path.endsWith(".class");
+            logger.addMessage("starting to instrument class");
             instrument(path);
         } catch (Exception e) {
             System.err.println("Exception ocurred, check log for details.");
@@ -56,16 +59,17 @@ public class InstrumentationTool {
 
             Vector<Routine> routines = ci.getRoutines();
 
+            
             // loop through all the routines
             // see java.util.Enumeration for more information on Enumeration class
             for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
                 Routine routine = (Routine) e.nextElement();
-                if (routine.getMethodName().equals("getPixelColor")) {
+                if (routine.getMethodName().equals("generateMaze")) {
                     routine.addBefore(itPackage, "mcount", new Integer(1));
-                    //for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
-                    //    BasicBlock bb = (BasicBlock) b.nextElement();
-                    //    bb.addBefore(itPackage, "count", new Integer(bb.size()));;
-                    //}
+                    for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
+                        BasicBlock bb = (BasicBlock) b.nextElement();
+                        bb.addBefore(itPackage, "count", new Integer(bb.size()));;
+                    }
                 }
             }
             ci.addAfter(itPackage, "printICount", ci.getClassName());
@@ -87,13 +91,13 @@ public class InstrumentationTool {
 
 
     public static synchronized void count(int incr) {
-        //System.out.println("count bb: " + b_count);
+        System.out.println("count bb: " + b_count);
         i_count += incr;
         b_count++;
     }
 
     public static synchronized void mcount(int incr) {
-        //System.out.println("m++ count: " + m_count);
+        System.out.println("m++ count: " + m_count);
         if (m_count-- == 0){
             m_count = METRIC;
 //            WebServer.workerUpdateMetrics(m_count);
