@@ -8,10 +8,12 @@ import java.util.concurrent.Executors;
 import java.util.List;
 import java.util.ArrayList;
 import java.sql.Timestamp;
+import java.io.*;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.Headers;
 
 import pt.ulisboa.tecnico.meic.cnv.mazerunner.maze.*;
 
@@ -19,6 +21,7 @@ public class WebServer {
 
     private static final int port = 8000;
     private static final int responseCode_OK = 200;
+    public static String ROOT_FOLDER = "/home/ec2-user/web/";
     private static final List<Long> threads = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
@@ -28,6 +31,7 @@ public class WebServer {
         server.createContext(Context.INDEX, new MyHandler());
         server.createContext(Context.HEALTH, new MyHandler());
         server.createContext(Context.MAZERUN, new MyMazeRunnerHandler());
+        server.createContext(Context.OUTPUT, new MyOutputHandler());
         server.setExecutor(null); // creates a default executor
         server.start();
     }
@@ -71,9 +75,7 @@ public class WebServer {
             String mazeNameOut = "maze" + timeStamp + ".html";
 
             try{
-                //Maze mazerunner = new Maze.Main(3,9,28,39,50,"astar","Maze50.maze","Maze50.html");
-                //Maze mazerun = null;
-                
+               
                 time = new Timestamp(System.currentTimeMillis());
                 System.out.println(String.valueOf(time.getTime()));
                 Main.main(new String[] {x0,y0,x1,y1,v,s,f,mazeNameOut});
@@ -84,13 +86,41 @@ public class WebServer {
                 System.out.println(e.toString());
             }
 
-            String response = "<html><title>hello </title><br><body>" +
-                    "<a href=http://localhost:8000/" + mazeNameOut  + ">hello </a>" +
+            String response = "<html><title>maze runner </title><br><body>" +
+                    "<a href=/output?f=" + mazeNameOut + ">Output</a><hr>" +
+                    "<iframe align=center width=600 height=400 src=/output?f=" + mazeNameOut +"></iframe>" +
                     "</body></html>";
             t.sendResponseHeaders(responseCode_OK, response.length());
             OutputStream os = t.getResponseBody();
             os.write(response.getBytes());
             os.close();
+        }
+    }
+
+    static class MyOutputHandler implements HttpHandler{
+
+        @Override
+        public void handle(HttpExchange he) throws IOException {
+
+            String query =  he.getRequestURI().getQuery();
+            String f = query.split("f=")[1];
+
+            Headers headers = he.getResponseHeaders();
+            headers.add("Content-Type", "text/html");
+
+            File file = new File ( f );
+            byte[] bytes = new byte [(int)file.length()];
+            System.out.println(file.getAbsolutePath());
+            System.out.println("length:" + file.length());
+
+            FileInputStream fileInputStream = new FileInputStream(file);
+            BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
+            bufferedInputStream.read(bytes, 0, bytes.length);
+
+            he.sendResponseHeaders(responseCode_OK, file.length());
+            OutputStream outputStream = he.getResponseBody();
+            outputStream.write(bytes, 0, bytes.length);
+            outputStream.close();
         }
     }
 
