@@ -32,7 +32,7 @@ public class WebServer {
         server.createContext(Context.HEALTH, new MyHandler());
         server.createContext(Context.MAZERUN, new MyMazeRunnerHandler());
         server.createContext(Context.OUTPUT, new MyOutputHandler());
-        server.setExecutor(null); // creates a default executor
+        server.setExecutor(executor); // creates a default executor
         server.start();
     }
 

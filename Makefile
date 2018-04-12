@@ -23,12 +23,17 @@ all:
 	$(JAVAC) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)/lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)/third-party/lib/* $(SRC_DIR)$(STORAGE)*.java -d $(RUN_DIR)
 	$(JAVAC) $(JFLAGS) -cp $(RUN_DIR) $(SRC_DIR)$(HTTPSERVER)*.java -d $(RUN_DIR)
 	$(JAVAC) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J) $(SRC_DIR)$(INST)*.java -d $(RUN_DIR)
+	$(JAVAC) $(JFLAGS) -cp $(RUN_DIR) $(SRC_DIR)samples/*.java -d $(RUN_DIR)
+
 
 run_inst:
 	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)/lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)/third-party/lib/* $(INST)InstrumentationTool $(inputClass)
 
 run_webserver:
 	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J) $(HTTPSERVER)WebServer
+
+inst_test:
+	$(JVM) $(JFLAGS) -cp $(RUN_DIR) samples/StatisticsTool $(inputClass)
 	
 clean: 
 	$(RM) -d $(RUN_DIR)$(MAZERUNNER)*.class -d $(RUN_DIR)$(MAZERUNNER)exceptions/*.class $(RUN_DIR)$(MAZERUNNER)render/*.class $(RUN_DIR)$(MAZERUNNER)strategies/*.class $(SRC_DIR)$(MAZERUNNER)strategies/datastructure/*.class

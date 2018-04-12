@@ -5,7 +5,7 @@ import java.util.Enumeration;
 import java.util.Vector;
 
 import pt.ulisboa.tecnico.meic.cnv.storage.Messenger;
-import org.apache.log4j.Logger;
+import org.apache.log4j.*;
 
 import BIT.highBIT.BasicBlock;
 import BIT.highBIT.ClassInfo;
@@ -13,7 +13,7 @@ import BIT.highBIT.Routine;
 import pt.ulisboa.tecnico.meic.cnv.httpserver.WebServer;
 
 public class InstrumentationTool {
-    final static com.sun.javafx.logging.Logger logger = Logger.getLogger(InstrumentationTool.class);
+    final static Logger logger = Logger.getLogger(InstrumentationTool.class);
     private static final int METRIC = 20000;
 
     private static final String itPackage = "pt/ulisboa/tecnico/meic/cnv/instrumentation/InstrumentationTool";
@@ -27,8 +27,8 @@ public class InstrumentationTool {
             + "\nLogging is written to log4j-metrics.log";
 
     public static void main(String args[]) {
-        logger.addMessage("starting");
-        //logger.newInput(name);
+        //logger.addMessage("starting");
+        //logger.info(name);
         try {
             if (args.length < 1) {
                 System.err.println(usage);
@@ -38,13 +38,13 @@ public class InstrumentationTool {
             File file_in = new File(args[0]);
             String path = new String(file_in.getAbsolutePath());
             assert path.endsWith(".class");
-            logger.addMessage("starting to instrument class");
+            logger.info("starting to instrument class");
             instrument(path);
         } catch (Exception e) {
             System.err.println("Exception ocurred, check log for details.");
             e.printStackTrace();
-            logger.fatal("Exception in main:");
-            logger.fatal(e.getMessage());
+            //logger.fatal("Exception in main:");
+            //logger.fatal(e.getMessage());
             System.exit(-1);
         }
     }
@@ -79,7 +79,7 @@ public class InstrumentationTool {
             System.err.println("Exception ocurred, check log for details.");
             e.printStackTrace();
             logger.fatal("Exception in instrumentThreadCount:");
-            logger.fatal(e.getMessage());
+            //logger.fatal(e.getMessage());
         }
     }
 

@@ -8,3 +8,7 @@ Run web server: java -cp bin/:lib/log4j-1.2.17.jar pt.ulisboa.tecnico.meic.cnv.h
 Run inst tool: make run_inst inputClass=bin/pt/ulisboa/tecnico/meic/cnv/mazerunner/maze/Maze.class
 
 Run maze runner: java -cp bin/:lib/log4j-1.2.17.jar pt.ulisboa.tecnico.meic.cnv.mazerunner.maze.Main 3 9 28 39 50 astar Maze50.maze Maze50.html
+
+
+run samples bit:
+java -cp "bin/:lib/*.jar" StatisticsTool -dynamic bin/pt/ulisboa/tecnico/meic/cnv/mazerunner/maze/ bin/pt/ulisboa/tecnico/meic/cnv/mazerunner/maze/
