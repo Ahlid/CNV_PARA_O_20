@@ -28,7 +28,7 @@ public class InstrumentationTool {
 
     public static void main(String args[]) {
         //logger.addMessage("starting");
-        //logger.info(name);
+        logger.info("init");
         try {
             if (args.length < 1) {
                 System.err.println(usage);
@@ -64,13 +64,13 @@ public class InstrumentationTool {
             // see java.util.Enumeration for more information on Enumeration class
             for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
                 Routine routine = (Routine) e.nextElement();
-                if (routine.getMethodName().equals("generateMaze")) {
-                    routine.addBefore(itPackage, "mcount", new Integer(1));
-                    for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
-                        BasicBlock bb = (BasicBlock) b.nextElement();
-                        bb.addBefore(itPackage, "count", new Integer(bb.size()));;
-                    }
-                }
+                //if (routine.getMethodName().equals("generateMaze")) {
+                //    routine.addBefore(itPackage, "mcount", new Integer(1));
+                    //for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
+                    //    BasicBlock bb = (BasicBlock) b.nextElement();
+                    //    bb.addBefore(itPackage, "count", new Integer(bb.size()));;
+                    //}
+                //}
             }
             ci.addAfter(itPackage, "printICount", ci.getClassName());
             ci.write(classFile);

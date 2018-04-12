@@ -76,11 +76,11 @@ public class WebServer {
 
             try{
                
-                time = new Timestamp(System.currentTimeMillis());
-                System.out.println(String.valueOf(time.getTime()));
+                //time = new Timestamp(System.currentTimeMillis());
+                //System.out.println(String.valueOf(time.getTime()));
                 Main.main(new String[] {x0,y0,x1,y1,v,s,f,mazeNameOut});
-                time = new Timestamp(System.currentTimeMillis());
-                System.out.println(String.valueOf(time.getTime()));
+                //time = new Timestamp(System.currentTimeMillis());
+                //System.out.println(String.valueOf(time.getTime()));
             }
             catch(Exception e){
                 System.out.println(e.toString());
@@ -116,6 +116,7 @@ public class WebServer {
             FileInputStream fileInputStream = new FileInputStream(file);
             BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
             bufferedInputStream.read(bytes, 0, bytes.length);
+            bufferedInputStream.close();
 
             he.sendResponseHeaders(responseCode_OK, file.length());
             OutputStream outputStream = he.getResponseBody();

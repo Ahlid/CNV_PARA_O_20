@@ -1,6 +1,6 @@
 JVM = java 
 JAVAC = javac
-JFLAGS =
+JFLAGS = 
 SRC_DIR = src/
 PACKAGE = pt/ulisboa/tecnico/meic/cnv/
 HTTPSERVER = $(PACKAGE)httpserver/
@@ -14,6 +14,8 @@ AWS_VERSION=1.11.308
 AWS=/home/ec2-user/aws-java-sdk-$(AWS_VERSION)/
 BIT = BIT/
 RUN_DIR = bin/
+
+export _JAVA_OPTIONS=-XX:-UseSplitVerifier
 
 all: 
 	$(JAVAC) $(JFLAGS) $(SRC_DIR)$(MAZERUNNER)*.java $(SRC_DIR)$(MAZERUNNER)exceptions/*.java $(SRC_DIR)$(MAZERUNNER)render/*.java $(SRC_DIR)$(MAZERUNNER)strategies/datastructure/*.java $(SRC_DIR)$(MAZERUNNER)strategies/*.java -d $(RUN_DIR)
