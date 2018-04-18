@@ -1,14 +1,60 @@
-# CNV_PARA_O_20
-#
+## CNV_PARA_O_20
+##
+### Instructions
 
-Compile everything: Make All
+Compile everything:
+```bash
+$ make all
+```
+Individual Modules: (some may have dependencies)
+Compile __mazerunner__
+```bash
+$ make maze
+```
+Compile __bit__
+```bash
+$ make bit
+```
+Compile __loadbalancer__
+```bash
+$ make loadbalancer
+```
+Compile __storage__
+```bash
+$ make storage
+```
+Compile __httpserver__
+```bash
+$ make httpserver
+```
+Compile __instrumentation__
+```bash
+$ make instrumentation
+```
+___
 
-Run web server: java -cp bin/:lib/log4j-1.2.17.jar pt.ulisboa.tecnico.meic.cnv.httpserver.WebServer
+Run __httpserver__:
+```bash
+$ make run_httpserver
+```
+___
 
-Run inst tool: make run_inst inputClass=bin/pt/ulisboa/tecnico/meic/cnv/mazerunner/maze/Maze.class
+Clean everything:
+```bash
+$ make clean
+```
+___
 
-Run maze runner: java -cp bin/:lib/log4j-1.2.17.jar pt.ulisboa.tecnico.meic.cnv.mazerunner.maze.Main 3 9 28 39 50 astar Maze50.maze Maze50.html
+Refresh env:
+```bash
+$ make refresh
+```
+___
 
+__Instrument__ mazerunner:
+```bash
+$ make inst_test
+```
 
 run samples bit:
 java -cp "bin/:lib/*.jar" StatisticsTool -dynamic bin/pt/ulisboa/tecnico/meic/cnv/mazerunner/maze/ bin/pt/ulisboa/tecnico/meic/cnv/mazerunner/maze/
