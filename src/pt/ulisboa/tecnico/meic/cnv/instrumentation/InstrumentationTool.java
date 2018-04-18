@@ -64,13 +64,14 @@ public class InstrumentationTool {
             // see java.util.Enumeration for more information on Enumeration class
             for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
                 Routine routine = (Routine) e.nextElement();
-                //if (routine.getMethodName().equals("generateMaze")) {
-                //    routine.addBefore(itPackage, "mcount", new Integer(1));
-                    //for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
-                    //    BasicBlock bb = (BasicBlock) b.nextElement();
-                    //    bb.addBefore(itPackage, "count", new Integer(bb.size()));;
-                    //}
-                //}
+                if (routine.getMethodName().equals("generateMaze")) {
+                    logger.info("found method");
+                    routine.addBefore(itPackage, "mcount", new Integer(1));
+                    for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
+                        BasicBlock bb = (BasicBlock) b.nextElement();
+                        bb.addBefore(itPackage, "count", new Integer(bb.size()));;
+                    }
+                }
             }
             ci.addAfter(itPackage, "printICount", ci.getClassName());
             ci.write(classFile);
@@ -91,13 +92,13 @@ public class InstrumentationTool {
 
 
     public static synchronized void count(int incr) {
-        System.out.println("count bb: " + b_count);
+        logger.info("count bb: " + b_count);
         i_count += incr;
         b_count++;
     }
 
     public static synchronized void mcount(int incr) {
-        System.out.println("m++ count: " + m_count);
+        logger.info("m++ count: " + m_count);
         if (m_count-- == 0){
             m_count = METRIC;
 //            WebServer.workerUpdateMetrics(m_count);
