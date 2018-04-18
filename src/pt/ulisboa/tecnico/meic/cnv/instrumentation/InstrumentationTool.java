@@ -13,7 +13,7 @@ import BIT.highBIT.Routine;
 import pt.ulisboa.tecnico.meic.cnv.httpserver.WebServer;
 
 public class InstrumentationTool {
-    final static com.sun.javafx.logging.Logger logger = Logger.getLogger(InstrumentationTool.class);
+    final static Logger logger = Logger.getLogger(InstrumentationTool.class);
     private static final int METRIC = 20000;
 
     private static final String itPackage = "pt/ulisboa/tecnico/meic/cnv/instrumentation/InstrumentationTool";
@@ -27,7 +27,7 @@ public class InstrumentationTool {
             + "\nLogging is written to log4j-metrics.log";
 
     public static void main(String args[]) {
-        logger.addMessage("starting");
+        logger.info("Start");
         //logger.newInput(name);
         try {
             if (args.length < 1) {
@@ -38,7 +38,7 @@ public class InstrumentationTool {
             File file_in = new File(args[0]);
             String path = new String(file_in.getAbsolutePath());
             assert path.endsWith(".class");
-            logger.addMessage("starting to instrument class");
+          //  logger.addMessage("starting to instrument class");
             instrument(path);
         } catch (Exception e) {
             System.err.println("Exception ocurred, check log for details.");
