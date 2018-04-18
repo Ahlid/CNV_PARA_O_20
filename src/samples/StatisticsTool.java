@@ -20,12 +20,13 @@ import BIT.highBIT.*;
 import java.io.File;
 import java.util.Enumeration;
 import java.util.Vector;
+import java.io.PrintWriter;
 
 public class StatisticsTool 
 {
 	private static int dyn_method_count = 0;
 	private static int dyn_bb_count = 0;
-	private static int dyn_instr_count = 0;
+	private static long dyn_instr_count = 0;
 	
 	private static int newcount = 0;
 	private static int newarraycount = 0;
@@ -139,6 +140,7 @@ public class StatisticsTool
 	
     public static synchronized void printDynamic(String foo) 
 		{
+
 			System.out.println("Dynamic information summary:");
 			System.out.println("Number of methods:      " + dyn_method_count);
 			System.out.println("Number of basic blocks: " + dyn_bb_count);
@@ -155,6 +157,31 @@ public class StatisticsTool
 			System.out.println("Average number of instructions per basic block: " + instr_per_bb);
 			System.out.println("Average number of instructions per method:      " + instr_per_method);
 			System.out.println("Average number of basic blocks per method:      " + bb_per_method);
+
+			/* try (PrintWriter out = new PrintWriter("filename.txt")) {
+		
+
+			out.println("Dynamic information summary:");
+			out.println("Number of methods:      " + dyn_method_count);
+			out.println("Number of basic blocks: " + dyn_bb_count);
+			out.println("Number of instructions: " + dyn_instr_count);
+		
+			if (dyn_method_count == 0) {
+				return;
+			}
+		
+			instr_per_bb = (float) dyn_instr_count / (float) dyn_bb_count;
+			instr_per_method = (float) dyn_instr_count / (float) dyn_method_count;
+			bb_per_method = (float) dyn_bb_count / (float) dyn_method_count;
+		
+			out.println("Average number of instructions per basic block: " + instr_per_bb);
+			out.println("Average number of instructions per method:      " + instr_per_method);
+			out.println("Average number of basic blocks per method:      " + bb_per_method);
+
+		 }
+		catch(Exception e){
+			System.out.println("oops");
+		}  */
 		}
     
 
