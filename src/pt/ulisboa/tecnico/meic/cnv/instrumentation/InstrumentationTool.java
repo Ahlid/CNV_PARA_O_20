@@ -5,7 +5,7 @@ import java.util.Enumeration;
 import java.util.Vector;
 
 import pt.ulisboa.tecnico.meic.cnv.storage.Messenger;
-import org.apache.log4j.Logger;
+import org.apache.log4j.*;
 
 import BIT.highBIT.BasicBlock;
 import BIT.highBIT.ClassInfo;
@@ -27,8 +27,8 @@ public class InstrumentationTool {
             + "\nLogging is written to log4j-metrics.log";
 
     public static void main(String args[]) {
-        logger.info("Start");
-        //logger.newInput(name);
+        //logger.addMessage("starting");
+        logger.info("init");
         try {
             if (args.length < 1) {
                 System.err.println(usage);
@@ -38,13 +38,13 @@ public class InstrumentationTool {
             File file_in = new File(args[0]);
             String path = new String(file_in.getAbsolutePath());
             assert path.endsWith(".class");
-          //  logger.addMessage("starting to instrument class");
+            logger.info("starting to instrument class");
             instrument(path);
         } catch (Exception e) {
             System.err.println("Exception ocurred, check log for details.");
             e.printStackTrace();
-            logger.fatal("Exception in main:");
-            logger.fatal(e.getMessage());
+            //logger.fatal("Exception in main:");
+            //logger.fatal(e.getMessage());
             System.exit(-1);
         }
     }
@@ -64,13 +64,13 @@ public class InstrumentationTool {
             // see java.util.Enumeration for more information on Enumeration class
             for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
                 Routine routine = (Routine) e.nextElement();
-                if (routine.getMethodName().equals("generateMaze")) {
-                    routine.addBefore(itPackage, "mcount", new Integer(1));
-                    for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
-                        BasicBlock bb = (BasicBlock) b.nextElement();
-                        bb.addBefore(itPackage, "count", new Integer(bb.size()));;
-                    }
-                }
+                //if (routine.getMethodName().equals("generateMaze")) {
+                //    routine.addBefore(itPackage, "mcount", new Integer(1));
+                    //for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
+                    //    BasicBlock bb = (BasicBlock) b.nextElement();
+                    //    bb.addBefore(itPackage, "count", new Integer(bb.size()));;
+                    //}
+                //}
             }
             ci.addAfter(itPackage, "printICount", ci.getClassName());
             ci.write(classFile);
@@ -79,7 +79,7 @@ public class InstrumentationTool {
             System.err.println("Exception ocurred, check log for details.");
             e.printStackTrace();
             logger.fatal("Exception in instrumentThreadCount:");
-            logger.fatal(e.getMessage());
+            //logger.fatal(e.getMessage());
         }
     }
 
