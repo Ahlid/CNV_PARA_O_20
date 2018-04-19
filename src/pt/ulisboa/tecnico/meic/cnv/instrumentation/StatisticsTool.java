@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Vector;
 import java.io.PrintWriter;
 
+
 public class StatisticsTool {
     private static HashMap<String, Integer> methodCounts = new HashMap<>();
 
@@ -128,13 +129,16 @@ public class StatisticsTool {
                 for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
 
                     Routine routine = (Routine) e.nextElement();
-                    routine.addBefore("pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation", "dynMethodCount", new String(routine.getMethodName()));
 
-                    // routine.addBefore("pt/ulisboa/tecnico/meic/cnv/instrumentation/StatisticsTool", "dynMethodCount", new Integer(1));
+                    if (routine.getMethodName().equals("isUnvisitedPassage") || routine.getMethodName().equals("isVisitedPassage")) {
+                        routine.addBefore("pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation", "dynMethodCount", new String(routine.getMethodName()));
 
-                    for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
-                        BasicBlock bb = (BasicBlock) b.nextElement();
-                        bb.addBefore("pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation", "dynInstrCount", new Integer(bb.size()));
+                        // routine.addBefore("pt/ulisboa/tecnico/meic/cnv/instrumentation/StatisticsTool", "dynMethodCount", new Integer(1));
+
+                        for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
+                            BasicBlock bb = (BasicBlock) b.nextElement();
+                            bb.addBefore("pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation", "dynInstrCount", new Integer(bb.size()));
+                        }
                     }
 
                 }
