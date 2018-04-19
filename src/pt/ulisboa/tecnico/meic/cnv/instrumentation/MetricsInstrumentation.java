@@ -58,9 +58,7 @@ public class MetricsInstrumentation {
      */
     public static synchronized void printDynamic(String foo) {
         System.out.println(foo);
-        Long threadId = Thread.currentThread().getId();
         Metrics metrics = getMetricForThread();
-        metrics.setRequestParams(WebServer.requestMap.get(threadId));
         metrics.print();
     }
 
@@ -69,8 +67,12 @@ public class MetricsInstrumentation {
         threadMetrics.put(threadId, new Metrics());
     }
 
-    public static synchronized void setRequest() {
+    public static synchronized void setRequest(String foo) {
         //todo: get the request payload
+        Long threadId = Thread.currentThread().getId();
+        Metrics metrics = getMetricForThread();
+        metrics.setRequestParams(WebServer.requestMap.get(threadId));
+
     }
 
 }

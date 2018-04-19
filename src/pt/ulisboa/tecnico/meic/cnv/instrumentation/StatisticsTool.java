@@ -124,6 +124,7 @@ public class StatisticsTool {
                 String in_filename = in_dir.getAbsolutePath() + System.getProperty("file.separator") + filename;
                 String out_filename = out_dir.getAbsolutePath() + System.getProperty("file.separator") + filename;
                 ClassInfo ci = new ClassInfo(in_filename);
+
                 for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
 
                     Routine routine = (Routine) e.nextElement();
@@ -140,6 +141,7 @@ public class StatisticsTool {
 
                 System.out.println(ci.getClassName());
                 if (ci.getClassName().equals("pt/ulisboa/tecnico/meic/cnv/mazerunner/maze/Main")) {
+                    ci.addBefore("pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation", "setRequest", "null");
                     ci.addAfter("pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation", "printDynamic", ci.getClassName());
                     ci.addAfter("pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation", "endOfThreadExecution", "null");
                 }
