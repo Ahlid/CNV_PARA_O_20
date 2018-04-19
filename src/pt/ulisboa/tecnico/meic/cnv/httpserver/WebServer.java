@@ -3,6 +3,7 @@ package pt.ulisboa.tecnico.meic.cnv.httpserver;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.List;
@@ -23,6 +24,7 @@ public class WebServer {
     private static final int responseCode_OK = 200;
     public static String ROOT_FOLDER = "/home/ec2-user/web/";
     private static final List<Long> threads = new ArrayList<>();
+    public static HashMap<Long, String[]> requestMap = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
@@ -40,8 +42,8 @@ public class WebServer {
         @Override
         public void handle(HttpExchange t) throws IOException {
 
-            String response = "This was the query:" + t.getRequestURI().getQuery() 
-                               + "##";
+            String response = "This was the query:" + t.getRequestURI().getQuery()
+                    + "##";
             t.sendResponseHeaders(200, response.length());
             OutputStream os = t.getResponseBody();
             os.write(response.getBytes());
@@ -52,6 +54,7 @@ public class WebServer {
     static class MyMazeRunnerHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange t) throws IOException {
+
             String query = t.getRequestURI().getQuery();
             String[] values = query.split("&");
             String f = values[0].split("m=")[1],
@@ -71,24 +74,26 @@ public class WebServer {
             threads.add(threadId);
             System.out.println("boing");
             System.out.println(threadId);
-            
+            System.out.println(values);
+
+            requestMap.put(threadId, values);
+
             String mazeNameOut = "maze" + timestamp + ".html";
 
-            try{
-               
+            try {
+
                 //time = new Timestamp(System.currentTimeMillis());
                 //System.out.println(String.valueOf(time.getTime()));
-                Main.main(new String[] {x0,y0,x1,y1,v,s,f,mazeNameOut});
+                Main.main(new String[]{x0, y0, x1, y1, v, s, f, mazeNameOut});
                 //time = new Timestamp(System.currentTimeMillis());
                 //System.out.println(String.valueOf(time.getTime()));
-            }
-            catch(Exception e){
+            } catch (Exception e) {
                 System.out.println(e.toString());
             }
 
             String response = "<html><title>maze runner </title><br><body>" +
                     "<a href=/output?f=" + mazeNameOut + ">Output</a><hr>" +
-                    "<iframe align=center width=600 height=400 src=/output?f=" + mazeNameOut +"></iframe>" +
+                    "<iframe align=center width=600 height=400 src=/output?f=" + mazeNameOut + "></iframe>" +
                     "</body></html>";
             t.sendResponseHeaders(responseCode_OK, response.length());
             OutputStream os = t.getResponseBody();
@@ -97,19 +102,19 @@ public class WebServer {
         }
     }
 
-    static class MyOutputHandler implements HttpHandler{
+    static class MyOutputHandler implements HttpHandler {
 
         @Override
         public void handle(HttpExchange he) throws IOException {
 
-            String query =  he.getRequestURI().getQuery();
+            String query = he.getRequestURI().getQuery();
             String f = query.split("f=")[1];
 
             Headers headers = he.getResponseHeaders();
             headers.add("Content-Type", "text/html");
 
-            File file = new File ( f );
-            byte[] bytes = new byte [(int)file.length()];
+            File file = new File(f);
+            byte[] bytes = new byte[(int) file.length()];
             System.out.println(file.getAbsolutePath());
             System.out.println("length:" + file.length());
 
