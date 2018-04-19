@@ -23,7 +23,7 @@ export _JAVA_OPTIONS=-XX:-UseSplitVerifier
 refresh: | clean all
 
 ## Make all : (warning: changing this order WILL break things)
-all: | create_bin maze bit loadbalancer storage httpserver instrumentation bit_samples
+all: | create_bin maze bit loadbalancer storage httpserver instrumentation
 
 ############### Sub sections #####################
 ## Create bin directory
@@ -48,28 +48,14 @@ httpserver:
 ## Compile instumentation
 instrumentation:
 	$(JAVAC) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J) $(SRC_DIR)$(INST)*.java -d $(RUN_DIR)
-## Compile bit_samples
-## TO REMOVE!
-bit_samples:
-	$(JAVAC) $(JFLAGS) -cp $(RUN_DIR) $(SRC_DIR)samples/*.java -d $(RUN_DIR)
-
 
 
 run_inst:
-	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)/lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)/third-party/lib/* $(INST)InstrumentationTool $(inputClass)
+	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)/lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)/third-party/lib/* $(INST)StatisticsTool -dynamic $(RUN_DIR)$(MAZERUNNER) $(TOOL_OUTPUT)
 
 run_httpserver:
 	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)/lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)/third-party/lib/* $(HTTPSERVER)WebServer
 
-inst_test:
-	#$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J) StatisticsTool $(inputClass)
-	mkdir -p $(TOOL_OUTPUT) $(TOOL_OUTPUT)exceptions/ $(TOOL_OUTPUT)render/ $(TOOL_OUTPUT)strategies/datastructure/ $(TOOL_OUTPUT)strategies/
-	$(JVM) $(JFLAGS) -cp $(RUN_DIR) StatisticsTool -dynamic $(RUN_DIR)$(MAZERUNNER) $(TOOL_OUTPUT)
-	#$(JVM) $(JFLAGS) -cp $(RUN_DIR) StatisticsTool -dynamic $(RUN_DIR)$(MAZERUNNER)exceptions/ $(TOOL_OUTPUT)exceptions/
-	#$(JVM) $(JFLAGS) -cp $(RUN_DIR) StatisticsTool -dynamic $(RUN_DIR)$(MAZERUNNER)render/ $(TOOL_OUTPUT)render/
-	#$(JVM) $(JFLAGS) -cp $(RUN_DIR) StatisticsTool -dynamic $(RUN_DIR)$(MAZERUNNER)strategies/datastructure/ $(TOOL_OUTPUT)strategies/datastructure/
-	#$(JVM) $(JFLAGS) -cp $(RUN_DIR) StatisticsTool -dynamic $(RUN_DIR)$(MAZERUNNER)strategies/ $(TOOL_OUTPUT)strategies/
-	
 clean: 
 	$(RM) -d $(RUN_DIR)$(MAZERUNNER)*.class -d $(RUN_DIR)$(MAZERUNNER)exceptions/*.class $(RUN_DIR)$(MAZERUNNER)render/*.class $(RUN_DIR)$(MAZERUNNER)strategies/*.class $(RUN_DIR)$(MAZERUNNER)strategies/datastructure/*.class
 	$(RM) $(RUN_DIR)$(BIT)highBIT/*.class
