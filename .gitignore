@@ -1,2 +1,6 @@
 .vscode/
 bin/
+aws-java-sdk-1.11.308/
+lib/aws-java-sdk-1.11.308.jar
+.idea/
+CNV-lab-AWS.pem
