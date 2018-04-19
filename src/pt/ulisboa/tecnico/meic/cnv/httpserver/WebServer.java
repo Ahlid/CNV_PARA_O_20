@@ -19,13 +19,13 @@ import pt.ulisboa.tecnico.meic.cnv.mazerunner.maze.*;
 
 public class WebServer {
 
-    private static final int port = 8000;
+    private static final int PORT = 8000;
     private static final int responseCode_OK = 200;
     public static String ROOT_FOLDER = "/home/ec2-user/web/";
     private static final List<Long> threads = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
-        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+        HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
         ExecutorService executor = Executors.newCachedThreadPool();
         server.createContext(Context.TEST, new MyHandler());
         server.createContext(Context.INDEX, new MyHandler());
@@ -64,7 +64,7 @@ public class WebServer {
 
             // Get timestamp to generate a file with a name without collisions
             Timestamp time = new Timestamp(System.currentTimeMillis());
-            String timeStamp = String.valueOf(time.getTime());
+            String timestamp = String.valueOf(time.getTime());
 
             // Get Thread Id and add it to Threads so we can keep track of threads running.
             Long threadId = Thread.currentThread().getId();
@@ -72,7 +72,7 @@ public class WebServer {
             System.out.println("boing");
             System.out.println(threadId);
             
-            String mazeNameOut = "maze" + timeStamp + ".html";
+            String mazeNameOut = "maze" + timestamp + ".html";
 
             try{
                
