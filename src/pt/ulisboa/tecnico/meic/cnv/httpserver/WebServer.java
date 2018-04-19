@@ -72,29 +72,30 @@ public class WebServer {
             // Get Thread Id and add it to Threads so we can keep track of threads running.
             Long threadId = Thread.currentThread().getId();
             threads.add(threadId);
-            System.out.println("boing");
             System.out.println(threadId);
-            System.out.println(values);
 
             requestMap.put(threadId, values);
 
             String mazeNameOut = "maze" + timestamp + ".html";
 
-            try {
+            String response;
 
-                //time = new Timestamp(System.currentTimeMillis());
-                //System.out.println(String.valueOf(time.getTime()));
-                Main.main(new String[]{x0, y0, x1, y1, v, s, f, mazeNameOut});
-                //time = new Timestamp(System.currentTimeMillis());
-                //System.out.println(String.valueOf(time.getTime()));
-            } catch (Exception e) {
+            try{
+
+                Main.main(new String[] {x0,y0,x1,y1,v,s,f,mazeNameOut});
+
+                response = "<html><title>maze runner </title><br><body>" +
+                "<a href=/output?f=" + mazeNameOut + ">Output</a><hr>" +
+                "<iframe align=center width=600 height=400 src=/output?f=" + mazeNameOut +"></iframe>" +
+                "</body></html>";
+            }
+            catch(Exception e){
                 System.out.println(e.toString());
+                response = "<html><title>maze runner </title><br><body>" +
+                ""+ e.toString() + "<hr>" +
+                "</body></html>";
             }
 
-            String response = "<html><title>maze runner </title><br><body>" +
-                    "<a href=/output?f=" + mazeNameOut + ">Output</a><hr>" +
-                    "<iframe align=center width=600 height=400 src=/output?f=" + mazeNameOut + "></iframe>" +
-                    "</body></html>";
             t.sendResponseHeaders(responseCode_OK, response.length());
             OutputStream os = t.getResponseBody();
             os.write(response.getBytes());

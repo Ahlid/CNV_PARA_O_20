@@ -11,8 +11,8 @@ STORAGE = $(PACKAGE)storage/
 LOADBALANCER = $(PACKAGE)loadbalancer/
 
 LOG4J = lib/log4j-1.2.17.jar
-AWS_VERSION=1.11.308
-AWS=/media/sf_CNV_PARA_O_20/aws-java-sdk-$(AWS_VERSION)/
+AWS_VERSION=1.11.313
+AWS=/home/ec2-user/aws-java-sdk-$(AWS_VERSION)/
 BIT = BIT/
 RUN_DIR = bin/
 TOOL_OUTPUT = $(RUN_DIR)$(MAZERUNNER)
@@ -49,6 +49,7 @@ httpserver:
 instrumentation:
 	$(JAVAC) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J) $(SRC_DIR)$(INST)*.java -d $(RUN_DIR)
 
+ref_instr: instrumentation maze run_inst
 
 run_inst:
 	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)/lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)/third-party/lib/* $(INST)StatisticsTool -dynamic $(RUN_DIR)$(MAZERUNNER) $(TOOL_OUTPUT)

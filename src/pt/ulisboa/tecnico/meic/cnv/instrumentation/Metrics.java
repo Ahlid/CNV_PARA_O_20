@@ -188,9 +188,13 @@ public class Metrics {
 
         System.out.println();
         System.out.println("Request params:");
+        //get the thread id
+        String filename = Thread.currentThread().getId() + "-";
         for (String s : this.requestParams) {
+            filename = (filename + s);
             System.out.println(s);
         }
+        filename = (filename + ".txt");
         System.out.println();
         System.out.println("Methods:");
 
@@ -218,7 +222,12 @@ public class Metrics {
         System.out.println("Average number of instructions per method:      " + instr_per_method);
         System.out.println("Average number of basic blocks per method:      " + bb_per_method);
 
-        try (PrintWriter out = new PrintWriter("filename.txt")) {
+
+        try (PrintWriter out = new PrintWriter(filename)) {
+
+            for (String entry : methodCounts.keySet()) {
+                out.println(entry + ": " + methodCounts.get(entry));
+            }
 
 
             out.println("Dynamic information summary:");
