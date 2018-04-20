@@ -1,0 +1,7 @@
+URL: localhost
+port: 8000
+maze_endpoint: mzrun.html
+params:
+  - { m: Maze50.maze, x0: 3, y0: 7, x1: 10, y1: 15, v: 100, s: astar}
+  - { m: Maze50.maze, x0: 3, y0: 7, x1: 10, y1: 15, v: 100, s: bfs}
+  - { m: Maze50.maze, x0: 3, y0: 7, x1: 10, y1: 15, v: 100, s: dfs}
