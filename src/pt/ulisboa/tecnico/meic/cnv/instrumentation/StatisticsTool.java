@@ -129,17 +129,12 @@ public class StatisticsTool {
                 for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
 
                     Routine routine = (Routine) e.nextElement();
+					routine.addBefore("pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation", "dynMethodCount", new String(routine.getMethodName()));
 
-                    if (routine.getMethodName().equals("isUnvisitedPassage") || routine.getMethodName().equals("isVisitedPassage")) {
-                        routine.addBefore("pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation", "dynMethodCount", new String(routine.getMethodName()));
-
-                        // routine.addBefore("pt/ulisboa/tecnico/meic/cnv/instrumentation/StatisticsTool", "dynMethodCount", new Integer(1));
-
-                        for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
-                            BasicBlock bb = (BasicBlock) b.nextElement();
-                            bb.addBefore("pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation", "dynInstrCount", new Integer(bb.size()));
-                        }
-                    }
+					for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
+						BasicBlock bb = (BasicBlock) b.nextElement();
+						bb.addBefore("pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation", "dynInstrCount", new Integer(bb.size()));
+					}
 
                 }
 
@@ -204,6 +199,7 @@ public class StatisticsTool {
             out.println("Average number of instructions per basic block: " + instr_per_bb);
             out.println("Average number of instructions per method:      " + instr_per_method);
             out.println("Average number of basic blocks per method:      " + bb_per_method);
+            out.println("bananas");
 
         } catch (Exception e) {
             System.out.println("oops");

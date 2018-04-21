@@ -49,7 +49,7 @@ public class MetricsInstrumentation {
      */
     public static synchronized void dynInstrCount(int incr) {
         Metrics metrics = getMetricForThread();
-        metrics.setDyn_instr_count(metrics.getDyn_instr_count() + 1);
+        metrics.setDyn_instr_count(metrics.getDyn_instr_count() + incr);
         metrics.setDyn_bb_count(metrics.getDyn_bb_count() + 1);
     }
 
