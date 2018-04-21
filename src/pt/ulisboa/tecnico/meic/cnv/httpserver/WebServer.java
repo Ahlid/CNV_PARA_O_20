@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
 import java.sql.Timestamp;
 import java.io.*;
 
@@ -23,8 +26,8 @@ public class WebServer {
     private static final int PORT = 8000;
     private static final int responseCode_OK = 200;
     public static String ROOT_FOLDER = "/home/ec2-user/web/";
-    private static final List<Long> threads = new ArrayList<>();
-    public static HashMap<Long, String[]> requestMap = new HashMap<>();
+    private static final Set<Long> threads = new HashSet<>();
+    public static HashMap<Long, Object> requestParams = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
@@ -34,7 +37,7 @@ public class WebServer {
         server.createContext(Context.HEALTH, new MyHandler());
         server.createContext(Context.MAZERUN, new MyMazeRunnerHandler());
         server.createContext(Context.OUTPUT, new MyOutputHandler());
-        server.setExecutor(executor); // creates a default executor
+        server.setExecutor(executor);
         server.start();
     }
 
@@ -55,41 +58,58 @@ public class WebServer {
         @Override
         public void handle(HttpExchange t) throws IOException {
 
-            String query = t.getRequestURI().getQuery();
-            String[] values = query.split("&");
-            String f = values[0].split("m=")[1],
-                    x0 = values[1].split("x0=")[1],
-                    y0 = values[2].split("y0=")[1],
-                    x1 = values[3].split("x1=")[1],
-                    y1 = values[4].split("y1=")[1],
-                    v = values[5].split("v=")[1],
-                    s = values[6].split("s=")[1];
-
             // Get timestamp to generate a file with a name without collisions
             Timestamp time = new Timestamp(System.currentTimeMillis());
             String timestamp = String.valueOf(time.getTime());
 
-            // Get Thread Id and add it to Threads so we can keep track of threads running.
+            // Get Thread Id and add it to Threads so we can keep track of running threads 
             Long threadId = Thread.currentThread().getId();
-            threads.add(threadId);
-            System.out.println(threadId);
+            boolean res = threads.add(threadId);
 
-            requestMap.put(threadId, values);
+            System.out.println();
+            System.out.println("Thread Id: " + threadId);
+            if (!res) {
+                System.out.println("Error: Separate requests have the same threadId=" + threadId);
+                throw new RuntimeException("This should not happen!");
+            }
+
+            // Keep track of URL parameters for each thread
+            LinkedHashMap<String, String> params = new LinkedHashMap<>();
+            requestParams.put(threadId, params);
+
+            // Process URL query string
+            String query = t.getRequestURI().getQuery();
+            String[] paramList = query.split("&");
+
+            // Store query string parameters in LinkedHashMap(preserving insertion order)
+            for (String param : paramList) {
+                String paramName = param.split("=")[0];
+                String paramValue = param.split("=")[1];
+                params.put(paramName, paramValue);
+            }
+
+            System.out.println("Request params: " + params);
+
+            // Main class expects parameters in order <x0,y0,x1,y1,v,s,m,mazeNameOut>
+            List<String> paramsMain = new ArrayList<>(params.values());
+            String mazeNameIn = paramsMain.remove(0);
+            paramsMain.add(mazeNameIn);
 
             String mazeNameOut = "maze" + timestamp + ".html";
+            paramsMain.add(mazeNameOut);
 
             String response;
 
-            try{
+            try {
 
-                Main.main(new String[] {x0,y0,x1,y1,v,s,f,mazeNameOut});
+                String[] paramsMainArray = paramsMain.toArray(new String[paramsMain.size()]);
+                Main.main(paramsMainArray);
 
                 response = "<html><title>maze runner </title><br><body>" +
                 "<a href=/output?f=" + mazeNameOut + ">Output</a><hr>" +
                 "<iframe align=center width=600 height=400 src=/output?f=" + mazeNameOut +"></iframe>" +
                 "</body></html>";
-            }
-            catch(Exception e){
+            } catch(Exception e) {
                 System.out.println(e.toString());
                 response = "<html><title>maze runner </title><br><body>" +
                 ""+ e.toString() + "<hr>" +
@@ -100,6 +120,11 @@ public class WebServer {
             OutputStream os = t.getResponseBody();
             os.write(response.getBytes());
             os.close();
+
+            // Remove threadId from data structures
+            threads.remove(threadId);
+            requestParams.remove(threadId);
+
         }
     }
 

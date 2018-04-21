@@ -1,7 +1,0 @@
-Dynamic information summary:
-Number of methods:      6892
-Number of basic blocks: 433934351
-Number of instructions: 433934351
-Average number of instructions per basic block: 1.0
-Average number of instructions per method:      62962.035
-Average number of basic blocks per method:      62962.035

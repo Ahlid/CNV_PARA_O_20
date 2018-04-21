@@ -129,12 +129,12 @@ public class StatisticsTool {
                 for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
 
                     Routine routine = (Routine) e.nextElement();
-					routine.addBefore("pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation", "dynMethodCount", new String(routine.getMethodName()));
+                    routine.addBefore("pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation", "dynMethodCount", new String(routine.getMethodName()));
 
-					for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
-						BasicBlock bb = (BasicBlock) b.nextElement();
-						bb.addBefore("pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation", "dynInstrCount", new Integer(bb.size()));
-					}
+                    for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
+                        BasicBlock bb = (BasicBlock) b.nextElement();
+                        bb.addBefore("pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation", "dynInstrCount", new Integer(bb.size()));
+                    }
 
                 }
 

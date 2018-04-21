@@ -3,6 +3,7 @@ package pt.ulisboa.tecnico.meic.cnv.instrumentation;
 import pt.ulisboa.tecnico.meic.cnv.httpserver.WebServer;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class MetricsInstrumentation {
 
@@ -71,7 +72,7 @@ public class MetricsInstrumentation {
         //todo: get the request payload
         Long threadId = Thread.currentThread().getId();
         Metrics metrics = getMetricForThread();
-        metrics.setRequestParams(WebServer.requestMap.get(threadId));
+        metrics.setRequestParams((LinkedHashMap) WebServer.requestParams.get(threadId));
 
     }
 
