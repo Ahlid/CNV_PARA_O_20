@@ -33,19 +33,13 @@ $ make instrumentation
 ```
 ___
 
-Run __httpserver__:
-```bash
-$ make run_httpserver
-```
-___
-
 Clean everything:
 ```bash
 $ make clean
 ```
 ___
 
-Refresh env:
+Refresh environment:
 ```bash
 $ make refresh
 ```
@@ -53,8 +47,18 @@ ___
 
 __Instrument__ mazerunner:
 ```bash
-$ make inst_test
+$ make run_inst
+```
+___
+
+Run __httpserver__:
+```bash
+$ make run_httpserver
 ```
 
-run samples bit:
-java -cp "bin/:lib/*.jar" StatisticsTool -dynamic bin/pt/ulisboa/tecnico/meic/cnv/mazerunner/maze/ bin/pt/ulisboa/tecnico/meic/cnv/mazerunner/maze/
+___
+
+Run __load balancer__:
+```bash
+$ make run_balancer
+```
