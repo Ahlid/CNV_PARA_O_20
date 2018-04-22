@@ -1,4 +1,4 @@
-URL: localhost
+host: localhost
 port: 8000
 maze_endpoint: mzrun.html
 params:
