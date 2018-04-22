@@ -6,4 +6,6 @@ lib/aws-java-sdk-1.11.308.jar
 CNV-lab-AWS.pem
 *.html
 *.txt
+*.csv
+*.swp
 CNV_PARA_O_20.iml

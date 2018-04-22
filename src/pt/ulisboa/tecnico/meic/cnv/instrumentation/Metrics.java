@@ -26,21 +26,6 @@ public class Metrics {
     private long dyn_bb_count = 0;
     private long dyn_instr_count = 0;
 
-    private int newcount = 0;
-    private int newarraycount = 0;
-    private int anewarraycount = 0;
-    private int multianewarraycount = 0;
-
-    private int loadcount = 0;
-    private int storecount = 0;
-    private int fieldloadcount = 0;
-    private int fieldstorecount = 0;
-
-    private StatisticsBranch[] branch_info;
-    private int branch_number;
-    private int branch_pc;
-    private String branch_class_name;
-    private String branch_method_name;
 
     private LinkedHashMap<String, String> requestParams;
 
@@ -92,109 +77,6 @@ public class Metrics {
         this.dyn_instr_count = dyn_instr_count;
     }
 
-    public int getNewcount() {
-        return newcount;
-    }
-
-    public void setNewcount(int newcount) {
-        this.newcount = newcount;
-    }
-
-    public int getNewarraycount() {
-        return newarraycount;
-    }
-
-    public void setNewarraycount(int newarraycount) {
-        this.newarraycount = newarraycount;
-    }
-
-    public int getAnewarraycount() {
-        return anewarraycount;
-    }
-
-    public void setAnewarraycount(int anewarraycount) {
-        this.anewarraycount = anewarraycount;
-    }
-
-    public int getMultianewarraycount() {
-        return multianewarraycount;
-    }
-
-    public void setMultianewarraycount(int multianewarraycount) {
-        this.multianewarraycount = multianewarraycount;
-    }
-
-    public int getLoadcount() {
-        return loadcount;
-    }
-
-    public void setLoadcount(int loadcount) {
-        this.loadcount = loadcount;
-    }
-
-    public int getStorecount() {
-        return storecount;
-    }
-
-    public void setStorecount(int storecount) {
-        this.storecount = storecount;
-    }
-
-    public int getFieldloadcount() {
-        return fieldloadcount;
-    }
-
-    public void setFieldloadcount(int fieldloadcount) {
-        this.fieldloadcount = fieldloadcount;
-    }
-
-    public int getFieldstorecount() {
-        return fieldstorecount;
-    }
-
-    public void setFieldstorecount(int fieldstorecount) {
-        this.fieldstorecount = fieldstorecount;
-    }
-
-    public StatisticsBranch[] getBranch_info() {
-        return branch_info;
-    }
-
-    public void setBranch_info(StatisticsBranch[] branch_info) {
-        this.branch_info = branch_info;
-    }
-
-    public int getBranch_number() {
-        return branch_number;
-    }
-
-    public void setBranch_number(int branch_number) {
-        this.branch_number = branch_number;
-    }
-
-    public int getBranch_pc() {
-        return branch_pc;
-    }
-
-    public void setBranch_pc(int branch_pc) {
-        this.branch_pc = branch_pc;
-    }
-
-    public String getBranch_class_name() {
-        return branch_class_name;
-    }
-
-    public void setBranch_class_name(String branch_class_name) {
-        this.branch_class_name = branch_class_name;
-    }
-
-    public String getBranch_method_name() {
-        return branch_method_name;
-    }
-
-    public void setBranch_method_name(String branch_method_name) {
-        this.branch_method_name = branch_method_name;
-    }
 
     public void print() {
 
@@ -274,13 +156,13 @@ public class Metrics {
 
     // Comparator that compares String keys
     private class ValueComparator implements Comparator<String> {
- 
+
         HashMap<String, Integer> map = new HashMap<String, Integer>();
-     
+
         public ValueComparator(HashMap<String, Integer> map) {
             this.map.putAll(map);
         }
-     
+
         @Override
         public int compare(String s1, String s2) {
             return map.get(s2).compareTo(map.get(s1));  // Compare in descending order
@@ -296,7 +178,7 @@ public class Metrics {
 
         // Iterate sorted map and keep only numMethods entries
         TreeMap<String, Integer> highestMethodCounts = new TreeMap<String, Integer>(comparator);
-        Iterator<Entry<String,Integer>> it = sortedMethodCounts.entrySet().iterator();
+        Iterator<Entry<String, Integer>> it = sortedMethodCounts.entrySet().iterator();
 
         for (int i = 0; i < numMethods; i++) {
             Entry<String, Integer> entry = it.next();

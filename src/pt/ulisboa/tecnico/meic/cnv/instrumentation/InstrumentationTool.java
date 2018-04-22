@@ -1,107 +1,106 @@
 package pt.ulisboa.tecnico.meic.cnv.instrumentation;
+//
+// InstrumentationTool.java
+//
+// This program measures and instruments to obtain different statistics
+// about Java programs.
+//
+// Copyright (c) 1998 by Han B. Lee (hanlee@cs.colorado.edu).
+// ALL RIGHTS RESERVED.
+//
+// Permission to use, copy, modify, and distribute this software and its
+// documentation for non-commercial purposes is hereby granted provided 
+// that this copyright notice appears in all copies.
+// 
+// This software is provided "as is".  The licensor makes no warrenties, either
+// expressed or implied, about its correctness or performance.  The licensor
+// shall not be liable for any damages suffered as a result of using
+// and modifying this software.
 
-import java.io.*;
+import BIT.highBIT.*;
+
+import java.io.File;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Vector;
+import java.io.PrintWriter;
 
-import pt.ulisboa.tecnico.meic.cnv.storage.Messenger;
-import org.apache.log4j.*;
-
-import BIT.highBIT.BasicBlock;
-import BIT.highBIT.ClassInfo;
-import BIT.highBIT.Routine;
-import pt.ulisboa.tecnico.meic.cnv.httpserver.WebServer;
 
 public class InstrumentationTool {
-    final static Logger logger = Logger.getLogger(InstrumentationTool.class);
-    private static final int METRIC = 20000;
 
-    private static final String itPackage = "pt/ulisboa/tecnico/meic/cnv/instrumentation/InstrumentationTool";
-
-    private static PrintStream out = null;
-    private static int i_count = 0, b_count = 0, m_count = 1;
-    private static Messenger messenger = null;
-
-
-    public static final String usage = "Usage: java pt.ulisboa.tecnico.meic.cnv.instrumentation.InstrumentationTool inputClass.class"
-            + "\nLogging is written to log4j-metrics.log";
-
-    public static void main(String args[]) {
-        //logger.addMessage("starting");
-        logger.info("init");
-        try {
-            if (args.length < 1) {
-                System.err.println(usage);
-                System.exit(-1);
-            }
-            messenger = new Messenger();
-            File file_in = new File(args[0]);
-            String path = new String(file_in.getAbsolutePath());
-            assert path.endsWith(".class");
-            logger.info("starting to instrument class");
-            instrument(path);
-        } catch (Exception e) {
-            System.err.println("Exception ocurred, check log for details.");
-            e.printStackTrace();
-            //logger.fatal("Exception in main:");
-            //logger.fatal(e.getMessage());
-            System.exit(-1);
-        }
+    public static void printUsage() {
+        System.out.println("Syntax: java InstrumentationTool -stat_type in_path [out_path]");
+        System.out.println("        where stat_type can be:");
+        System.out.println("        static:     static properties");
+        System.out.println("        dynamic:    dynamic properties");
+        System.out.println("        alloc:      memory allocation instructions");
+        System.out.println("        load_store: loads and stores (both field and regular)");
+        System.out.println("        branch:     gathers branch outcome statistics");
+        System.out.println();
+        System.out.println("        in_path:  directory from which the class files are read");
+        System.out.println("        out_path: directory to which the class files are written");
+        System.out.println("        Both in_path and out_path are required unless stat_type is static");
+        System.out.println("        in which case only in_path is required");
+        System.exit(-1);
     }
 
-    /**
-     *  Instruments the given class file.
-     */
-    @SuppressWarnings("unchecked")
-    public static void instrument(String classFile) {
-        try {
-            ClassInfo ci = new ClassInfo(classFile); /* read & process the class */
 
-            Vector<Routine> routines = ci.getRoutines();
+    public static void doDynamic(File in_dir, File out_dir) {
+        String filelist[] = in_dir.list();
 
-            
-            // loop through all the routines
-            // see java.util.Enumeration for more information on Enumeration class
-            for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
-                Routine routine = (Routine) e.nextElement();
-                if (routine.getMethodName().equals("generateMaze")) {
-                    logger.info("found method");
-                    routine.addBefore(itPackage, "mcount", new Integer(1));
+        for (int i = 0; i < filelist.length; i++) {
+            String filename = filelist[i];
+            if (filename.endsWith(".class")) {
+                String in_filename = in_dir.getAbsolutePath() + System.getProperty("file.separator") + filename;
+                String out_filename = out_dir.getAbsolutePath() + System.getProperty("file.separator") + filename;
+                ClassInfo ci = new ClassInfo(in_filename);
+
+                for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
+
+                    Routine routine = (Routine) e.nextElement();
+                    routine.addBefore("pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation", "dynMethodCount", new String(routine.getMethodName()));
+
                     for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
                         BasicBlock bb = (BasicBlock) b.nextElement();
-                        bb.addBefore(itPackage, "count", new Integer(bb.size()));;
+                        bb.addBefore("pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation", "dynInstrCount", new Integer(bb.size()));
                     }
-                }
-            }
-            ci.addAfter(itPackage, "printICount", ci.getClassName());
-            ci.write(classFile);
 
-        } catch (Exception e) {
-            System.err.println("Exception ocurred, check log for details.");
-            e.printStackTrace();
-            logger.fatal("Exception in instrumentThreadCount:");
-            //logger.fatal(e.getMessage());
+                }
+
+                System.out.println(ci.getClassName());
+                if (ci.getClassName().equals("pt/ulisboa/tecnico/meic/cnv/mazerunner/maze/Main")) {
+                    ci.addBefore("pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation", "setRequest", "null");
+                    ci.addAfter("pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation", "printDynamic", ci.getClassName());
+                    ci.addAfter("pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation", "endOfThreadExecution", "null");
+                }
+                ci.write(out_filename);
+            }
         }
     }
 
-    public static synchronized void printICount(String foo) {
-        System.out.println(i_count + " instructions in " + b_count + " basic blocks were executed in " + m_count + " methods.");
-        logger.info(m_count);
-        m_count=0;
-    }
 
+    public static void main(String argv[]) {
+        if (argv.length < 2 || !argv[0].startsWith("-")) {
+            printUsage();
+        }
 
-    public static synchronized void count(int incr) {
-        logger.info("count bb: " + b_count);
-        i_count += incr;
-        b_count++;
-    }
+        if (argv[0].equals("-dynamic")) {
+            if (argv.length != 3) {
+                printUsage();
+            }
 
-    public static synchronized void mcount(int incr) {
-        logger.info("m++ count: " + m_count);
-        if (m_count-- == 0){
-            m_count = METRIC;
-//            WebServer.workerUpdateMetrics(m_count);
+            try {
+                File in_dir = new File(argv[1]);
+                File out_dir = new File(argv[2]);
+
+                if (in_dir.isDirectory() && out_dir.isDirectory()) {
+                    doDynamic(in_dir, out_dir);
+                } else {
+                    printUsage();
+                }
+            } catch (NullPointerException e) {
+                printUsage();
+            }
         }
     }
 
