@@ -106,9 +106,19 @@ public class WebServer {
                 Main.main(paramsMainArray);
 
                 response = "<html><title>maze runner </title><br><body>" +
-                "<a href=/output?f=" + mazeNameOut + ">Output</a><hr>" +
-                "<iframe align=center width=600 height=400 src=/output?f=" + mazeNameOut +"></iframe>" +
-                "</body></html>";
+                    "<hr><form action=\"/mzrun.html\">" +
+                    "<b>Model Filename:</b> <input name=\"m\" type=\"text\"  ><br><br>" +
+                    "x0: <input name=\"x0\" type=\"text\">" +
+                    "y0: <input name=\"y0\" type=\"text\" ><br>" +
+                    "x1: <input name=\"x1\" type=\"text\">" +
+                    "y1: <input name=\"y1\" type=\"text\" ><br>" +
+                    "Velocity: <input name=\"v\" type=\"text\"><br>" +
+                    "Strategy: <input name=\"s\" type=\"text\"><br>" +
+                    "<input type=\"submit\" value=\"Submit\">" +
+                    "</form>" +
+                    "<a href=/output?f=" + mazeNameOut + ">Output</a><hr>" +
+                    "<iframe align=center width=600 height=400 src=/output?f=" + mazeNameOut +"></iframe>" +
+                    "</body></html>";
             } catch(Exception e) {
                 System.out.println(e.toString());
                 response = "<html><title>maze runner </title><br><body>" +

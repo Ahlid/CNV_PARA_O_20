@@ -15,7 +15,7 @@ LOG4J = lib/log4j-1.2.17.jar
 #AWS_VERSION=1.11.308
 #AWS=/media/sf_CNV_PARA_O_20/aws-java-sdk-$(AWS_VERSION)/
 
-AWS_VERSION=1.11.313
+AWS_VERSION=1.11.308
 AWS=/home/ec2-user/aws-java-sdk-$(AWS_VERSION)/
 BIT = BIT/
 RUN_DIR = bin/
@@ -27,7 +27,7 @@ export _JAVA_OPTIONS=-XX:-UseSplitVerifier
 refresh: | clean all
 
 ## Make all : (warning: changing this order WILL break things)
-all: | create_bin maze bit loadbalancer storage httpserver instrumentation
+all: | create_bin maze bit storage loadbalancer httpserver instrumentation
 
 ############### Sub sections #####################
 ## Create bin directory
@@ -57,9 +57,14 @@ ref_instr: instrumentation maze run_inst
 
 run_inst:
 	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)/lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)/third-party/lib/* $(INST)InstrumentationTool -dynamic $(RUN_DIR)$(MAZERUNNER) $(TOOL_OUTPUT)
+	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)/lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)/third-party/lib/* $(INST)InstrumentationTool -dynamic $(RUN_DIR)$(MAZERUNNER)strategies/ $(TOOL_OUTPUT)strategies/
+	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)/lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)/third-party/lib/* $(INST)InstrumentationTool -dynamic $(RUN_DIR)$(MAZERUNNER)strategies/datastructure/ $(TOOL_OUTPUT)strategies/datastructure/
 
 run_httpserver:
 	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)/lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)/third-party/lib/* $(HTTPSERVER)WebServer
+
+run_balancer:
+	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)/lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)/third-party/lib/* $(LOADBALANCER)Proxy
 
 clean: 
 	$(RM) -d $(RUN_DIR)$(MAZERUNNER)*.class -d $(RUN_DIR)$(MAZERUNNER)exceptions/*.class $(RUN_DIR)$(MAZERUNNER)render/*.class $(RUN_DIR)$(MAZERUNNER)strategies/*.class $(RUN_DIR)$(MAZERUNNER)strategies/datastructure/*.class
