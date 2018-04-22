@@ -1,0 +1,19 @@
+URL: localhost
+port: 8000
+maze_endpoint: mzrun.html
+params:
+  # Maze 50 - A*
+  - { m: Maze50.maze, x0: 0, y0: 1, x1: 10, y1: 15, v: 100, s: astar}
+  - { m: Maze50.maze, x0: 0, y0: 1, x1: 25, y1: 25, v: 100, s: astar}
+  - { m: Maze50.maze, x0: 0, y0: 49, x1: 25, y1: 25, v: 100, s: astar}
+  - { m: Maze50.maze, x0: 0, y0: 1, x1: 48, y1: 1, v: 100, s: astar}
+  - { m: Maze50.maze, x0: 0, y0: 1, x1: 48, y1: 49, v: 100, s: astar}
+  # Maze 50 - BFS
+  - { m: Maze50.maze, x0: 0, y0: 1, x1: 10, y1: 15, v: 100, s: bfs}
+  - { m: Maze50.maze, x0: 0, y0: 1, x1: 25, y1: 25, v: 100, s: bfs}
+  - { m: Maze50.maze, x0: 0, y0: 49, x1: 25, y1: 25, v: 100, s: bfs}
+  - { m: Maze50.maze, x0: 0, y0: 1, x1: 48, y1: 1, v: 100, s: bfs}
+  - { m: Maze50.maze, x0: 0, y0: 1, x1: 48, y1: 49, v: 100, s: bfs}
+  # Maze 50 - DFS
+  - { m: Maze50.maze, x0: 0, y0: 1, x1: 10, y1: 15, v: 100, s: dfs}
+  - { m: Maze50.maze, x0: 0, y0: 1, x1: 25, y1: 25, v: 100, s: dfs}
