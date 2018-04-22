@@ -14,15 +14,15 @@ public class MetricsInstrumentation {
 
 
     /**
-     * Gets the metrics object for the specific thread
+     * Gets the metrics object for the current running thread
      *
-     * @return
+     * @return - metrics object
      */
-    private static Metrics getMetricForThread() {
-        //get the thread id
+    private static Metrics getMetricsForThread() {
+        // Get the thread id
         Long threadId = Thread.currentThread().getId();
 
-        //create the metrics counter if not exists
+        // Create a metrics object for current thread if it doesn't exist
         if (!threadMetrics.containsKey(threadId))
             threadMetrics.put(threadId, new Metrics());
 
@@ -31,25 +31,24 @@ public class MetricsInstrumentation {
     }
 
     /**
-     * Me method to be called when a new routine starts
+     * Method to be called when a new routine starts
      *
      * @param name - the name of the method
      */
     public static synchronized void dynMethodCount(String name) {
 
-        Metrics metrics = getMetricForThread();
+        Metrics metrics = getMetricsForThread();
         metrics.addMethodCount(name);
         metrics.setDyn_method_count(metrics.getDyn_method_count() + 1);
     }
 
-
     /**
-     * Method to be called when an instruction is executed
+     * Method to be called when a basic block is executed
      *
-     * @param incr - ???
+     * @param incr - number of instructions inside basic block
      */
-    public static synchronized void dynInstrCount(int incr) {
-        Metrics metrics = getMetricForThread();
+    public static synchronized void dynBasicBlockCount(int incr) {
+        Metrics metrics = getMetricsForThread();
         metrics.setDyn_instr_count(metrics.getDyn_instr_count() + incr);
         metrics.setDyn_bb_count(metrics.getDyn_bb_count() + 1);
     }
@@ -59,7 +58,7 @@ public class MetricsInstrumentation {
      */
     public static synchronized void printDynamic(String foo) {
         System.out.println(foo);
-        Metrics metrics = getMetricForThread();
+        Metrics metrics = getMetricsForThread();
         metrics.print();
     }
 
@@ -71,7 +70,7 @@ public class MetricsInstrumentation {
     public static synchronized void setRequest(String foo) {
         //todo: get the request payload
         Long threadId = Thread.currentThread().getId();
-        Metrics metrics = getMetricForThread();
+        Metrics metrics = getMetricsForThread();
         metrics.setRequestParams((LinkedHashMap) WebServer.requestParams.get(threadId));
 
     }
