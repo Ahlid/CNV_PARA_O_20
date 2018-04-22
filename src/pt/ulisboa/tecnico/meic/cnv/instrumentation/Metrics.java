@@ -18,28 +18,13 @@ public class Metrics {
 
     private int threadID;
     private HashMap<String, Integer> methodCounts = new HashMap<>();
-	private static final String CSV_SEPARATOR = ",";
-	private static final int NUM_METHODS = 5;
+    private static final String CSV_SEPARATOR = ",";
+    private static final int NUM_METHODS = 5;
 
     private int dyn_method_count = 0;
     private int dyn_bb_count = 0;
     private long dyn_instr_count = 0;
-
-    private int newcount = 0;
-    private int newarraycount = 0;
-    private int anewarraycount = 0;
-    private int multianewarraycount = 0;
-
-    private int loadcount = 0;
-    private int storecount = 0;
-    private int fieldloadcount = 0;
-    private int fieldstorecount = 0;
-
-    private StatisticsBranch[] branch_info;
-    private int branch_number;
-    private int branch_pc;
-    private String branch_class_name;
-    private String branch_method_name;
+    
 
     private String[] requestParams;
 
@@ -91,109 +76,6 @@ public class Metrics {
         this.dyn_instr_count = dyn_instr_count;
     }
 
-    public int getNewcount() {
-        return newcount;
-    }
-
-    public void setNewcount(int newcount) {
-        this.newcount = newcount;
-    }
-
-    public int getNewarraycount() {
-        return newarraycount;
-    }
-
-    public void setNewarraycount(int newarraycount) {
-        this.newarraycount = newarraycount;
-    }
-
-    public int getAnewarraycount() {
-        return anewarraycount;
-    }
-
-    public void setAnewarraycount(int anewarraycount) {
-        this.anewarraycount = anewarraycount;
-    }
-
-    public int getMultianewarraycount() {
-        return multianewarraycount;
-    }
-
-    public void setMultianewarraycount(int multianewarraycount) {
-        this.multianewarraycount = multianewarraycount;
-    }
-
-    public int getLoadcount() {
-        return loadcount;
-    }
-
-    public void setLoadcount(int loadcount) {
-        this.loadcount = loadcount;
-    }
-
-    public int getStorecount() {
-        return storecount;
-    }
-
-    public void setStorecount(int storecount) {
-        this.storecount = storecount;
-    }
-
-    public int getFieldloadcount() {
-        return fieldloadcount;
-    }
-
-    public void setFieldloadcount(int fieldloadcount) {
-        this.fieldloadcount = fieldloadcount;
-    }
-
-    public int getFieldstorecount() {
-        return fieldstorecount;
-    }
-
-    public void setFieldstorecount(int fieldstorecount) {
-        this.fieldstorecount = fieldstorecount;
-    }
-
-    public StatisticsBranch[] getBranch_info() {
-        return branch_info;
-    }
-
-    public void setBranch_info(StatisticsBranch[] branch_info) {
-        this.branch_info = branch_info;
-    }
-
-    public int getBranch_number() {
-        return branch_number;
-    }
-
-    public void setBranch_number(int branch_number) {
-        this.branch_number = branch_number;
-    }
-
-    public int getBranch_pc() {
-        return branch_pc;
-    }
-
-    public void setBranch_pc(int branch_pc) {
-        this.branch_pc = branch_pc;
-    }
-
-    public String getBranch_class_name() {
-        return branch_class_name;
-    }
-
-    public void setBranch_class_name(String branch_class_name) {
-        this.branch_class_name = branch_class_name;
-    }
-
-    public String getBranch_method_name() {
-        return branch_method_name;
-    }
-
-    public void setBranch_method_name(String branch_method_name) {
-        this.branch_method_name = branch_method_name;
-    }
 
     public void print() {
 
@@ -265,30 +147,30 @@ public class Metrics {
         }
 		*/
 
-		File csvFile = new File("results.csv");
-		boolean csvExists = csvFile.isFile();
+        File csvFile = new File("results.csv");
+        boolean csvExists = csvFile.isFile();
 
         try (PrintWriter out = new PrintWriter(new FileOutputStream(csvFile, true /* append = true */))) {
 
-			// Write header line if file didn't exist
-			if (!csvExists) {
-				String headerArray[] = new String[] { "m", "x0", "y0", "x1", "y1", "v", "s", "method_count", "bb_count", "instr_count" };
+            // Write header line if file didn't exist
+            if (!csvExists) {
+                String headerArray[] = new String[]{"m", "x0", "y0", "x1", "y1", "v", "s", "method_count", "bb_count", "instr_count"};
 
-				// Convert fixed-size array to list
-				List<String> header = new ArrayList<String>(Arrays.asList(headerArray));
+                // Convert fixed-size array to list
+                List<String> header = new ArrayList<String>(Arrays.asList(headerArray));
 
-				// Additional header columns for method names and counts
-				for (int i = 0; i < NUM_METHODS; i++) {
-					header.add("method" + (i+1) + "_name");
-					header.add("method" + (i+1) + "_count");
-				}
+                // Additional header columns for method names and counts
+                for (int i = 0; i < NUM_METHODS; i++) {
+                    header.add("method" + (i + 1) + "_name");
+                    header.add("method" + (i + 1) + "_count");
+                }
 
-				String headerLine = getCSVLine(header);
-				out.println(headerLine);
-			}
+                String headerLine = getCSVLine(header);
+                out.println(headerLine);
+            }
 
-			// Remove this from here somehow, it's code duplication from WebServer
-			String  m = requestParams[0].split("m=")[1],
+            // Remove this from here somehow, it's code duplication from WebServer
+            String m = requestParams[0].split("m=")[1],
                     x0 = requestParams[1].split("x0=")[1],
                     y0 = requestParams[2].split("y0=")[1],
                     x1 = requestParams[3].split("x1=")[1],
@@ -296,88 +178,88 @@ public class Metrics {
                     v = requestParams[5].split("v=")[1],
                     s = requestParams[6].split("s=")[1];
 
-			TreeMap<String, Integer> highestMethodCounts = getHighestMethodCounts(NUM_METHODS);
-			System.out.println("Highest method counts: " + highestMethodCounts);
+            TreeMap<String, Integer> highestMethodCounts = getHighestMethodCounts(NUM_METHODS);
+            System.out.println("Highest method counts: " + highestMethodCounts);
 
-			// CSV values list
-			List<String> values = new ArrayList<String>();
+            // CSV values list
+            List<String> values = new ArrayList<String>();
 
-			// Request parameters
-			values.add(m);
-			values.add(x0);
-			values.add(y0);
-			values.add(x1);
-			values.add(y1);
-			values.add(v);
-			values.add(s);
+            // Request parameters
+            values.add(m);
+            values.add(x0);
+            values.add(y0);
+            values.add(x1);
+            values.add(y1);
+            values.add(v);
+            values.add(s);
 
-			// Instrumentation metrics
-			values.add(String.valueOf(dyn_method_count));
-			values.add(String.valueOf(dyn_bb_count));
-			values.add(String.valueOf(dyn_instr_count));
+            // Instrumentation metrics
+            values.add(String.valueOf(dyn_method_count));
+            values.add(String.valueOf(dyn_bb_count));
+            values.add(String.valueOf(dyn_instr_count));
 
-			// Method names and counts
-			for(Entry<String, Integer> entry : highestMethodCounts.entrySet()) {
-				values.add(entry.getKey());
-				values.add(String.valueOf(entry.getValue()));
-			}
+            // Method names and counts
+            for (Entry<String, Integer> entry : highestMethodCounts.entrySet()) {
+                values.add(entry.getKey());
+                values.add(String.valueOf(entry.getValue()));
+            }
 
-			String valuesLine = getCSVLine(values);
-			out.println(valuesLine);
+            String valuesLine = getCSVLine(values);
+            out.println(valuesLine);
 
         } catch (Exception e) {
-			e.printStackTrace();
+            e.printStackTrace();
         }
 
     }
 
-	// Comparator that compares String keys
-	private class ValueComparator implements Comparator<String> {
- 
-		HashMap<String, Integer> map = new HashMap<String, Integer>();
-	 
-		public ValueComparator(HashMap<String, Integer> map) {
-			this.map.putAll(map);
-		}
-	 
-		@Override
-		public int compare(String s1, String s2) {
-			return map.get(s2).compareTo(map.get(s1));  // Compare in descending order
-		}
-	}
+    // Comparator that compares String keys
+    private class ValueComparator implements Comparator<String> {
 
-	private TreeMap<String, Integer> getHighestMethodCounts(int numMethods) {
+        HashMap<String, Integer> map = new HashMap<String, Integer>();
 
-		// Sort TreeMap based on method counts
-		Comparator<String> comparator = new ValueComparator(methodCounts);
-		TreeMap<String, Integer> sortedMethodCounts = new TreeMap<String, Integer>(comparator);
-		sortedMethodCounts.putAll(methodCounts);
+        public ValueComparator(HashMap<String, Integer> map) {
+            this.map.putAll(map);
+        }
 
-		// Iterate sorted map and keep only numMethods entries
-		TreeMap<String, Integer> highestMethodCounts = new TreeMap<String, Integer>(comparator);
-		Iterator<Entry<String,Integer>> it = sortedMethodCounts.entrySet().iterator();
+        @Override
+        public int compare(String s1, String s2) {
+            return map.get(s2).compareTo(map.get(s1));  // Compare in descending order
+        }
+    }
 
-		for (int i = 0; i < numMethods; i++) {
-			Entry<String, Integer> entry = it.next();
-			highestMethodCounts.put(entry.getKey(), entry.getValue());
-		}
+    private TreeMap<String, Integer> getHighestMethodCounts(int numMethods) {
 
-		return highestMethodCounts;
-	}
+        // Sort TreeMap based on method counts
+        Comparator<String> comparator = new ValueComparator(methodCounts);
+        TreeMap<String, Integer> sortedMethodCounts = new TreeMap<String, Integer>(comparator);
+        sortedMethodCounts.putAll(methodCounts);
 
-	private String getCSVLine(List<String> values) {
+        // Iterate sorted map and keep only numMethods entries
+        TreeMap<String, Integer> highestMethodCounts = new TreeMap<String, Integer>(comparator);
+        Iterator<Entry<String, Integer>> it = sortedMethodCounts.entrySet().iterator();
 
-		StringBuilder csvBuilder = new StringBuilder();
-		Iterator<String> iter = values.iterator();
+        for (int i = 0; i < numMethods; i++) {
+            Entry<String, Integer> entry = it.next();
+            highestMethodCounts.put(entry.getKey(), entry.getValue());
+        }
 
-		csvBuilder.append(iter.next());
-		while (iter.hasNext()) {
-			csvBuilder.append(CSV_SEPARATOR);
-			csvBuilder.append(iter.next());
-		}
+        return highestMethodCounts;
+    }
 
-		return csvBuilder.toString();
-	}
+    private String getCSVLine(List<String> values) {
+
+        StringBuilder csvBuilder = new StringBuilder();
+        Iterator<String> iter = values.iterator();
+
+        csvBuilder.append(iter.next());
+        while (iter.hasNext()) {
+            csvBuilder.append(CSV_SEPARATOR);
+            csvBuilder.append(iter.next());
+        }
+
+        return csvBuilder.toString();
+    }
 
     public void addMethodCount(String name) {
         if (methodCounts.containsKey(name)) {

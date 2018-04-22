@@ -54,7 +54,7 @@ instrumentation:
 ref_instr: instrumentation maze run_inst
 
 run_inst:
-	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)/lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)/third-party/lib/* $(INST)StatisticsTool -dynamic $(RUN_DIR)$(MAZERUNNER) $(TOOL_OUTPUT)
+	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)/lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)/third-party/lib/* $(INST)InstrumentationTool -dynamic $(RUN_DIR)$(MAZERUNNER) $(TOOL_OUTPUT)
 
 run_httpserver:
 	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)/lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)/third-party/lib/* $(HTTPSERVER)WebServer
