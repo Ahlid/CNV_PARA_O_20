@@ -57,7 +57,7 @@ public class MetricsInstrumentation {
      * Method to print the metrics
      */
     public static synchronized void printDynamic(String foo) {
-        System.out.println(foo);
+        //System.out.println(foo);
         Metrics metrics = getMetricsForThread();
         metrics.print();
     }

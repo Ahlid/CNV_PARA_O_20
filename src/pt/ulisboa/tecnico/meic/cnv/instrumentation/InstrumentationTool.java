@@ -6,11 +6,14 @@ import java.io.File;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Vector;
+import java.util.List;
+import java.util.Arrays;
 import java.io.PrintWriter;
 
 public class InstrumentationTool {
 
     private static final String metricsInstrClass = "pt/ulisboa/tecnico/meic/cnv/instrumentation/MetricsInstrumentation";
+    private static List<String> methodWhitelist = Arrays.asList(new String[]{"getContent", "readObject", "isUnvisitedPassage", "isVisitedPassage", "isWall", "getX", "getY", "getHeight", "getPos", "solveAux", "compare"});
 
     public static void runInstrumentation(File in_dir, File out_dir) {
         String filelist[] = in_dir.list();
@@ -25,11 +28,13 @@ public class InstrumentationTool {
                 for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
 
                     Routine routine = (Routine) e.nextElement();
-                    routine.addBefore(metricsInstrClass, "dynMethodCount", new String(routine.getMethodName()));
+                    if (methodWhitelist.contains(routine.getMethodName())) {
+                        routine.addBefore(metricsInstrClass, "dynMethodCount", new String(routine.getMethodName()));
 
-                    for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
-                        BasicBlock bb = (BasicBlock) b.nextElement();
-                        bb.addBefore(metricsInstrClass, "dynBasicBlockCount", new Integer(bb.size()));
+                        for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
+                            BasicBlock bb = (BasicBlock) b.nextElement();
+                            bb.addBefore(metricsInstrClass, "dynBasicBlockCount", new Integer(bb.size()));
+                        }
                     }
 
                 }
