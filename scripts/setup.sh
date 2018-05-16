@@ -21,8 +21,8 @@ echo "Secret Access Key:"
 read secret
 mkdir ~/.aws
 echo [default] >> ~/.aws/credentials
-echo aws_access_key_id=$(key) >> ~/.aws/credentials
-echo aws_secret_access_key=$(secret) >> ~/.aws/credentials
+echo aws_access_key_id=$key >> ~/.aws/credentials
+echo aws_secret_access_key=$secret >> ~/.aws/credentials
 
 echo ===================================
 echo = Copying autostart item          =
