@@ -47,7 +47,7 @@ public class Proxy {
     }
 
     public void start() throws Exception {
-        // logger.info("Launching Scaler...");
+        logger.info("Launching Scaler...");
         scaler.start();
 
         logger.info("Launching Proxy at port " + PROXY_PORT);

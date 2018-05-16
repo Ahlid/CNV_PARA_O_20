@@ -135,32 +135,4 @@ public class WebServer {
         }
     }
 
-    static class MyOutputHandler implements HttpHandler {
-
-        @Override
-        public void handle(HttpExchange he) throws IOException {
-
-            String query = he.getRequestURI().getQuery();
-            String f = query.split("f=")[1];
-
-            Headers headers = he.getResponseHeaders();
-            headers.add("Content-Type", "text/html");
-
-            File file = new File(f);
-            byte[] bytes = new byte[(int) file.length()];
-            System.out.println(file.getAbsolutePath());
-            System.out.println("length:" + file.length());
-
-            FileInputStream fileInputStream = new FileInputStream(file);
-            BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
-            bufferedInputStream.read(bytes, 0, bytes.length);
-            bufferedInputStream.close();
-
-            he.sendResponseHeaders(responseCode_OK, file.length());
-            OutputStream outputStream = he.getResponseBody();
-            outputStream.write(bytes, 0, bytes.length);
-            outputStream.close();
-        }
-    }
-
 }

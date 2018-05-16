@@ -41,7 +41,7 @@ public class Scaler extends Thread{
  *  Default constructor, initialize AWS and if no instances are running, start one.
  */
 
-    public Scaler(){ // throws Exception {
+    public Scaler(){ 
         try {
             logger.info("Initializing Scaler...");
             AWS.init();

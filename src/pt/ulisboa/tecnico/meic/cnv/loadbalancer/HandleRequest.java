@@ -20,24 +20,6 @@ public class HandleRequest implements HttpHandler {
 
     static final int responseCode_OK = 200;
 
-
-
-    final String HTML = "<html><title>maze runner </title><br><body>" +
-                        "<hr><form action=\"/mzrun.html\">" +
-                        "<b>Model Filename:</b> <input name=\"m\" type=\"text\"  ><br>" +
-                        "<b>Start Point</b><br>" +
-                        "x0: <input name=\"x0\" type=\"text\">" +
-                        "y0: <input name=\"y0\" type=\"text\" ><br>" +
-                        "<b>Finish Point </b><br>" +
-                        "x1: <input name=\"x1\" type=\"text\">" +
-                        "y1: <input name=\"y1\" type=\"text\" ><br>" +
-                        "<b>Velocity and Strategy</b><br>" +
-                        "Velocity: <input name=\"v\" type=\"text\">" +
-                        "Strategy: <input name=\"s\" type=\"text\"><br><br>" +
-                        "<input type=\"submit\" value=\"Submit\">" +
-                        "</form>" +
-                        "</body></html>";
-
     private Scaler scaler;
     private Balancer balancer;
 
@@ -83,10 +65,10 @@ public class HandleRequest implements HttpHandler {
 
 
             } else {
-                t.sendResponseHeaders(responseCode_OK, HTML.length());
-                OutputStream os = t.getResponseBody();
-                os.write(HTML.getBytes());
-                os.close();
+                //t.sendResponseHeaders(responseCode_OK, HTML.length());
+                //OutputStream os = t.getResponseBody();
+                //os.write(HTML.getBytes());
+                //os.close();
             }
         } else {
             logger.warn("Unsupported method");
@@ -104,8 +86,10 @@ public class HandleRequest implements HttpHandler {
         BufferedReader in = new BufferedReader(
                 new InputStreamReader(wc.getInputStream()));
 
-        String answer = in.readLine();
+        String answer = new String();
+        for (String line; (line = in.readLine()) != null; answer += line + "\n");
         in.close();
+        System.out.println("answer was: " + answer);
         return answer;
 
     }
