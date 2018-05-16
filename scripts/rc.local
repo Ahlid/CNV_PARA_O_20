@@ -8,3 +8,4 @@ touch /var/lock/subsys/local
 
 #java -cp /home/ec2-user/CNV_PARA_O_20/ WebServer
 (cd /home/ec2-user/CNV_PARA_O_20/ && make run_httpserver)
+(wget -q -O - http://169.254.169.254/latest/meta-data/instance-id) >> /home/ec2-user/id.txt
