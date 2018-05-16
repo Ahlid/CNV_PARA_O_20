@@ -36,7 +36,6 @@ public class WebServer {
         server.createContext(Context.INDEX, new MyHandler());
         server.createContext(Context.HEALTH, new MyHandler());
         server.createContext(Context.MAZERUN, new MyMazeRunnerHandler());
-        server.createContext(Context.OUTPUT, new MyOutputHandler());
         server.setExecutor(executor);
         server.start();
     }

@@ -6,6 +6,5 @@ public final class Context{
     public static String TEST = "/test";
     public static String HEALTH = "/health";
     public static String MAZERUN = "/mzrun.html";
-    public static String OUTPUT = "/output";
 
 }
