@@ -2,10 +2,8 @@ package pt.ulisboa.tecnico.meic.cnv.storage;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import org.apache.log4j.Logger;
 
 public class UpdateAmiName {
-    final static Logger logger = Logger.getLogger(UpdateAmiName.class);
 
     public static void main(String[] args) throws Exception {
         Messenger m = null;
@@ -15,13 +13,14 @@ public class UpdateAmiName {
         try {
             m = new Messenger();
             if (args.length >= 1){
-                System.out.println(args[0]);
+                System.out.println("Changing Worker AMI to: " + args[0]);
                 res = m.changeAmiName(args[0]);
+                System.out.println("Result: " + res);
             }
             else {
                 result = m.getAMIName();
+                System.out.println("Current AMI is: " + result);
             }
-            logger.info("res: " + res + " result: " + result);
 
         }
         catch (AmazonServiceException ase) {

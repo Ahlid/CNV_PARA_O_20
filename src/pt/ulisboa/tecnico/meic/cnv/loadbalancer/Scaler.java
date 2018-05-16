@@ -53,7 +53,7 @@ public class Scaler extends Thread{
             if (workers.size() == 0) {
                 logger.info("No workers detected, starting one, waiting 1min to pool aws...");
                 //startWorker();
-                //AWS.createInstance();
+                AWS.createInstance();
                 Thread.sleep(60000);
                 workers = AWS.getInstances();
             }
@@ -96,7 +96,7 @@ public class Scaler extends Thread{
                     }
                 }
             }
-            System.out.println("create: " + createInstance + "threshold: " + (Double.valueOf(cpu)/Double.valueOf(workers.size())>CPU_THRESHOLD));
+            System.out.println("create: " + createInstance + " threshold: " + (Double.valueOf(cpu)/Double.valueOf(workers.size())>CPU_THRESHOLD));
             //if(createInstance || (Double.valueOf(cpu)/Double.valueOf(workers.size())>CPU_THRESHOLD)){ startWorker(); }
 
         }

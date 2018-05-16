@@ -91,46 +91,39 @@ public class WebServer {
             System.out.println("Request params: " + params);
 
             // Main class expects parameters in order <x0,y0,x1,y1,v,s,m,mazeNameOut>
-            List<String> paramsMain = new ArrayList<>(params.values());
-            String mazeNameIn = paramsMain.remove(0);
-            paramsMain.add(mazeNameIn);
 
             String mazeNameOut = "maze" + timestamp + ".html";
-            paramsMain.add(mazeNameOut);
 
             String response;
 
             try {
 
-                String[] paramsMainArray = paramsMain.toArray(new String[paramsMain.size()]);
-                Main.main(paramsMainArray);
+                String[] paramsArray = { params.get("m"),params.get("x0"),params.get("y0"),params.get("x1"),params.get("y1"),params.get("v"),params.get("s")};
+                Main.main(paramsArray);
 
-                response = "<html><title>maze runner </title><br><body>" +
-                    "<hr><form action=\"/mzrun.html\">" +
-                    "<b>Model Filename:</b> <input name=\"m\" type=\"text\"  ><br><br>" +
-                    "x0: <input name=\"x0\" type=\"text\">" +
-                    "y0: <input name=\"y0\" type=\"text\" ><br>" +
-                    "x1: <input name=\"x1\" type=\"text\">" +
-                    "y1: <input name=\"y1\" type=\"text\" ><br>" +
-                    "Velocity: <input name=\"v\" type=\"text\"><br>" +
-                    "Strategy: <input name=\"s\" type=\"text\"><br>" +
-                    "<input type=\"submit\" value=\"Submit\">" +
-                    "</form>" +
-                    "<a href=/output?f=" + mazeNameOut + ">Output</a><hr>" +
-                    "<iframe align=center width=600 height=400 src=/output?f=" + mazeNameOut +"></iframe>" +
-                    "</body></html>";
+                File file = new File(mazeNameOut);
+                byte[] bytes = new byte[(int) file.length()];
+    
+                FileInputStream fileInputStream = new FileInputStream(file);
+                BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
+                bufferedInputStream.read(bytes, 0, bytes.length);
+                bufferedInputStream.close();
+    
+                t.sendResponseHeaders(responseCode_OK, file.length());
+                OutputStream outputStream = t.getResponseBody();
+                outputStream.write(bytes, 0, bytes.length);
+                outputStream.close();
+
             } catch(Exception e) {
                 System.out.println(e.toString());
                 response = "<html><title>maze runner </title><br><body>" +
                 ""+ e.toString() + "<hr>" +
                 "</body></html>";
+                t.sendResponseHeaders(responseCode_OK, response.length());
+                OutputStream os = t.getResponseBody();
+                os.write(response.getBytes());
+                os.close();
             }
-
-            t.sendResponseHeaders(responseCode_OK, response.length());
-            OutputStream os = t.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
-
             // Remove threadId from data structures
             threads.remove(threadId);
             requestParams.remove(threadId);

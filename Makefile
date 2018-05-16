@@ -62,6 +62,9 @@ run_httpserver:
 run_balancer:
 	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)/lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)/third-party/lib/* $(LOADBALANCER)Proxy
 
+updateami:
+	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)/lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)/third-party/lib/* $(STORAGE)UpdateAmiName $(name)
+
 clean: 
 	$(RM) -d $(RUN_DIR)$(MAZERUNNER)*.class -d $(RUN_DIR)$(MAZERUNNER)exceptions/*.class $(RUN_DIR)$(MAZERUNNER)render/*.class $(RUN_DIR)$(MAZERUNNER)strategies/*.class $(RUN_DIR)$(MAZERUNNER)strategies/datastructure/*.class
 	$(RM) $(RUN_DIR)$(BIT)highBIT/*.class
