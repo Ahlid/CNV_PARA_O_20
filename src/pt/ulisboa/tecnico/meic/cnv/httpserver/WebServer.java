@@ -93,12 +93,16 @@ public class WebServer {
             // Main class expects parameters in order <x0,y0,x1,y1,v,s,m,mazeNameOut>
 
             String mazeNameOut = "maze" + timestamp + ".html";
+            params.put("out", mazeNameOut);
 
             String response;
 
             try {
 
-                String[] paramsArray = { params.get("m"),params.get("x0"),params.get("y0"),params.get("x1"),params.get("y1"),params.get("v"),params.get("s")};
+                String[] paramsArray = {params.get("x0"), params.get("y0"),
+                                        params.get("x1"),params.get("y1"),
+                                        params.get("v"),params.get("s"),
+                                        params.get("m"),params.get("out")};
                 Main.main(paramsArray);
 
                 File file = new File(mazeNameOut);
