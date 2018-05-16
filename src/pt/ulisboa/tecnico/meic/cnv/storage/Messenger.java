@@ -29,45 +29,6 @@ public class Messenger {
         //this.setup();
     }
 
-    public static void main(String[] args) throws Exception {
-        Messenger m = null;
-        int res=0;
-        List<String> result=null;
-        String result1;
-        try {
-            m = new Messenger();
-            WorkerInstance w = new WorkerInstance();
-            w.setId("12345");
-            w.setStatus("running");
-            w.setCPU(0.50);
-            res = m.putMessage(w );
-            listMyTables();
-            result = m.getMessage(w);
-            //deleteTable("my-favorite-movies-table");
-            for(String s : result){
-                System.out.println( s + " \n");
-            }
-            //logger.info("message from dynamoDB: " + result);
-            result1 = m.getAMIName();
-            logger.info("result: " + result);
-
-        }
-        catch (AmazonServiceException ase) {
-            System.out.println("Caught an AmazonServiceException, which means your request made it "
-                    + "to AWS, but was rejected with an error response for some reason.");
-            System.out.println("Error Message:    " + ase.getMessage());
-            System.out.println("HTTP Status Code: " + ase.getStatusCode());
-            System.out.println("AWS Error Code:   " + ase.getErrorCode());
-            System.out.println("Error Type:       " + ase.getErrorType());
-            System.out.println("Request ID:       " + ase.getRequestId());
-        } catch (AmazonClientException ace) {
-            System.out.println("Caught an AmazonClientException, which means the client encountered "
-                    + "a serious internal problem while trying to communicate with AWS, "
-                    + "such as not being able to access the network.");
-            System.out.println("Error Message: " + ace.getMessage());
-        }
-    }
-
     public void setup() throws Exception{
 
         // Create table to keep settings

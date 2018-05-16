@@ -33,7 +33,8 @@ public class Proxy {
             proxy.start();
 
         } catch (Exception e) {
-            System.out.println("oops at proxy: " + e.getMessage());
+            System.out.println("Oops at proxy: " + e.getMessage());
+            System.out.println("Probably problems with ~/.aws/credentials file!");
         }
     }
 

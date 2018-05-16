@@ -33,17 +33,14 @@ public class HandleRequest implements HttpHandler {
     @Override
     public void handle(HttpExchange t) throws IOException {
         if (t.getRequestMethod().equals("GET")) {
-            //logger.info("GET request from " + t.getRequestURI());
             String query =  t.getRequestURI().getQuery();
             String response = null;
-
             LinkedHashMap<String, String> params = new LinkedHashMap<>();
 
-            //logger.info("Params are: " + query);
             if (query != null) {
 
                 WorkerInstance worker = balancer.getInstance();
-                //logger.info("Sending request to " + worker.getAddress() + t.getRequestURI().toString());
+                logger.info("Sending request to " + worker.getAddress() + t.getRequestURI().toString());
                 try {
                     response = callWorker(worker.getAddress(), t.getRequestURI().toString(), "12345");
                 }
@@ -65,10 +62,11 @@ public class HandleRequest implements HttpHandler {
 
 
             } else {
-                //t.sendResponseHeaders(responseCode_OK, HTML.length());
-                //OutputStream os = t.getResponseBody();
-                //os.write(HTML.getBytes());
-                //os.close();
+                String HTML = "null";
+                t.sendResponseHeaders(responseCode_OK, HTML.length());
+                OutputStream os = t.getResponseBody();
+                os.write(HTML.getBytes());
+                os.close();
             }
         } else {
             logger.warn("Unsupported method");
@@ -89,7 +87,6 @@ public class HandleRequest implements HttpHandler {
         String answer = new String();
         for (String line; (line = in.readLine()) != null; answer += line + "\n");
         in.close();
-        System.out.println("answer was: " + answer);
         return answer;
 
     }

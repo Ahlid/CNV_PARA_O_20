@@ -18,6 +18,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.Headers;
+import pt.ulisboa.tecnico.meic.cnv.storage.Messenger;
 
 import pt.ulisboa.tecnico.meic.cnv.mazerunner.maze.*;
 
@@ -25,11 +26,28 @@ public class WebServer {
 
     private static final int PORT = 8000;
     private static final int responseCode_OK = 200;
-    public static String ROOT_FOLDER = "/home/ec2-user/web/";
+    public static String HOME_FOLDER = "/home/ec2-user/";
     private static final Set<Long> threads = new HashSet<>();
     public static HashMap<Long, Object> requestParams = new HashMap<>();
+    private static Messenger messenger = null;
+    private static String amiId = null;
 
     public static void main(String[] args) throws Exception {
+
+        // read machine details from ~/id.txt - fetched when machine is booting
+        List<String> id = new ArrayList<>();
+        id =getMachineDetails();
+        // instance id
+        String amiId = id.get(0);
+        // instance public address
+        String address = id.get(1) + ":" + PORT;
+
+        // create new messenger, to put information at dynamo
+        messenger = new Messenger();
+        // send machine data to dynamo
+        messenger.newWorker(amiId, address);
+        messenger.workerUpdate(amiId,"0",0,true);
+
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
         ExecutorService executor = Executors.newCachedThreadPool();
         server.createContext(Context.TEST, new MyHandler());
@@ -56,6 +74,9 @@ public class WebServer {
     static class MyMazeRunnerHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange t) throws IOException {
+
+            // Work Size
+            Integer size = 0;
 
             // Get timestamp to generate a file with a name without collisions
             Timestamp time = new Timestamp(System.currentTimeMillis());
@@ -96,6 +117,9 @@ public class WebServer {
 
             String response;
 
+            // TODO: calculate size to update in dynamo
+            messenger.workerUpdate(amiId, "0%",size, true);
+
             try {
 
                 String[] paramsArray = {params.get("x0"), params.get("y0"),
@@ -127,11 +151,45 @@ public class WebServer {
                 os.write(response.getBytes());
                 os.close();
             }
-            // Remove threadId from data structures
-            threads.remove(threadId);
+
+            // Check if it's last thread to reset counters
+            if (threads.size() == 1) {
+                messenger.workerUpdate(amiId, "0%",0, false);
+            }
+            // Remove thread from running list
+            threads.remove(Thread.currentThread().getId());
             requestParams.remove(threadId);
 
         }
+    }
+
+    public static List<String> getMachineDetails(){
+        List<String> details = new ArrayList<>();
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new FileReader(HOME_FOLDER +"id.txt"));
+            try {
+                StringBuilder sb = new StringBuilder();
+                String line = br.readLine();
+
+                while (line != null) {
+                    details.add(line);
+                    sb.append(line);
+                    sb.append(System.lineSeparator());
+                    line = br.readLine();
+                }
+                //String everything = sb.toString();
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
+            finally {
+                br.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return details;
     }
 
 }
