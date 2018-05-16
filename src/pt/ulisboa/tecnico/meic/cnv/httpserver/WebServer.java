@@ -117,9 +117,6 @@ public class WebServer {
 
             String response;
 
-            // TODO: calculate size to update in dynamo
-            messenger.workerUpdate(amiId, "0%",size, true);
-
             try {
 
                 String[] paramsArray = {params.get("x0"), params.get("y0"),
@@ -141,6 +138,8 @@ public class WebServer {
                 outputStream.write(bytes, 0, bytes.length);
                 outputStream.close();
 
+                System.out.println("Finished!");
+
             } catch(Exception e) {
                 System.out.println(e.toString());
                 response = "<html><title>maze runner </title><br><body>" +
@@ -152,10 +151,7 @@ public class WebServer {
                 os.close();
             }
 
-            // Check if it's last thread to reset counters
-            if (threads.size() == 1) {
-                messenger.workerUpdate(amiId, "0%",0, false);
-            }
+
             // Remove thread from running list
             threads.remove(Thread.currentThread().getId());
             requestParams.remove(threadId);

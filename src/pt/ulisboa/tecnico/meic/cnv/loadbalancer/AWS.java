@@ -51,7 +51,7 @@ public class AWS {
      */
 
     final static Logger logger = Logger.getLogger(AWS.class);
-    // AWS EC2 Endpoint (Ireland)
+    // AWS EC2 Endpoint (US - East North Virginia)
     private static final String REGION = "us-east-1";
     // Instance id to be used
     private static String AMI_ID = "ami-5ba10224";
