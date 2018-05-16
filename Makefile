@@ -23,7 +23,7 @@ export _JAVA_OPTIONS=-XX:-UseSplitVerifier
 refresh: | clean all
 
 ## Make all : (warning: changing this order WILL break things)
-all: | create_bin maze bit storage loadbalancer httpserver instrumentation
+all: | create_bin maze bit worker storage loadbalancer httpserver instrumentation
 
 ############### Sub sections #####################
 ## Create bin directory
@@ -49,6 +49,9 @@ httpserver:
 instrumentation:
 	$(JAVAC) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J) $(SRC_DIR)$(INST)*.java -d $(RUN_DIR)
 
+worker:
+	$(JAVAC) $(JFLAGS) -cp $(RUN_DIR) $(SRC_DIR)$(LOADBALANCER)WorkerInstance.java -d $(RUN_DIR)
+
 ref_instr: instrumentation maze run_inst
 
 run_inst:
@@ -70,5 +73,6 @@ clean:
 	$(RM) $(RUN_DIR)$(BIT)highBIT/*.class
 	$(RM) $(RUN_DIR)$(BIT)lowBIT/*.class
 	$(RM) $(RUN_DIR)$(STORAGE)*.class
+	$(RM) $(RUN_DIR)$(LOADBALANCER)*.class
 	$(RM) $(RUN_DIR)$(HTTPSERVER)*.class
 	$(RM) $(RUN_DIR)$(INST)*.class
