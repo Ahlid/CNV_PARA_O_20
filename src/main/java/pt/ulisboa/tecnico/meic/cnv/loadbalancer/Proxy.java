@@ -28,7 +28,6 @@ public class Proxy {
 
     }
 
-
     public static void main(String[] args) {
 
         try {
@@ -75,12 +74,14 @@ public class Proxy {
 
             String instanceHeader = "<tr><th>ID</th>" + 
                                     "<th>Status</th>" + 
+                                    "<th>CPU</th>" +
                                     "<th>Address</th></tr>";
             String instances = "";
             for(WorkerInstance w : scaler.getInstances()){
                 instances += "<tr><th>" +  w.getId() + "</th>" + 
                              "<th>" +  w.getStatus() + "</th>" + 
-                             "<th>" + " <a href=\"http://" + w.getAddress() + ":8080/health\">" + 
+                             "<th>" +  w.getCPU() + "</th>" +
+                             "<th>" + " <a href=\"http://" + w.getAddress() + ":8000/health\">" + 
                              w.getAddress() + "</a></th></tr>";
             }
 

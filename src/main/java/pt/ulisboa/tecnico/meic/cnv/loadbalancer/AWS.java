@@ -178,11 +178,12 @@ public class AWS {
                         }
                     });
                     //System.out.println("printing dp - size: " + datapoints.size());
-                    //for (Datapoint dp : datapoints) {
-                    //    System.out.println(" CPU utilization for instance " + name +
-                    //            " = " + dp.getAverage() + " max:" + dp.getMaximum() + " @ " + dp.getTimestamp());
-                    //    worker.setCPU(dp.getAverage());
-                    //    }
+                    System.out.println("==============================");
+                    System.out.println("CPU USE for instance: " + name);
+                    for (Datapoint dp : datapoints) {
+                        System.out.println("Average: " + dp.getAverage() + "| Max: " + dp.getMaximum() + " | Time: " + dp.getTimestamp());
+                        worker.setCPU(dp.getAverage());
+                        }
                     workers.add(worker);
                     }
 

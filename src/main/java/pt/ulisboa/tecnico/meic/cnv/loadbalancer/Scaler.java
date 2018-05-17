@@ -12,7 +12,7 @@ import javax.swing.text.StyledEditorKit;
 public class Scaler extends Thread{
     final static Logger logger = Logger.getLogger(Scaler.class);
     private final static Integer CLEANUP = 4;
-    private final static Double CPU_THRESHOLD = 50.0;
+    private final static Double CPU_THRESHOLD = 60.0;
     private final static Integer SIZE_THRESHOLD = 500;
 
     private static final String METRICS_TOPIC = "Metrics";
@@ -33,7 +33,7 @@ public class Scaler extends Thread{
                 ping();
             }
             catch (Exception e) {
-                System.out.println("something went wrong at: " + e.getMessage());
+                System.out.println("Error checking if scaling is needed..." + e.getMessage());
             }
         }
     };
@@ -64,10 +64,13 @@ public class Scaler extends Thread{
         cpu = 0.0;
         Boolean createInstance = false;
         try {
-            workers = AWS.getInstances();
+            workers = aws.getInstances();
 
             if (workers.size() < 1){ createInstance = true;}
 
+
+            // TODO we need to check if we need new workers
+            // or to delete unused workers
             for (WorkerInstance w : workers){
 
                 if (w.getSize() >= SIZE_THRESHOLD) {createInstance = true;}
@@ -86,23 +89,22 @@ public class Scaler extends Thread{
                     }
                     //System.out.println(progress.get(0) + " - " + progress.get(1) + " - " + w.getStatus() + " - " + progress.get(2));
                     if (w.getStatus().equals("running")) {
-                        //System.out.println("it's running cpu use is " + w.getCPU());
                         cpu += w.getCPU();
                     }
                 }
             }
             System.out.println("Create instance?: " + createInstance + " | Threshold: " + (Double.valueOf(cpu)/Double.valueOf(workers.size())>CPU_THRESHOLD));
-            if(createInstance){ 
+            if(createInstance || (Double.valueOf(cpu)/Double.valueOf(workers.size())>CPU_THRESHOLD)){ 
                 startWorker(); 
             }
 
         }
         catch (Exception e) {
             e.printStackTrace();
-            System.out.println("oops... old workers:" + e.getMessage());
+            System.out.println("Error retreiving workers:" + e.getMessage());
         }
         for(WorkerInstance w : workers){
-            System.out.println("id: " + w.getId() + " | state: " + w.getStatus() + " | cpu: " + w.getCPU().toString());
+            System.out.println("Id: " + w.getId() + " | State: " + w.getStatus() + " | CPU: " + w.getCPU().toString());
             messenger.putMessage(w);
         }
     }

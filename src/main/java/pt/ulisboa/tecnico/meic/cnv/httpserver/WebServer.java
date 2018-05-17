@@ -50,7 +50,6 @@ public class WebServer {
 
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
         ExecutorService executor = Executors.newCachedThreadPool();
-        server.createContext(Context.TEST, new MyHandler());
         server.createContext(Context.INDEX, new MyHandler());
         server.createContext(Context.HEALTH, new MyHandler());
         server.createContext(Context.MAZERUN, new MyMazeRunnerHandler());
