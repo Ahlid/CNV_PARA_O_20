@@ -106,6 +106,7 @@ public class AWS {
         String result;
         RunInstancesResult instanceResult = ec2.runInstances(runInstanceReq);
         WorkerInstance worker = new WorkerInstance();
+        
         worker.setId(instanceResult.getReservation().getInstances().get(0).getInstanceId());
         worker.setStatus(instanceResult.getReservation().getInstances().get(0).getState().toString());
         worker.setAddress(instanceResult.getReservation().getInstances().get(0).getPublicDnsName());
@@ -176,12 +177,12 @@ public class AWS {
                             return o1.getTimestamp().compareTo(o2.getTimestamp());
                         }
                     });
-                    System.out.println("printing dp - size: " + datapoints.size());
-                    for (Datapoint dp : datapoints) {
-                        System.out.println(" CPU utilization for instance " + name +
-                                " = " + dp.getAverage() + " max:" + dp.getMaximum() + " @ " + dp.getTimestamp());
-                        worker.setCPU(dp.getAverage());
-                        }
+                    //System.out.println("printing dp - size: " + datapoints.size());
+                    //for (Datapoint dp : datapoints) {
+                    //    System.out.println(" CPU utilization for instance " + name +
+                    //            " = " + dp.getAverage() + " max:" + dp.getMaximum() + " @ " + dp.getTimestamp());
+                    //    worker.setCPU(dp.getAverage());
+                    //    }
                     workers.add(worker);
                     }
 

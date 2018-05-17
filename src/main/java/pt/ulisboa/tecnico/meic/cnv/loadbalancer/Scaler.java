@@ -20,9 +20,11 @@ public class Scaler extends Thread{
     private Balancer balancer = null;
     private boolean running = true;
     private Messenger messenger = null;
+    private AWS aws = null;
     private Integer cleanCounter = 0;
     private Double cpu = 0.0;
     ArrayList<WorkerInstance> workers;
+    
 
     TimerTask sayHello = new TimerTask() {
         @Override
@@ -44,19 +46,12 @@ public class Scaler extends Thread{
     public Scaler(){ 
         try {
             logger.info("Initializing Scaler...");
-            AWS.init();
+            aws = new AWS();
+            aws.init();
+            workers = aws.getInstances();
             messenger = new Messenger();
-            workers = AWS.getInstances();
             resetPool();
-            //messenger.deleteTable(METRICS_TOPIC);
             messenger.setup();
-            if (workers.size() == 0) {
-                logger.info("No workers detected, starting one, waiting 1min to pool aws...");
-                //startWorker();
-                AWS.createInstance();
-                Thread.sleep(60000);
-                workers = AWS.getInstances();
-            }
             logger.info("Starting with " + workers.size() + " workers.");
         }
         catch (Exception e) {
@@ -87,7 +82,7 @@ public class Scaler extends Thread{
                     else {
                         w.setProgress(Double.valueOf(progress.get(0)), Integer.valueOf(progress.get(1)));
                         w.setWork(false);
-                        System.out.println("finish" + w.getId());
+                        System.out.println("finished! " + w.getId());
                     }
                     //System.out.println(progress.get(0) + " - " + progress.get(1) + " - " + w.getStatus() + " - " + progress.get(2));
                     if (w.getStatus().equals("running")) {
@@ -96,17 +91,18 @@ public class Scaler extends Thread{
                     }
                 }
             }
-            System.out.println("create: " + createInstance + " threshold: " + (Double.valueOf(cpu)/Double.valueOf(workers.size())>CPU_THRESHOLD));
-            //if(createInstance || (Double.valueOf(cpu)/Double.valueOf(workers.size())>CPU_THRESHOLD)){ startWorker(); }
+            System.out.println("Create instance?: " + createInstance + " | Threshold: " + (Double.valueOf(cpu)/Double.valueOf(workers.size())>CPU_THRESHOLD));
+            if(createInstance){ 
+                startWorker(); 
+            }
 
         }
         catch (Exception e) {
             e.printStackTrace();
             System.out.println("oops... old workers:" + e.getMessage());
         }
-        System.out.println("workers: " + workers.size());
         for(WorkerInstance w : workers){
-            System.out.println("id: " + w.getId() + " > state: " + w.getStatus() + " cpu: " + w.getCPU().toString());
+            System.out.println("id: " + w.getId() + " | state: " + w.getStatus() + " | cpu: " + w.getCPU().toString());
             messenger.putMessage(w);
         }
     }
@@ -115,17 +111,28 @@ public class Scaler extends Thread{
         return this.workers;
     }
 
+    public ArrayList<WorkerInstance> getInstances(){
+        try{
+            return aws.getInstances();
+        }
+        catch (Exception e){
+            return null;
+        }
+    }
+
     public void startWorker(){
-        //WorkerInstance worker =
-        //        AWS.createInstance();
-        //workers.add(worker);
-        //messenger.putMessage(worker);
-        //balancer.addWorkerBalancer(worker);
+        WorkerInstance worker = aws.createInstance();
+        workers.add(worker);
+        // instances start with and empty address
+        // dynamodb doesnt support empty
+        worker.setAddress("empty");
+        messenger.putMessage(worker);
+        balancer.addWorkerBalancer(worker);
     }
 
     public void terminateWorker(WorkerInstance worker){
         balancer.removeWorkerBalancer(worker);
-        AWS.terminateInstance(worker.getId());
+        aws.terminateInstance(worker.getId());
     }
 
     public synchronized void resetPool(){

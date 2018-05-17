@@ -29,7 +29,7 @@ public class LoadBalancer implements Balancer {
 
 
         for (WorkerInstance w : workers){
-            System.out.println("[lb]:id : " + w.getId() + ", cpu use: " + w.getCPU() + ", progress: " + w.getProgress() + ", size: " + w.getSize() + ", working: " + w.working());
+            System.out.println("[lb] :id : " + w.getId() + ", cpu use: " + w.getCPU() + ", progress: " + w.getProgress() + ", size: " + w.getSize() + ", working: " + w.working());
             if (!w.working() || (w.getCPU() < cpu) && (w.getProgress() > 0.50) || w.getSize() == 0 ){
                 cpu = w.getCPU();
                 progress = w.getProgress();
@@ -44,14 +44,14 @@ public class LoadBalancer implements Balancer {
 
     @Override
     public synchronized void addWorkerBalancer(WorkerInstance instance) {
-        logger.info("Remove worker " + instance.getId());
-        workers.remove(instance);
+        logger.info("Add worker " + instance.getId());
+        workers.add(instance);
     }
 
     @Override
     public synchronized void removeWorkerBalancer(WorkerInstance instance) {
-        logger.info("Add worker " + instance.getId());
-        workers.add(instance);
+        logger.info("Remove worker " + instance.getId());
+        workers.remove(instance);
     }
 
 }

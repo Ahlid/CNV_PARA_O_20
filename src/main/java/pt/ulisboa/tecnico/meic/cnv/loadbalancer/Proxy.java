@@ -2,8 +2,12 @@ package pt.ulisboa.tecnico.meic.cnv.loadbalancer;
 
 import java.net.InetSocketAddress;
 import java.util.Timer;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.concurrent.Executors;
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import org.apache.log4j.Logger;
 
@@ -54,6 +58,7 @@ public class Proxy {
         logger.info("Launching Proxy at port " + PROXY_PORT);
         proxiedServer = HttpServer.create(new InetSocketAddress(PROXY_PORT), 0);
         proxiedServer.createContext("/", new HandleRequest(scaler, balancer));
+        proxiedServer.createContext("/lb", new MyHandler());
         proxiedServer.setExecutor(Executors.newCachedThreadPool());
         proxiedServer.start();
 
@@ -62,5 +67,32 @@ public class Proxy {
         // And From your main() method or any other method
         Timer timer = new Timer();
         timer.schedule(scaler.sayHello, 0, 30000);
+    }
+
+    static class MyHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange t) throws IOException {
+
+            String instanceHeader = "<tr><th>ID</th>" + 
+                                    "<th>Status</th>" + 
+                                    "<th>Address</th></tr>";
+            String instances = "";
+            for(WorkerInstance w : scaler.getInstances()){
+                instances += "<tr><th>" +  w.getId() + "</th>" + 
+                             "<th>" +  w.getStatus() + "</th>" + 
+                             "<th>" + " <a href=\"http://" + w.getAddress() + ":8080/health\">" + 
+                             w.getAddress() + "</a></th></tr>";
+            }
+
+            String response = "<html><head><title>load balancer</title><head>" +
+                              "<body><h3>Load Balancer Status</h3>" +
+                              "<table>" + instanceHeader + instances +"</table>" +
+                              "</body>";
+            
+            t.sendResponseHeaders(200, response.length());
+            OutputStream os = t.getResponseBody();
+            os.write(response.getBytes());
+            os.close();
+        }
     }
 }
