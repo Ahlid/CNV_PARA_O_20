@@ -2,7 +2,7 @@ JVM = java
 JAVAC = javac
 JFLAGS = 
 SHELL = /bin/bash
-SRC_DIR = src/
+SRC_DIR = src/main/java/
 PACKAGE = pt/ulisboa/tecnico/meic/cnv/
 HTTPSERVER = $(PACKAGE)httpserver/
 MAZERUNNER = $(PACKAGE)mazerunner/maze/
@@ -11,7 +11,7 @@ STORAGE = $(PACKAGE)storage/
 LOADBALANCER = $(PACKAGE)loadbalancer/
 
 LOG4J = lib/log4j-1.2.17.jar
-AWS_VERSION=1.11.308
+AWS_VERSION=1.11.313
 AWS=/home/ec2-user/aws-java-sdk-$(AWS_VERSION)/
 BIT = BIT/
 RUN_DIR = bin/
