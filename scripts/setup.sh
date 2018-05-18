@@ -21,7 +21,7 @@ echo ===================================
 AWS_SDK_DIR=$(echo aws-java-sdk-*)
 AWS_SDK_VERSION=${AWS_SDK_DIR#aws-java-sdk-}
 sed -i "s/AWS_VERSION=.*/AWS_VERSION=$AWS_SDK_VERSION/" ~/CNV_PARA_O_20/Makefile &&
-cd CNV_PARA_O_20/ && make all && cd .. &&
+cd CNV_PARA_O_20/ && make all && make run_inst && cd .. &&
 echo ===================================
 echo = Creating AWS Credentials        =   
 echo ===================================
@@ -33,9 +33,18 @@ mkdir ~/.aws
 echo [default] >> ~/.aws/credentials
 echo aws_access_key_id=$key >> ~/.aws/credentials
 echo aws_secret_access_key=$secret >> ~/.aws/credentials
-echo ===================================
-echo = Copying autostart item          =   
-echo ===================================
-sudo cp ~/CNV_PARA_O_20/scripts/rc.local /etc/rc.local
+echo [default] >> ~/.aws/config
+echo region=us-east-1 >> ~/.aws/config
+echo output=text >> ~/.aws/config
+echo =====================================
+echo = Creating worker and balancer AMIs =   
+echo =====================================
+INSTANCE_ID=$(ec2-metadata --instance-id | cut -d ' ' -f2)
+sudo cp ~/CNV_PARA_O_20/scripts/rc.local.worker /etc/rc.local
+echo "Creating AMI: worker-ami"
+aws ec2 create-image --instance-id $INSTANCE_ID --no-reboot --name worker-ami
+sudo cp ~/CNV_PARA_O_20/scripts/rc.local.balancer /etc/rc.local
+echo "Creating AMI: balancer-ami"
+aws ec2 create-image --instance-id $INSTANCE_ID --no-reboot --name balancer-ami
 
 echo Done

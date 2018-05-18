@@ -11,7 +11,7 @@ STORAGE = $(PACKAGE)storage/
 LOADBALANCER = $(PACKAGE)loadbalancer/
 
 LOG4J = lib/log4j-1.2.17.jar
-AWS_VERSION=1.11.313
+AWS_VERSION=1.11.331
 AWS=/home/ec2-user/aws-java-sdk-$(AWS_VERSION)/
 BIT = BIT/
 RUN_DIR = bin/
@@ -59,7 +59,7 @@ run_inst:
 	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)third-party/lib/* $(INST)InstrumentationTool $(RUN_DIR)$(MAZERUNNER)strategies/ $(TOOL_OUTPUT)strategies/
 	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)third-party/lib/* $(INST)InstrumentationTool $(RUN_DIR)$(MAZERUNNER)strategies/datastructure/ $(TOOL_OUTPUT)strategies/datastructure/
 
-run_httpserver:
+run_worker:
 	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)third-party/lib/* $(HTTPSERVER)WebServer
 
 run_balancer:
