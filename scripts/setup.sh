@@ -40,11 +40,17 @@ echo =====================================
 echo = Creating worker and balancer AMIs =   
 echo =====================================
 INSTANCE_ID=$(ec2-metadata --instance-id | cut -d ' ' -f2)
-sudo cp ~/CNV_PARA_O_20/scripts/rc.local.worker /etc/rc.local
 echo "Creating AMI: worker-ami"
-aws ec2 create-image --instance-id $INSTANCE_ID --no-reboot --name worker-ami
-sudo cp ~/CNV_PARA_O_20/scripts/rc.local.balancer /etc/rc.local
+sudo cp ~/CNV_PARA_O_20/scripts/rc.local.worker /etc/rc.local
+WORKER_AMI=$(aws ec2 create-image --instance-id $INSTANCE_ID --no-reboot --name worker-ami)
+aws ec2 wait image-available --filters "Name=name,Values=worker-ami"
+
 echo "Creating AMI: balancer-ami"
+sudo cp ~/CNV_PARA_O_20/scripts/rc.local.balancer /etc/rc.local
 aws ec2 create-image --instance-id $INSTANCE_ID --no-reboot --name balancer-ami
+aws ec2 wait image-available --filters "Name=name,Values=balancer-ami"
+
+echo "Updating Worker AMI on DynamoDB"
+cd CNV_PARA_O_20/ && make updateami name=$WORKER_AMI && cd .. &&
 
 echo Done
