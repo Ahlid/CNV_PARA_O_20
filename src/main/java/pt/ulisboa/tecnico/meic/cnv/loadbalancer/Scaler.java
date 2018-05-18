@@ -72,14 +72,15 @@ public class Scaler extends Thread{
     }
 
     public void ping(){
-        if(cleanCounter++ == CLEANUP){ 
-            cleanCounter = 0; 
-            // TODO we need to remove dead instances from dynamoDB
-            workers = aws.getInstances();
-        }
+        
         cpu = 0.0;
         Boolean createInstance = false;
         try {
+            if(cleanCounter++ == CLEANUP){ 
+                cleanCounter = 0; 
+                // TODO we need to remove dead instances from dynamoDB
+                workers = aws.getInstances();
+            }
 
             if (workers.size() < 1){ createInstance = true;}
 
