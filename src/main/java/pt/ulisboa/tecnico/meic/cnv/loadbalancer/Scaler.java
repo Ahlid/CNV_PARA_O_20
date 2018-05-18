@@ -24,6 +24,7 @@ public class Scaler extends Thread{
     private Integer cleanCounter = 0;
     private Double cpu = 0.0;
     ArrayList<WorkerInstance> workers;
+    private LinkedHashMap<String, String> configs = new LinkedHashMap<>();
     
 
     TimerTask sayHello = new TimerTask() {
@@ -46,11 +47,22 @@ public class Scaler extends Thread{
     public Scaler(){ 
         try {
             logger.info("Initializing Scaler...");
+            // New AWS connection
             aws = new AWS();
+            // Setup credentials
             aws.init();
-            workers = aws.getInstances();
+            // New messenger
             messenger = new Messenger();
+            // Setup db
             messenger.setup();
+            // Setup AMI Name
+            configs = messenger.fetchConfig();
+
+            aws.setupInstances(configs.get("AMI_Name"));
+            
+
+            workers = aws.getInstances();
+            
             resetPool();
             logger.info("Starting with " + workers.size() + " workers.");
         }
@@ -102,7 +114,7 @@ public class Scaler extends Thread{
             logger.error("Error retreiving workers:" + e.getMessage());
         }
         for(WorkerInstance w : workers){
-            logger.info("Id: " + w.getId() + " | State: " + w.getStatus() + " | CPU: " + w.getCPU().toString());
+            logger.info("Id: " + w.getId() + " | State: " + w.getStatus() + " | CPU: " + w.getCPU().toString() + "| Working: " + w.working());
             messenger.putMessage(w);
         }
     }
@@ -158,5 +170,22 @@ public class Scaler extends Thread{
     public void setState(Boolean state){
         this.running = state;
     }
+
+
+    public void setupConfig(LinkedHashMap<String,String> configs){
+        for (Map.Entry<String, String> entry : configs.entrySet()) {
+            String name = entry.getKey();
+            String value = entry.getValue();
+            messenger.changeConfig(name, value);
+            messenger.fetchConfig();
+            aws.setupInstances(configs.get("AMI_Name"));
+        }
+    }
+
+    public LinkedHashMap<String,String> getConfigs(){
+        return configs;
+    }
+
+    
 
 }

@@ -16,8 +16,7 @@ public class Messenger {
     final static Logger logger = Logger.getLogger(Messenger.class);
     static AmazonDynamoDB db = null;
 
-    private static final String AMI_TOPIC = "AMI Name";
-    private static final String AMI_TOPIC_TABLE = "myConfig";
+    private static final String CONFIG_TABLE = "myConfig";
 
     private static final String METRICS_TOPIC = "Metrics";
     private static final String METRICS_TABLE = "Metrics";
@@ -30,24 +29,7 @@ public class Messenger {
 
     public void setup() throws Exception{
 
-        // Create table to keep settings
-        String tableNameConfig = AMI_TOPIC_TABLE;
-
-        // Create a table with a primary hash key named 'name', which holds a string
-        CreateTableRequest createTableRequest = new CreateTableRequest().withTableName(tableNameConfig)
-                .withKeySchema(new KeySchemaElement().withAttributeName("name").withKeyType(KeyType.HASH))
-                .withAttributeDefinitions(new AttributeDefinition().withAttributeName("name").withAttributeType(ScalarAttributeType.S))
-                .withProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(1L));
-
-        // Create table if it does not exist yet
-        TableUtils.createTableIfNotExists(db.dynamoDB, createTableRequest);
-        // wait for the table to move into ACTIVE state
-        TableUtils.waitUntilActive(db.dynamoDB, tableNameConfig);
-
-        // Describe our new table
-        DescribeTableRequest describeTableRequest = new DescribeTableRequest().withTableName(tableNameConfig);
-        TableDescription tableDescription = db.dynamoDB.describeTable(describeTableRequest).getTable();
-        //System.out.println("Config Table Description: " + tableDescription + "\n");
+        createConfigTable();
 
         // setup table for metrics
         String tableName = METRICS_TABLE;
@@ -88,37 +70,6 @@ public class Messenger {
         //System.out.println("Metrics Table Description: " + tableDescription1 + "\n");
     }
 
-    // change name of AMI image for workers instances
-    public int changeAmiName(String payload){
-        // puts messages in Configuration table
-        Map<String, AttributeValue> item = newItem(AMI_TOPIC, payload);
-        PutItemRequest putItemRequest = new PutItemRequest(AMI_TOPIC_TABLE, item);
-        PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
-        return 1;
-    }
-
-    // get AMI image name for workers
-    public String getAMIName() {
-        // get messages from Configuration table
-        String name = null;
-        try {
-            HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
-            Condition condition = new Condition()
-                    .withComparisonOperator(ComparisonOperator.EQ.toString())
-                    .withAttributeValueList(new AttributeValue(AMI_TOPIC));
-            scanFilter.put("name", condition);
-            ScanRequest scanRequest = new ScanRequest(AMI_TOPIC_TABLE).withScanFilter(scanFilter);
-            ScanResult scanResult = db.dynamoDB.scan(scanRequest);
-            for (Map<String, AttributeValue> i : scanResult.getItems()) {
-                name = i.get("value").getS();
-            }
-            return name;
-        } catch (Exception e) {
-            logger.error("null" + e.getMessage());
-            return "null";
-        }
-    }
-
     // put messages in Metrics table
     public int newWorker(String id, String ip){
         // puts messages in Metrics table
@@ -129,19 +80,19 @@ public class Messenger {
     }
 
     // put messages in Metrics table
-    public int workerUpdate(String id, String progress,int size ,Boolean finish){
-        // puts messages in Metrics table
-        Map<String, AttributeValue> item = newJobItem(id, progress,size,finish );
-        PutItemRequest putItemRequest = new PutItemRequest(JOBS_TABLE, item);
-        PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
-        return 1;
-    }
-
-    // put messages in Metrics table
     public int putMessage(WorkerInstance instance){
         // puts messages in Metrics table
         Map<String, AttributeValue> item = newMetricsItem(instance.getId(), instance.getStatus(), instance.getCPU(), instance.getAddress());
         PutItemRequest putItemRequest = new PutItemRequest(METRICS_TABLE, item);
+        PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
+        return 1;
+    }
+
+    // put messages in Jobs table
+    public int workerUpdate(String id, String progress,int size ,Boolean finish){
+        // puts messages in Metrics table
+        Map<String, AttributeValue> item = newJobItem(id, progress,size,finish );
+        PutItemRequest putItemRequest = new PutItemRequest(JOBS_TABLE, item);
         PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
         return 1;
     }
@@ -254,4 +205,86 @@ public class Messenger {
             logger.error(e.getMessage());
         }
     }
+
+	/*
+	 * Configuration table
+	 */
+    private void createConfigTable() throws Exception{
+         // Create table to keep settings
+         String tableNameConfig = CONFIG_TABLE;
+
+         // Create a table with a primary hash key named 'name', which holds a string
+         CreateTableRequest createTableRequest = new CreateTableRequest().withTableName(tableNameConfig)
+                 .withKeySchema(new KeySchemaElement().withAttributeName("name").withKeyType(KeyType.HASH))
+                 .withAttributeDefinitions(new AttributeDefinition().withAttributeName("name").withAttributeType(ScalarAttributeType.S))
+                 .withProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(1L));
+ 
+         // Create table if it does not exist yet
+         TableUtils.createTableIfNotExists(db.dynamoDB, createTableRequest);
+         // wait for the table to move into ACTIVE state
+         TableUtils.waitUntilActive(db.dynamoDB, tableNameConfig);
+ 
+         // Describe our new table
+         DescribeTableRequest describeTableRequest = new DescribeTableRequest().withTableName(tableNameConfig);
+         TableDescription tableDescription = db.dynamoDB.describeTable(describeTableRequest).getTable();
+         //System.out.println("Config Table Description: " + tableDescription + "\n");
+    }
+
+        // change name of AMI image for workers instances
+        public int changeAmiName(String payload){
+            // puts messages in Configuration table
+            Map<String, AttributeValue> item = newItem("AMI_Name", payload);
+            PutItemRequest putItemRequest = new PutItemRequest(CONFIG_TABLE, item);
+            PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
+            return 1;
+        }
+
+        // change name of AMI image for workers instances
+        public int changeConfig(String name, String value){
+            // puts messages in Configuration table
+            Map<String, AttributeValue> item = newItem(name, value);
+            PutItemRequest putItemRequest = new PutItemRequest(CONFIG_TABLE, item);
+            PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
+            return 1;
+        }
+
+        public static LinkedHashMap<String, String> fetchConfig() {
+                    // get messages from Metrics table
+                    LinkedHashMap<String, String> result = new LinkedHashMap<>();
+                    try {
+
+                        ScanRequest scanRequest = new ScanRequest(CONFIG_TABLE);
+                        ScanResult scanResult = db.dynamoDB.scan(scanRequest);
+                        for (Map<String, AttributeValue> i : scanResult.getItems()){
+                            result.put((String)i.get("name").getS(),(String)i.get("value").getS());
+                        }
+                        return result;
+                    }
+                    catch (Exception e){
+                        logger.error( "exception: " + e.getMessage());
+                    }
+                return result;
+        }
+    
+        // get AMI image name for workers
+        public String getAMIName() {
+            // get messages from Configuration table
+            String name = null;
+            try {
+                HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
+                Condition condition = new Condition()
+                        .withComparisonOperator(ComparisonOperator.EQ.toString())
+                        .withAttributeValueList(new AttributeValue("AMI_Name"));
+                scanFilter.put("name", condition);
+                ScanRequest scanRequest = new ScanRequest(CONFIG_TABLE).withScanFilter(scanFilter);
+                ScanResult scanResult = db.dynamoDB.scan(scanRequest);
+                for (Map<String, AttributeValue> i : scanResult.getItems()) {
+                    name = i.get("value").getS();
+                }
+                return name;
+            } catch (Exception e) {
+                logger.error("null" + e.getMessage());
+                return "empty";
+            }
+        }
 }

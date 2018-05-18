@@ -35,7 +35,7 @@ public class LoadBalancer implements Balancer {
                 cpu = w.getCPU();
                 progress = w.getProgress();
                 faster = w;
-                logger.info("Faster worker: " + w.getAddress());
+                logger.info("Faster worker: " + w.getId());
             }
             else { return workers.get(0); }
         }
