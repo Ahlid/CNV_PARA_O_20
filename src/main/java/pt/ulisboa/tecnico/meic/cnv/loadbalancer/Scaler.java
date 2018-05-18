@@ -23,7 +23,7 @@ public class Scaler extends Thread{
     private AWS aws = null;
     private Integer cleanCounter = 0;
     private Double cpu = 0.0;
-    ArrayList<WorkerInstance> workers;
+    private ArrayList<WorkerInstance> workers;
     private LinkedHashMap<String, String> configs = new LinkedHashMap<>();
     
 
@@ -72,14 +72,16 @@ public class Scaler extends Thread{
     }
 
     public void ping(){
-        if(cleanCounter++ == CLEANUP){ cleanCounter = 0; }
+        if(cleanCounter++ == CLEANUP){ 
+            cleanCounter = 0; 
+            // TODO we need to remove dead instances from dynamoDB
+            workers = aws.getInstances();
+        }
         cpu = 0.0;
         Boolean createInstance = false;
         try {
-            workers = aws.getInstances();
 
             if (workers.size() < 1){ createInstance = true;}
-
 
             // TODO we need to check if we need new workers
             // or to delete unused workers
