@@ -26,7 +26,6 @@ public class Messenger {
     public Messenger() throws Exception {
         db = new AmazonDynamoDB();
         db.init();
-        //this.setup();
     }
 
     public void setup() throws Exception{
@@ -115,7 +114,8 @@ public class Messenger {
             }
             return name;
         } catch (Exception e) {
-            return "null" + e.getMessage();
+            logger.error("null" + e.getMessage());
+            return "null";
         }
     }
 
@@ -166,7 +166,7 @@ public class Messenger {
             return result;
         }
         catch (Exception e){
-            System.out.println( "null: " + e.getMessage());
+            logger.error( "exception: " + e.getMessage());
         }
         return result;
     }
@@ -193,7 +193,7 @@ public class Messenger {
                 return result;
             }
             catch (Exception e){
-                System.out.println( "null: " + e.getMessage());
+                logger.error( "exception: " + e.getMessage());
             }
         return result;
     }
@@ -231,7 +231,7 @@ public class Messenger {
         ListTablesResult tables = db.dynamoDB.listTables();
         List<String> tableNames = tables.getTableNames();
 
-        System.out.println("Listing table names");
+        logger.info("Listing table names");
 
         for(String n : tableNames){
             System.out.println(n);
@@ -242,16 +242,16 @@ public class Messenger {
 
         //Table table = db.dynamoDB.getTable(tableName);
         try {
-            System.out.println("Issuing DeleteTable request for " + tableName);
+            logger.info("Issuing DeleteTable request for " + tableName);
             db.dynamoDB.deleteTable(tableName);
 
-            System.out.println("Waiting for " + tableName + " to be deleted...this may take a while...");
+            logger.info("Waiting for " + tableName + " to be deleted...this may take a while...");
 
             //table.waitForDelete();
         }
         catch (Exception e) {
-            System.err.println("DeleteTable request failed for " + tableName);
-            System.err.println(e.getMessage());
+            logger.error("DeleteTable request failed for " + tableName);
+            logger.error(e.getMessage());
         }
     }
 }

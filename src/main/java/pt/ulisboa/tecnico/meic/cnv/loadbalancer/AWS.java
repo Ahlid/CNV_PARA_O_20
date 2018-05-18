@@ -177,11 +177,9 @@ public class AWS {
                             return o1.getTimestamp().compareTo(o2.getTimestamp());
                         }
                     });
-                    //System.out.println("printing dp - size: " + datapoints.size());
-                    System.out.println("==============================");
-                    System.out.println("CPU USE for instance: " + name);
+                    logger.info("CPU USE for instance: " + name + "Datapoints: " + datapoints.size());
                     for (Datapoint dp : datapoints) {
-                        System.out.println("Average: " + dp.getAverage() + "| Max: " + dp.getMaximum() + " | Time: " + dp.getTimestamp());
+                        logger.info("Average: " + dp.getAverage() + "| Max: " + dp.getMaximum() + " | Time: " + dp.getTimestamp());
                         worker.setCPU(dp.getAverage());
                         }
                     workers.add(worker);
@@ -194,7 +192,7 @@ public class AWS {
         }
         }
 
-        System.out.println("running instances: " + runningInstances);
+        logger.info("Running instances: " + runningInstances);
 
         return workers;
     }

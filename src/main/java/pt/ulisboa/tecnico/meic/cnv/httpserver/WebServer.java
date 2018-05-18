@@ -38,7 +38,7 @@ public class WebServer {
         List<String> id = new ArrayList<>();
         id =getMachineDetails();
         // instance id
-        String amiId = id.get(0);
+        amiId = id.get(0);
         // instance public address
         String address = id.get(1) + ":" + PORT;
 

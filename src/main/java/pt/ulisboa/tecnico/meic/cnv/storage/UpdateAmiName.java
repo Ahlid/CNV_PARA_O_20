@@ -12,6 +12,7 @@ public class UpdateAmiName {
 
         try {
             m = new Messenger();
+            m.setup();
             if (args.length >= 1){
                 System.out.println("Changing Worker AMI to: " + args[0]);
                 res = m.changeAmiName(args[0]);

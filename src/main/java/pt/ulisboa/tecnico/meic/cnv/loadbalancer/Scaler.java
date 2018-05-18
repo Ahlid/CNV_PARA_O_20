@@ -33,7 +33,7 @@ public class Scaler extends Thread{
                 ping();
             }
             catch (Exception e) {
-                System.out.println("Error checking if scaling is needed..." + e.getMessage());
+                logger.error("Error checking if scaling is needed..." + e.getMessage());
             }
         }
     };
@@ -50,8 +50,8 @@ public class Scaler extends Thread{
             aws.init();
             workers = aws.getInstances();
             messenger = new Messenger();
-            resetPool();
             messenger.setup();
+            resetPool();
             logger.info("Starting with " + workers.size() + " workers.");
         }
         catch (Exception e) {
@@ -75,25 +75,23 @@ public class Scaler extends Thread{
 
                 if (w.getSize() >= SIZE_THRESHOLD) {createInstance = true;}
                 List<String> progress = messenger.getProgress(w.getId());
-                System.out.println(w.getSize());
+                logger.info("Progress: " + progress.toString());
                 if (progress != null && progress.size() ==3) {
                     if (progress.get(2).equals("false")) {
                         w.setProgress(Double.valueOf(progress.get(0)), Integer.valueOf(progress.get(1)));
-                        System.out.println("not finish" + w.getId());
                         w.setWork(true);
                     }
                     else {
                         w.setProgress(Double.valueOf(progress.get(0)), Integer.valueOf(progress.get(1)));
                         w.setWork(false);
-                        System.out.println("finished! " + w.getId());
                     }
-                    //System.out.println(progress.get(0) + " - " + progress.get(1) + " - " + w.getStatus() + " - " + progress.get(2));
+                    logger.info(progress.get(0) + " - " + progress.get(1) + " - " + w.getStatus() + " - " + progress.get(2));
                     if (w.getStatus().equals("running")) {
                         cpu += w.getCPU();
                     }
                 }
             }
-            System.out.println("Create instance?: " + createInstance + " | Threshold: " + (Double.valueOf(cpu)/Double.valueOf(workers.size())>CPU_THRESHOLD));
+            logger.info("Create instance?: " + createInstance + " | Threshold: " + (Double.valueOf(cpu)/Double.valueOf(workers.size())>CPU_THRESHOLD));
             if(createInstance || (Double.valueOf(cpu)/Double.valueOf(workers.size())>CPU_THRESHOLD)){ 
                 startWorker(); 
             }
@@ -101,10 +99,10 @@ public class Scaler extends Thread{
         }
         catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Error retreiving workers:" + e.getMessage());
+            logger.error("Error retreiving workers:" + e.getMessage());
         }
         for(WorkerInstance w : workers){
-            System.out.println("Id: " + w.getId() + " | State: " + w.getStatus() + " | CPU: " + w.getCPU().toString());
+            logger.info("Id: " + w.getId() + " | State: " + w.getStatus() + " | CPU: " + w.getCPU().toString());
             messenger.putMessage(w);
         }
     }

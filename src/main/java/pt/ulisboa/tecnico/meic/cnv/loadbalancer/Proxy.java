@@ -72,20 +72,33 @@ public class Proxy {
         @Override
         public void handle(HttpExchange t) throws IOException {
 
+            String style = "<style>" +
+                                "table, th, td {" +
+                                "border: 1px solid black;" +
+                                "border-collapse: collapse;}" +
+                            "th, td {" +
+                                "padding: 5px;" +
+                                "text-align: left;}" +
+                            "</style>";
+
             String instanceHeader = "<tr><th>ID</th>" + 
                                     "<th>Status</th>" + 
+                                    "<th>Progress</th>" +
+                                    "<th>Working</th>" +
                                     "<th>CPU</th>" +
                                     "<th>Address</th></tr>";
             String instances = "";
             for(WorkerInstance w : scaler.getInstances()){
                 instances += "<tr><th>" +  w.getId() + "</th>" + 
                              "<th>" +  w.getStatus() + "</th>" + 
+                             "<th>" +  w.getProgress() + "</th>" + 
+                             "<th>" +  w.working() + "</th>" + 
                              "<th>" +  w.getCPU() + "</th>" +
                              "<th>" + " <a href=\"http://" + w.getAddress() + ":8000/health\">" + 
                              w.getAddress() + "</a></th></tr>";
             }
 
-            String response = "<html><head><title>load balancer</title><head>" +
+            String response = "<html><head><title>load balancer</title>"+ style +"<head>" +
                               "<body><h3>Load Balancer Status</h3>" +
                               "<table>" + instanceHeader + instances +"</table>" +
                               "</body>";
