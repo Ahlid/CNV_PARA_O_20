@@ -6,4 +6,4 @@
 
 touch /var/lock/subsys/local
 
-(runuser -l ec2-user -c 'cd /home/ec2-user/CNV_PARA_O_20/; make run_balancer')
+(runuser -l ec2-user -c 'cd CNV_PARA_O_20/ && echo "Starting balancer at $(date)" >> balancer.log && make run_balancer &>> balancer.log')

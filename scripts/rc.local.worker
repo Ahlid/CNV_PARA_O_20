@@ -6,4 +6,4 @@
 
 touch /var/lock/subsys/local
 
-(runuser -l ec2-user -c 'cd /home/ec2-user/CNV_PARA_O_20/; make run_worker')
+(runuser -l ec2-user -c 'cd CNV_PARA_O_20/ && echo "Starting worker at $(date)" >> worker.log && make run_worker &>> worker.log')

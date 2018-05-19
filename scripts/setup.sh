@@ -53,7 +53,7 @@ aws ec2 wait image-available --image-ids $BALANCER_AMI_ID &&
 echo "Balancer AMI Id: $BALANCER_AMI_ID"
 
 echo "Updating Worker AMI on DynamoDB"
-cd CNV_PARA_O_20/ && make updateami name=$WORKER_AMI_ID > /dev/null && cd .. &&
+cd CNV_PARA_O_20/ && make updateami name=$WORKER_AMI_ID &> /dev/null && cd .. &&
 echo Done
 
 echo "Terminating current instance since it is no longer needed"
