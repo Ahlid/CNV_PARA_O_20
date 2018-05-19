@@ -17,7 +17,7 @@ public class Proxy {
     final static Logger logger = Logger.getLogger(Proxy.class);
     
     private HttpServer proxiedServer = null;
-    private static int PROXY_PORT = 8080;
+    private static int PROXY_PORT = 80;
     
     private static Balancer balancer = null;
     private static Scaler scaler = null;
