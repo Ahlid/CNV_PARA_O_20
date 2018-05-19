@@ -33,7 +33,7 @@ public class Messenger {
         createConfigTable();
         createIDTable(WORKERS_TABLE);
         createIDTable(METRICS_TABLE);
-        //getWorkersTable();
+        getWorkersTable();
     }
     
     /*
@@ -46,6 +46,14 @@ public class Messenger {
     public int newWorker(String id, String hostname){
         // puts messages in Metrics table
         Map<String, AttributeValue> item = newWorkerItem(id, "pending", 0.0, hostname, false, 0.0);
+        PutItemRequest putItemRequest = new PutItemRequest(WORKERS_TABLE, item);
+        PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
+        return 1;
+    }
+    // put messages in Metrics table
+    public int endWorker(String id){
+        // puts messages in Metrics table
+        Map<String, AttributeValue> item = newDeadWorkerItem(id, "dead");
         PutItemRequest putItemRequest = new PutItemRequest(WORKERS_TABLE, item);
         PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
         return 1;
@@ -83,6 +91,14 @@ public class Messenger {
         return item;
     }
 
+    private static Map<String, AttributeValue> newDeadWorkerItem(String id, String status) {
+        Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
+        item.put("id", new AttributeValue(id));
+        item.put("status", new AttributeValue(status));
+        
+        return item;
+    }
+
     public static LinkedHashMap<String, String> getWorkersTable() {
         // get messages from Metrics table
         LinkedHashMap<String, String> result = new LinkedHashMap<>();
@@ -91,7 +107,7 @@ public class Messenger {
             ScanRequest scanRequest = new ScanRequest(WORKERS_TABLE);
             ScanResult scanResult = db.dynamoDB.scan(scanRequest);
             for (Map<String, AttributeValue> i : scanResult.getItems()){
-                logger.info((String)i.get("id").getS() +  " : " + (String)i.get("status").getS());
+                //logger.info((String)i.get("id").getS() +  " : " + String.valueOf(i.get("working").getBOOL()) + (String)i.get("status").getS());
                 result.put((String)i.get("id").getS(),(String)i.get("status").getS());
                 // TODO missing, return rest of items
             }

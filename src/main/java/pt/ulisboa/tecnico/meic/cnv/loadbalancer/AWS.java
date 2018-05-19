@@ -186,7 +186,7 @@ public class AWS {
             }
         }
         
-        logger.info("Running instances: " + runningInstances);
+        //logger.info("Running instances: " + runningInstances);
         
         return workers;
     }

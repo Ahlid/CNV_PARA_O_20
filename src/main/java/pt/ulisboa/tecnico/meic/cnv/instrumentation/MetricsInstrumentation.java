@@ -7,7 +7,7 @@ import java.util.LinkedHashMap;
 
 public class MetricsInstrumentation {
 
-    private static long BB_SIZE = 2000;
+    private static long BB_SIZE = 20000;
 
     /**
      * The hashMap for the metrics on each thread execution

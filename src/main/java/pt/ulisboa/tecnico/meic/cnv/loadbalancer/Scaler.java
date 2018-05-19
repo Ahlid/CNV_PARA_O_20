@@ -80,6 +80,7 @@ public class Scaler extends Thread{
                 cleanCounter = 0; 
                 // TODO we need to remove dead instances from dynamoDB
                 workers = aws.getInstances();
+
             }
 
             if (workers.size() < 1){ createInstance = true;}
@@ -151,6 +152,16 @@ public class Scaler extends Thread{
     }
 
     public synchronized void resetPool(){
+
+        LinkedHashMap<String, String> workerData = messenger.getWorkersTable();
+        for (Map.Entry<String, String> entry : workerData.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            logger.info("key: " + key + " value: " + value);
+            messenger.endWorker(key);
+            // now work with key and value...
+        }
+
         for (WorkerInstance w : workers){
             if(!w.getStatus().equals("running")) {
                 terminateWorker(w);
