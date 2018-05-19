@@ -175,7 +175,7 @@ public class AWS {
                     });
                     logger.info("CPU USE for instance: " + name + " | Datapoints: " + datapoints.size());
                     for (Datapoint dp : datapoints) {
-                        logger.info("Average: " + dp.getAverage() + "| Max: " + dp.getMaximum() + " | Time: " + dp.getTimestamp());
+                        //logger.info("Average: " + dp.getAverage() + "| Max: " + dp.getMaximum() + " | Time: " + dp.getTimestamp());
                         worker.setCPU(dp.getAverage());
                     }
                     workers.add(worker);

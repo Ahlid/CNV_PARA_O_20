@@ -7,7 +7,7 @@ import java.util.LinkedHashMap;
 
 public class MetricsInstrumentation {
 
-    private static long BB_SIZE = 20000;
+    private static long BB_SIZE = 1000000;
 
     /**
      * The hashMap for the metrics on each thread execution
@@ -54,7 +54,7 @@ public class MetricsInstrumentation {
         metrics.setDyn_bb_count(metrics.getDyn_bb_count() + 1);
         // Notifier
         if( metrics.getDyn_bb_count() % BB_SIZE == 0 ){
-            WebServer.updateMetrics(metrics.getDyn_bb_count(), false);
+            WebServer.updateMetrics(metrics.getDyn_instr_count(), metrics.getDyn_bb_count(), false);
         }
     }
 
@@ -70,7 +70,8 @@ public class MetricsInstrumentation {
     public static synchronized void endOfThreadExecution(String foo) {
         Long threadId = Thread.currentThread().getId();
         Metrics metrics = getMetricsForThread();
-        WebServer.updateMetrics(metrics.getDyn_bb_count(), true);
+        // Notify about end of execution
+        WebServer.updateMetrics(metrics.getDyn_instr_count(), metrics.getDyn_bb_count(), true);
         threadMetrics.put(threadId, new Metrics());
     }
 
@@ -79,6 +80,9 @@ public class MetricsInstrumentation {
         Long threadId = Thread.currentThread().getId();
         System.out.println(threadId);
         Metrics metrics = getMetricsForThread();
+        // Notify about end of execution
+        WebServer.updateMetrics((long) 0, (long) 0, false);
+
         metrics.setThreadID((int) (long) threadId);
         metrics.setRequestParams((LinkedHashMap) WebServer.requestParams.get(threadId));
 

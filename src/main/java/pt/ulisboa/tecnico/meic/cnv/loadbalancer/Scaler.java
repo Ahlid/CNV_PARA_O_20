@@ -11,7 +11,7 @@ import javax.swing.text.StyledEditorKit;
 
 public class Scaler extends Thread{
     final static Logger logger = Logger.getLogger(Scaler.class);
-    private final static Integer CLEANUP = 4;
+    private final static Integer CLEANUP = 3;
     private final static Double CPU_THRESHOLD = 60.0;
     private final static Integer SIZE_THRESHOLD = 500;
 
@@ -74,14 +74,16 @@ public class Scaler extends Thread{
         cpu = 0.0;
         Boolean createInstance = false;
         try {
-            if(cleanCounter++ == CLEANUP){ 
+            if(cleanCounter == CLEANUP){ 
                 cleanCounter = 0; 
+                syncWorkers();
                 // TODO we need to remove dead instances from dynamoDB
                 workers = aws.getInstances();
-
             }
+            cleanCounter++;
+            
             // THIS SHOULD NOT BE DONE EVERY TIME
-            workers = aws.getInstances();
+            //workers = aws.getInstances();
 
             if (workers.size() < 1){ createInstance = true;}
 
@@ -123,6 +125,25 @@ public class Scaler extends Thread{
         }
     }
 
+    public List<WorkerInstance> syncWorkers(){
+        LinkedHashMap<String, Map<String,String>> workerData =  messenger.getWorkersTable();
+        List<WorkerInstance> w = new ArrayList<>();
+        logger.info("sync data: " + workerData.toString());
+
+        for (WorkerInstance wo : workers){
+            logger.info("exists:" + workerData.containsKey(wo.getId()));
+        }
+
+        // for (Map.Entry<String, Map<String,String>> entry : workerData.entrySet()) {
+        //     String key = entry.getKey();
+        //     Map<String,String> value = entry.getValue();
+        //     logger.info("id: " + key + " value: " + value.get("status"));
+        //     logger.info("exists: " + workers.contains(key));
+        //     //messenger.endWorker(key);
+        // }
+        return w;
+    }
+
     public List<WorkerInstance> getWorkers(){
         return this.workers;
     }
@@ -153,13 +174,12 @@ public class Scaler extends Thread{
 
     public synchronized void resetPool(){
 
-        LinkedHashMap<String, String> workerData = messenger.getWorkersTable();
-        for (Map.Entry<String, String> entry : workerData.entrySet()) {
+        LinkedHashMap<String, Map<String,String>> workerData = messenger.getWorkersTable();
+        for (Map.Entry<String, Map<String,String>> entry : workerData.entrySet()) {
             String key = entry.getKey();
-            String value = entry.getValue();
-            logger.info("key: " + key + " value: " + value);
+            Map<String,String> value = entry.getValue();
+            logger.info("key: " + key + " value: " + value.get("status"));
             messenger.endWorker(key);
-            // now work with key and value...
         }
 
         for (WorkerInstance w : workers){
@@ -185,13 +205,12 @@ public class Scaler extends Thread{
         this.running = state;
     }
 
-
     public void setupConfig(LinkedHashMap<String,String> configs){
         for (Map.Entry<String, String> entry : configs.entrySet()) {
             String name = entry.getKey();
             String value = entry.getValue();
             messenger.changeConfig(name, value);
-            messenger.fetchConfig();
+            configs = messenger.fetchConfig();
             aws.setupInstances(configs.get("AMI_Name"));
         }
     }

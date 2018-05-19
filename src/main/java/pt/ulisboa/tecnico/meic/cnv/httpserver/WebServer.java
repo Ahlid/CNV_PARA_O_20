@@ -35,6 +35,7 @@ public class WebServer {
     public static String HOME_FOLDER = "/home/ec2-user/";
     private static final Set<Long> threads = new HashSet<>();
     public static HashMap<Long, Object> requestParams = new HashMap<>();
+    public static HashMap<String, Object> pureRequest = new HashMap<>();
     private static HashMap<Long, Long> requestId = new HashMap<>();
     private static AtomicLong highestRequestId = new AtomicLong();
     private static Messenger messenger = null;
@@ -127,6 +128,7 @@ public class WebServer {
                 String paramName = param.split("=")[0];
                 String paramValue = param.split("=")[1];
                 params.put(paramName, paramValue);
+                pureRequest.put(paramName, paramValue);
             }
 
             logger.info("Request params: " + params);
@@ -136,8 +138,6 @@ public class WebServer {
             String mazeNameOut = "maze" + timestamp + ".html";
             params.put("out", mazeNameOut);
 
-            // Notify about new requests
-            updateMetrics((long) 0, false);
             // Notify that this worker is working
             updateWorker("running", true);
 
@@ -189,8 +189,14 @@ public class WebServer {
         }
     }
 
-    public static void updateMetrics(long bb, Boolean finished){
-        messenger.newMetrics(instanceId + "+" + requestId,requestId.toString(),String.valueOf(bb), finished);
+    public static void updateMetrics(long inst,long bb, Boolean finished){
+        Long threadId = Thread.currentThread().getId();
+        messenger.newMetrics(instanceId,
+                            String.valueOf(requestId.get(threadId)),
+                            String.valueOf(inst),
+                            String.valueOf(bb), 
+                            finished,
+                            pureRequest.toString());
     }
 
     public static void updateWorker(String status, Boolean working){

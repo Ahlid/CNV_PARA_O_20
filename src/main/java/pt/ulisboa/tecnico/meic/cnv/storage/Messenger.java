@@ -30,10 +30,9 @@ public class Messenger {
     
     public void setup() throws Exception{
         logger.info("Initializing DynamoDB...");
-        createConfigTable();
-        createIDTable(WORKERS_TABLE);
-        createIDTable(METRICS_TABLE);
-        getWorkersTable();
+        createTable(CONFIG_TABLE, "name");
+        createTable(WORKERS_TABLE, "id");
+        createMetricTable();
     }
     
     /*
@@ -42,34 +41,30 @@ public class Messenger {
     *
     */
     
-    // put messages in Metrics table
+    // Adds a new worker in Workers table
     public int newWorker(String id, String hostname){
-        // puts messages in Metrics table
         Map<String, AttributeValue> item = newWorkerItem(id, "pending", 0.0, hostname, false, 0.0);
         PutItemRequest putItemRequest = new PutItemRequest(WORKERS_TABLE, item);
         PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
         return 1;
     }
-    // put messages in Metrics table
+    // Set end state for worker in Workers table
     public int endWorker(String id){
-        // puts messages in Metrics table
         Map<String, AttributeValue> item = newDeadWorkerItem(id, "dead");
         PutItemRequest putItemRequest = new PutItemRequest(WORKERS_TABLE, item);
         PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
         return 1;
     }
-    // put messages in Metrics table
+    // put messages in Workers table
     public int workerUpdate(String id, String status,Double cpu, String hostname, Boolean working, Double progress){
-        // puts messages in Metrics table
         Map<String, AttributeValue> item = newWorkerItem(id, status, cpu, hostname, working, progress);
         PutItemRequest putItemRequest = new PutItemRequest(WORKERS_TABLE, item);
         PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
         return 1;
     }
     
-    // put messages in Metrics table
+    // put messages in Workers table
     public int putMessage(WorkerInstance instance){
-        // puts messages in Metrics table
         Map<String, AttributeValue> item = newWorkerItem(instance.getId(), instance.getStatus(), 
                                                         instance.getCPU(), instance.getAddress(), 
                                                         instance.working(), instance.getProgress());
@@ -81,8 +76,16 @@ public class Messenger {
     
     private static Map<String, AttributeValue> newWorkerItem(String id, String status, Double cpu, String address, Boolean working, Double progress) {
         Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
+        Map<String, AttributeValue> metric = newWorkerStatsItem( cpu, address, working, progress);
         item.put("id", new AttributeValue(id));
         item.put("status", new AttributeValue(status));
+        item.put("stats", new AttributeValue().withM(metric));
+        
+        return item;
+    }
+
+    private static Map<String, AttributeValue> newWorkerStatsItem( Double cpu, String address, Boolean working, Double progress) {
+        Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
         item.put("cpu", new AttributeValue().withS(cpu.toString()));
         item.put("address", new AttributeValue(address));
         item.put("working", new AttributeValue().withBOOL(working));
@@ -99,17 +102,21 @@ public class Messenger {
         return item;
     }
 
-    public static LinkedHashMap<String, String> getWorkersTable() {
-        // get messages from Metrics table
-        LinkedHashMap<String, String> result = new LinkedHashMap<>();
+    public static LinkedHashMap<String, Map<String,String>> getWorkersTable() {
+        // get messages from workers table
+        LinkedHashMap<String, Map<String,String>> result = new LinkedHashMap<>();
+        Map<String, String> stats = new LinkedHashMap<>();
         try {
             
             ScanRequest scanRequest = new ScanRequest(WORKERS_TABLE);
             ScanResult scanResult = db.dynamoDB.scan(scanRequest);
             for (Map<String, AttributeValue> i : scanResult.getItems()){
-                //logger.info((String)i.get("id").getS() +  " : " + String.valueOf(i.get("working").getBOOL()) + (String)i.get("status").getS());
-                result.put((String)i.get("id").getS(),(String)i.get("status").getS());
-                // TODO missing, return rest of items
+                stats.put("cpu", i.get("stats").getM().get("address").getS());
+                stats.put("address",i.get("stats").getM().get("address").getS());
+                stats.put("working", String.valueOf( i.get("stats").getM().get("working").getBOOL()));
+                stats.put("progress", i.get("stats").getM().get("progress").getS());
+                stats.put("status", i.get("status").getS());
+                result.put((String)i.get("id").getS(),stats);  
             }
             return result;
         }
@@ -124,20 +131,56 @@ public class Messenger {
     * Metrics Functions
     *
     */
-    private static Map<String, AttributeValue> newMetricsItem(String id, String request, String bb, Boolean finished) {
+    private void createMetricTable() throws Exception{
+        // Create table to keep settings
+        String tableName = METRICS_TABLE;
+        
+        // Create a table with a primary hash key named 'id', which holds a string
+        CreateTableRequest createTableRequest = new CreateTableRequest().withTableName(tableName);
+        createTableRequest.withKeySchema(new KeySchemaElement().withAttributeName("id").withKeyType(KeyType.HASH),
+                        new KeySchemaElement().withAttributeName("requestId").withKeyType(KeyType.RANGE));
+        //createTableRequest.withLocalSecondaryIndexes(makeLocalSecondaryIndexes());
+        createTableRequest.withAttributeDefinitions(new AttributeDefinition().withAttributeName("id").withAttributeType(ScalarAttributeType.S),
+                                 new AttributeDefinition().withAttributeName("requestId").withAttributeType(ScalarAttributeType.S));
+        createTableRequest.withProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(10L));
+        
+        // Create table if it does not exist yet
+        TableUtils.createTableIfNotExists(db.dynamoDB, createTableRequest);
+        // wait for the table to move into ACTIVE state
+        TableUtils.waitUntilActive(db.dynamoDB, tableName);
+        
+        // Describe our new table
+        DescribeTableRequest describeTableRequest1 = new DescribeTableRequest().withTableName(tableName);
+        TableDescription tableDescription1 = db.dynamoDB.describeTable(describeTableRequest1).getTable();
+    }
+    private static Map<String, AttributeValue> newMetricsItem(String instanceId, String requestId,String inst, String bb, Boolean finished, String params) {
         Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
-        item.put("id", new AttributeValue(id));
-        item.put("request", new AttributeValue(request));
-        item.put("bb", new AttributeValue(bb));
+        Map<String, AttributeValue> metric = newMItem( inst,  bb);
+        //Map<String, AttributeValue> metric = newMItem( inst,  bb);
+        item.put("id", new AttributeValue(instanceId));
+        item.put("requestId", new AttributeValue(requestId));
         item.put("finished", new AttributeValue().withBOOL(finished));
+        item.put("metrics",new AttributeValue().withM(metric));
+        item.put("params",new AttributeValue(params));
+        
+        return item;
+    }
+
+    private static Map<String, AttributeValue> newMItem(String inst, String bb) {
+        Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
+        item.put("inst", new AttributeValue(inst));
+        item.put("bb", new AttributeValue(bb));
         return item;
     }
 
 
+
+
     // put messages in Metrics table
-    public int newMetrics(String id, String request,String bb, Boolean finished){
+    public int newMetrics(String instanceId, String requestId, String inst, String bb, Boolean finished, String params){
         // puts messages in Metrics table
-        Map<String, AttributeValue> item = newMetricsItem(id, request, bb, finished );
+        Map<String, AttributeValue> item = newMetricsItem(instanceId, requestId, inst, bb, finished, params );
+        
         PutItemRequest putItemRequest = new PutItemRequest(METRICS_TABLE, item);
         PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
         return 1;
@@ -171,29 +214,9 @@ public class Messenger {
     
     /*
     *
-    * Configuration table
+    * Configuration functions
     * 
     */
-    private void createConfigTable() throws Exception{
-        // Create table to keep settings
-        String tableNameConfig = CONFIG_TABLE;
-        
-        // Create a table with a primary hash key named 'name', which holds a string
-        CreateTableRequest createTableRequest = new CreateTableRequest().withTableName(tableNameConfig)
-        .withKeySchema(new KeySchemaElement().withAttributeName("name").withKeyType(KeyType.HASH))
-        .withAttributeDefinitions(new AttributeDefinition().withAttributeName("name").withAttributeType(ScalarAttributeType.S))
-        .withProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(1L));
-        
-        // Create table if it does not exist yet
-        TableUtils.createTableIfNotExists(db.dynamoDB, createTableRequest);
-        // wait for the table to move into ACTIVE state
-        TableUtils.waitUntilActive(db.dynamoDB, tableNameConfig);
-        
-        // Describe our new table
-        DescribeTableRequest describeTableRequest = new DescribeTableRequest().withTableName(tableNameConfig);
-        TableDescription tableDescription = db.dynamoDB.describeTable(describeTableRequest).getTable();
-        //System.out.println("Config Table Description: " + tableDescription + "\n");
-    }
 
     // Config item 
     private static Map<String, AttributeValue> newConfigItem(String name, String value) {
@@ -269,15 +292,15 @@ public class Messenger {
     * Generic Tables
     * 
     */
-    private void createIDTable(String name) throws Exception{
+    private void createTable(String name, String key) throws Exception{
         // Create table to keep settings
         String tableName = name;
         
         // Create a table with a primary hash key named 'id', which holds a string
-        CreateTableRequest createTableRequest = new CreateTableRequest().withTableName(tableName)
-        .withKeySchema(new KeySchemaElement().withAttributeName("id").withKeyType(KeyType.HASH))
-        .withAttributeDefinitions(new AttributeDefinition().withAttributeName("id").withAttributeType(ScalarAttributeType.S))
-        .withProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(1L));
+        CreateTableRequest createTableRequest = new CreateTableRequest().withTableName(tableName);
+        createTableRequest.withKeySchema(new KeySchemaElement().withAttributeName(key).withKeyType(KeyType.HASH));
+        createTableRequest.withAttributeDefinitions(new AttributeDefinition().withAttributeName(key).withAttributeType(ScalarAttributeType.S));
+        createTableRequest.withProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(10L));
         
         // Create table if it does not exist yet
         TableUtils.createTableIfNotExists(db.dynamoDB, createTableRequest);
