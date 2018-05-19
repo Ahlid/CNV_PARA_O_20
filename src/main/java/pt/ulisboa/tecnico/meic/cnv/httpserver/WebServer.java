@@ -19,10 +19,13 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.Headers;
 import pt.ulisboa.tecnico.meic.cnv.storage.Messenger;
+import com.amazonaws.util.EC2MetadataUtils;
 
+import org.apache.log4j.Logger;
 import pt.ulisboa.tecnico.meic.cnv.mazerunner.maze.*;
 
 public class WebServer {
+    final static Logger logger = Logger.getLogger(WebServer.class);
 
     private static final int PORT = 8000;
     private static final int responseCode_OK = 200;
@@ -30,23 +33,25 @@ public class WebServer {
     private static final Set<Long> threads = new HashSet<>();
     public static HashMap<Long, Object> requestParams = new HashMap<>();
     private static Messenger messenger = null;
-    private static String amiId = null;
+    //private static String instanceId = null;
 
     public static void main(String[] args) throws Exception {
 
-        // read machine details from ~/id.txt - fetched when machine is booting
-        List<String> id = new ArrayList<>();
-        id =getMachineDetails();
-        // instance id
-        amiId = id.get(0);
-        // instance public address
-        String address = id.get(1) + ":" + PORT;
+        // Read worker machine details at startup
+        // Instance id
+        String instanceId = EC2MetadataUtils.getInstanceId();
+        logger.info("Instance Id: " + instanceId);
+        // HTTP server public endpoint
+        String endpoint = EC2MetadataUtils.getData("/latest/meta-data/public-hostname") + PORT;
+        logger.info("Public endpoint: " + endpoint);
+        //String privateEndpoint = EC2MetadataUtils.getPrivateIpAddress();
 
-        // create new messenger, to put information at dynamo
+        // Create new Messenger, to place information at Dynamo
         messenger = new Messenger();
-        // send machine data to dynamo
-        messenger.newWorker(amiId, address);
-        messenger.workerUpdate(amiId,"0",0,true);
+
+        // Send machine data to Dynamo
+        messenger.newWorker(instanceId, endpoint);
+        messenger.workerUpdate(instanceId,"0",0,true);
 
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
         ExecutorService executor = Executors.newCachedThreadPool();
@@ -155,35 +160,6 @@ public class WebServer {
             requestParams.remove(threadId);
 
         }
-    }
-
-    public static List<String> getMachineDetails(){
-        List<String> details = new ArrayList<>();
-        BufferedReader br = null;
-        try {
-            br = new BufferedReader(new FileReader(HOME_FOLDER +"id.txt"));
-            try {
-                StringBuilder sb = new StringBuilder();
-                String line = br.readLine();
-
-                while (line != null) {
-                    details.add(line);
-                    sb.append(line);
-                    sb.append(System.lineSeparator());
-                    line = br.readLine();
-                }
-                //String everything = sb.toString();
-            }
-            catch(Exception e){
-                e.printStackTrace();
-            }
-            finally {
-                br.close();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return details;
     }
 
 }
