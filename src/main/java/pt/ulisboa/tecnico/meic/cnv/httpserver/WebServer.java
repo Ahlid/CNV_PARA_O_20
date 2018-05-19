@@ -20,6 +20,8 @@ import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.Headers;
 import pt.ulisboa.tecnico.meic.cnv.storage.Messenger;
 
+import com.amazonaws.util.EC2MetadataUtils;
+
 import pt.ulisboa.tecnico.meic.cnv.mazerunner.maze.*;
 
 public class WebServer {
@@ -29,24 +31,31 @@ public class WebServer {
     public static String HOME_FOLDER = "/home/ec2-user/";
     private static final Set<Long> threads = new HashSet<>();
     public static HashMap<Long, Object> requestParams = new HashMap<>();
+    private static LinkedHashMap<String, String> requestID = new LinkedHashMap<>();
     private static Messenger messenger = null;
     private static String amiId = null;
+    private static String address = null;
+
 
     public static void main(String[] args) throws Exception {
 
-        // read machine details from ~/id.txt - fetched when machine is booting
-        List<String> id = new ArrayList<>();
-        id =getMachineDetails();
-        // instance id
-        amiId = id.get(0);
+        // LOCAL TESTING
+        //amiId = "i-04d65d02f3cea064d";
+        //address = "localhost";
+        
+        amiId = EC2MetadataUtils.getInstanceId();
         // instance public address
-        String address = id.get(1) + ":" + PORT;
+         address = EC2MetadataUtils.getData("/latest/meta-data/public-hostname") + ":" + PORT;
 
         // create new messenger, to put information at dynamo
         messenger = new Messenger();
         // send machine data to dynamo
+        // update dynamo with info about worker
         messenger.newWorker(amiId, address);
-        messenger.workerUpdate(amiId,"0",0,true);
+        // status , working
+        updateWorker("running", false);
+        
+
 
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
         ExecutorService executor = Executors.newCachedThreadPool();
@@ -104,14 +113,21 @@ public class WebServer {
                 String paramName = param.split("=")[0];
                 String paramValue = param.split("=")[1];
                 params.put(paramName, paramValue);
+                requestID.put(paramName, paramValue);
             }
 
             System.out.println("Request params: " + params);
+            
 
             // Main class expects parameters in order <x0,y0,x1,y1,v,s,m,mazeNameOut>
 
             String mazeNameOut = "maze" + timestamp + ".html";
             params.put("out", mazeNameOut);
+
+            // Notify about new requests
+            updateMetrics((long) 0, false);
+            // Notify that this worker is working
+            updateWorker("running", true);
 
             String response;
 
@@ -149,6 +165,9 @@ public class WebServer {
                 os.close();
             }
 
+            // Notify that this worker is not working
+            updateWorker("running", false);
+
 
             // Remove thread from running list
             threads.remove(Thread.currentThread().getId());
@@ -157,33 +176,12 @@ public class WebServer {
         }
     }
 
-    public static List<String> getMachineDetails(){
-        List<String> details = new ArrayList<>();
-        BufferedReader br = null;
-        try {
-            br = new BufferedReader(new FileReader(HOME_FOLDER +"id.txt"));
-            try {
-                StringBuilder sb = new StringBuilder();
-                String line = br.readLine();
+    public static void updateMetrics(long bb, Boolean finished){
+        messenger.newMetrics(amiId + "+" + requestID,requestID.toString(),String.valueOf(bb), finished);
+    }
 
-                while (line != null) {
-                    details.add(line);
-                    sb.append(line);
-                    sb.append(System.lineSeparator());
-                    line = br.readLine();
-                }
-                //String everything = sb.toString();
-            }
-            catch(Exception e){
-                e.printStackTrace();
-            }
-            finally {
-                br.close();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return details;
+    public static void updateWorker(String status, Boolean working){
+        messenger.workerUpdate(amiId,status,0.0,address,working,0.0);
     }
 
 }
