@@ -200,7 +200,8 @@ public class WebServer {
     }
 
     public static void updateWorker(String status, Boolean working){
-        messenger.workerUpdate(instanceId,status,0.0,endpoint,working,0.0);
+        // instanceId, status, cpu, endpoint, working, jobs
+        messenger.workerUpdate(instanceId,status,0.0,endpoint,working,requestId.size());
     }
 
 }

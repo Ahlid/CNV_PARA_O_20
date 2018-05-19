@@ -1,4 +1,4 @@
 #!/bin/bash
 
-rm -f ../../results.csv
+#rm -f ../../results.csv
 python perform_requests.py

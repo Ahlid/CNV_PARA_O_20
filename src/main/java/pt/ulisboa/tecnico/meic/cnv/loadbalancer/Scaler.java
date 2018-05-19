@@ -91,7 +91,7 @@ public class Scaler extends Thread{
             // or to delete unused workers
             for (WorkerInstance w : workers){
 
-                if (w.getSize() >= SIZE_THRESHOLD) {createInstance = true;}
+                if (w.getJobs() >= SIZE_THRESHOLD) {createInstance = true;}
                 List<String> progress = messenger.getProgress(w.getId());
                 logger.info("Progress: " + progress.toString());
                 if (progress != null && progress.size() ==3) {

@@ -43,7 +43,8 @@ public class Messenger {
     
     // Adds a new worker in Workers table
     public int newWorker(String id, String hostname){
-        Map<String, AttributeValue> item = newWorkerItem(id, "pending", 0.0, hostname, false, 0.0);
+        // instanceid, status, cpu, endpoint, working, jobs
+        Map<String, AttributeValue> item = newWorkerItem(id, "pending", 0.0, hostname, false, 0);
         PutItemRequest putItemRequest = new PutItemRequest(WORKERS_TABLE, item);
         PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
         return 1;
@@ -56,8 +57,8 @@ public class Messenger {
         return 1;
     }
     // put messages in Workers table
-    public int workerUpdate(String id, String status,Double cpu, String hostname, Boolean working, Double progress){
-        Map<String, AttributeValue> item = newWorkerItem(id, status, cpu, hostname, working, progress);
+    public int workerUpdate(String id, String status,Double cpu, String hostname, Boolean working, Integer jobs){
+        Map<String, AttributeValue> item = newWorkerItem(id, status, cpu, hostname, working, jobs);
         PutItemRequest putItemRequest = new PutItemRequest(WORKERS_TABLE, item);
         PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
         return 1;
@@ -67,16 +68,16 @@ public class Messenger {
     public int putMessage(WorkerInstance instance){
         Map<String, AttributeValue> item = newWorkerItem(instance.getId(), instance.getStatus(), 
                                                         instance.getCPU(), instance.getAddress(), 
-                                                        instance.working(), instance.getProgress());
+                                                        instance.working(), instance.getJobs());
         PutItemRequest putItemRequest = new PutItemRequest(WORKERS_TABLE, item);
         PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
         return 1;
     }
     
     
-    private static Map<String, AttributeValue> newWorkerItem(String id, String status, Double cpu, String address, Boolean working, Double progress) {
+    private static Map<String, AttributeValue> newWorkerItem(String id, String status, Double cpu, String address, Boolean working, Integer jobs) {
         Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
-        Map<String, AttributeValue> metric = newWorkerStatsItem( cpu, address, working, progress);
+        Map<String, AttributeValue> metric = newWorkerStatsItem( cpu, address, working, jobs);
         item.put("id", new AttributeValue(id));
         item.put("status", new AttributeValue(status));
         item.put("stats", new AttributeValue().withM(metric));
@@ -84,12 +85,12 @@ public class Messenger {
         return item;
     }
 
-    private static Map<String, AttributeValue> newWorkerStatsItem( Double cpu, String address, Boolean working, Double progress) {
+    private static Map<String, AttributeValue> newWorkerStatsItem( Double cpu, String address, Boolean working, Integer jobs) {
         Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
         item.put("cpu", new AttributeValue().withS(cpu.toString()));
         item.put("address", new AttributeValue(address));
         item.put("working", new AttributeValue().withBOOL(working));
-        item.put("progress", new AttributeValue().withS(progress.toString()));
+        item.put("jobs", new AttributeValue().withS(jobs.toString()));
         
         return item;
     }
