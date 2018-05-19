@@ -54,8 +54,21 @@ echo "Balancer AMI Id: $BALANCER_AMI_ID"
 
 echo "Updating Worker AMI on DynamoDB"
 cd CNV_PARA_O_20/ && make updateami name=$WORKER_AMI_ID &> /dev/null && cd .. &&
-echo Done
 
+echo =====================================
+echo = Creating worker and balancer SGs =   
+echo =====================================
+echo "Creating Security Group: CNV-worker-sg"
+aws ec2 create-security-group --description "Allows SSH + HTTP at a worker instance" --group-name CNV-worker-sg
+aws ec2 authorize-security-group-ingress --group-name CNV-worker-sg --protocol tcp --port 8000 --cidr 0.0.0.0/0
+aws ec2 authorize-security-group-ingress --group-name CNV-worker-sg --protocol tcp --port 22 --cidr 0.0.0.0/0
+
+echo "Creating Security Group: CNV-balancer-sg"
+aws ec2 create-security-group --description "Allows SSH + HTTP at the load balancer instance" --group-name CNV-balancer-sg
+aws ec2 authorize-security-group-ingress --group-name CNV-balancer-sg --protocol tcp --port 80 --cidr 0.0.0.0/0
+aws ec2 authorize-security-group-ingress --group-name CNV-balancer-sg --protocol tcp --port 22 --cidr 0.0.0.0/0
+
+echo Done
 echo "Terminating current instance as it is no longer needed"
 echo "You may now manually create an instance with the AMI: balancer-ami"
 aws ec2 terminate-instances --instance-ids $INSTANCE_ID &> /dev/null
