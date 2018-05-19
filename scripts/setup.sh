@@ -56,6 +56,6 @@ echo "Updating Worker AMI on DynamoDB"
 cd CNV_PARA_O_20/ && make updateami name=$WORKER_AMI_ID &> /dev/null && cd .. &&
 echo Done
 
-echo "Terminating current instance since it is no longer needed"
+echo "Terminating current instance as it is no longer needed"
 echo "You may now manually create an instance with the AMI: balancer-ami"
-aws ec2 terminate-instances --instance-ids $INSTANCE_ID
+aws ec2 terminate-instances --instance-ids $INSTANCE_ID &> /dev/null
