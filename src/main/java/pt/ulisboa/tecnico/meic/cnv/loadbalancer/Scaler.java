@@ -59,8 +59,6 @@ public class Scaler extends Thread{
             configs = messenger.fetchConfig();
 
             aws.setupInstances(configs.get("AMI_Name"));
-            
-
             workers = aws.getInstances();
             
             resetPool();
@@ -82,6 +80,8 @@ public class Scaler extends Thread{
                 workers = aws.getInstances();
 
             }
+            // THIS SHOULD NOT BE DONE EVERY TIME
+            workers = aws.getInstances();
 
             if (workers.size() < 1){ createInstance = true;}
 
