@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
 import java.sql.Timestamp;
+import java.util.concurrent.atomic.AtomicLong;
 import java.io.*;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -34,7 +35,8 @@ public class WebServer {
     public static String HOME_FOLDER = "/home/ec2-user/";
     private static final Set<Long> threads = new HashSet<>();
     public static HashMap<Long, Object> requestParams = new HashMap<>();
-    private static LinkedHashMap<String, String> requestID = new LinkedHashMap<>();
+    private static HashMap<Long, Long> requestID = new HashMap<>();
+    private static AtomicLong highestRequestID = new AtomicLong();
     private static Messenger messenger = null;
     private static String instanceId = null;
     private static String endpoint = null;
@@ -108,6 +110,10 @@ public class WebServer {
                 throw new RuntimeException("This should not happen!");
             }
 
+            // Create unique requestId for current request
+            requestID.put(threadID, highestRequestID.getAndIncrement();
+            logger.info("Request ID: " + requestID);
+
             // Keep track of URL parameters for each thread
             LinkedHashMap<String, String> params = new LinkedHashMap<>();
             requestParams.put(threadId, params);
@@ -121,11 +127,9 @@ public class WebServer {
                 String paramName = param.split("=")[0];
                 String paramValue = param.split("=")[1];
                 params.put(paramName, paramValue);
-                requestID.put(paramName, paramValue);
             }
 
             System.out.println("Request params: " + params);
-            
 
             // Main class expects parameters in order <x0,y0,x1,y1,v,s,m,mazeNameOut>
 
@@ -178,7 +182,8 @@ public class WebServer {
 
 
             // Remove thread from running list
-            threads.remove(Thread.currentThread().getId());
+            threads.remove(threadId);
+            requestID.remove(threadId);
             requestParams.remove(threadId);
 
         }
