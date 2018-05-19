@@ -44,7 +44,7 @@ storage:
 	$(JAVAC) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)third-party/lib/* $(SRC_DIR)$(STORAGE)*.java -d $(RUN_DIR)
 ## Compile hhtpserver
 httpserver:
-	$(JAVAC) $(JFLAGS) -cp $(RUN_DIR) $(SRC_DIR)$(HTTPSERVER)*.java -d $(RUN_DIR)
+	$(JAVAC) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)lib/aws-java-sdk-$(AWS_VERSION).jar $(SRC_DIR)$(HTTPSERVER)*.java -d $(RUN_DIR)
 ## Compile instumentation
 instrumentation:
 	$(JAVAC) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J) $(SRC_DIR)$(INST)*.java -d $(RUN_DIR)
