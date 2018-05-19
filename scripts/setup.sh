@@ -21,7 +21,7 @@ echo =======================================
 AWS_SDK_DIR=$(echo aws-java-sdk-*)
 AWS_SDK_VERSION=${AWS_SDK_DIR#aws-java-sdk-}
 sed -i "s/AWS_VERSION=.*/AWS_VERSION=$AWS_SDK_VERSION/" ~/CNV_PARA_O_20/Makefile &&
-cd CNV_PARA_O_20/ && make all && make run_inst && cd .. &&
+cd CNV_PARA_O_20/ && make all && cd .. &&
 echo =======================================
 echo = Creating AWS Credentials            =
 echo =======================================
@@ -74,6 +74,6 @@ echo =======================================
 aws ec2 run-instances --image-id $BALANCER_AMI_ID --count 1 --instance-type t2.micro --security-groups CNV-balancer-sg &> /dev/null &&
 
 echo Done
-echo "Terminating current instance as it is no longer needed"
 echo "You may stop the load balancer instance anytime to stop incurring costs"
+echo "Terminating current instance as it is no longer needed"
 aws ec2 terminate-instances --instance-ids $INSTANCE_ID &> /dev/null
