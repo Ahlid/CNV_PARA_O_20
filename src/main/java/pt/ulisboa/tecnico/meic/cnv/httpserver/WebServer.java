@@ -19,12 +19,15 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.Headers;
 import pt.ulisboa.tecnico.meic.cnv.storage.Messenger;
+import com.amazonaws.util.EC2MetadataUtils;
 
 import com.amazonaws.util.EC2MetadataUtils;
 
+import org.apache.log4j.Logger;
 import pt.ulisboa.tecnico.meic.cnv.mazerunner.maze.*;
 
 public class WebServer {
+    final static Logger logger = Logger.getLogger(WebServer.class);
 
     private static final int PORT = 8000;
     private static final int responseCode_OK = 200;
@@ -33,25 +36,30 @@ public class WebServer {
     public static HashMap<Long, Object> requestParams = new HashMap<>();
     private static LinkedHashMap<String, String> requestID = new LinkedHashMap<>();
     private static Messenger messenger = null;
-    private static String amiId = null;
-    private static String address = null;
+    private static String instanceId = null;
+    private static String endpoint = null;
 
 
     public static void main(String[] args) throws Exception {
 
-        // LOCAL TESTING
-        //amiId = "i-04d65d02f3cea064d";
-        //address = "localhost";
         
-        amiId = EC2MetadataUtils.getInstanceId();
-        // instance public address
-         address = EC2MetadataUtils.getData("/latest/meta-data/public-hostname") + ":" + PORT;
 
-        // create new messenger, to put information at dynamo
+        // LOCAL TESTING
+        //instanceId = "i-04d65d02f3cea064d";
+        //endpoint = "localhost";
+        
+        // Read worker machine details at startup
+        // instance public address
+        instanceId = EC2MetadataUtils.getInstanceId();
+        logger.info("Instance Id: " + instanceId);
+        endpoint = EC2MetadataUtils.getData("/latest/meta-data/public-hostname") + PORT;
+        logger.info("Public endpoint: " + endpoint);
+
+        // Create new Messenger, to place information at Dynamo
         messenger = new Messenger();
         // send machine data to dynamo
         // update dynamo with info about worker
-        messenger.newWorker(amiId, address);
+        messenger.newWorker(instanceId, endpoint);
         // status , working
         updateWorker("running", false);
         
@@ -177,11 +185,11 @@ public class WebServer {
     }
 
     public static void updateMetrics(long bb, Boolean finished){
-        messenger.newMetrics(amiId + "+" + requestID,requestID.toString(),String.valueOf(bb), finished);
+        messenger.newMetrics(instanceId + "+" + requestID,requestID.toString(),String.valueOf(bb), finished);
     }
 
     public static void updateWorker(String status, Boolean working){
-        messenger.workerUpdate(amiId,status,0.0,address,working,0.0);
+        messenger.workerUpdate(instanceId,status,0.0,endpoint,working,0.0);
     }
 
 }

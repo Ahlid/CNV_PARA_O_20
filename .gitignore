@@ -9,3 +9,5 @@ CNV-lab-AWS.pem
 *.csv
 *.swp
 CNV_PARA_O_20.iml
+worker.log
+balancer.log
