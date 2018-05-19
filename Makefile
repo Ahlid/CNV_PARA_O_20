@@ -11,7 +11,7 @@ STORAGE = $(PACKAGE)storage/
 LOADBALANCER = $(PACKAGE)loadbalancer/
 
 LOG4J = lib/log4j-1.2.17.jar
-AWS_VERSION=1.11.333
+AWS_VERSION=1.11.332
 AWS=/home/ec2-user/aws-java-sdk-$(AWS_VERSION)/
 BIT = BIT/
 RUN_DIR = bin/
@@ -52,9 +52,9 @@ instrumentation:
 worker:
 	$(JAVAC) $(JFLAGS) -cp $(RUN_DIR) $(SRC_DIR)$(LOADBALANCER)WorkerInstance.java -d $(RUN_DIR)
 
-ref_instr: instrumentation maze run_instr
+ref_instr: instrumentation maze run_inst
 
-run_instr:
+run_inst:
 	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)third-party/lib/* $(INST)InstrumentationTool $(RUN_DIR)$(MAZERUNNER) $(TOOL_OUTPUT)
 	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)third-party/lib/* $(INST)InstrumentationTool $(RUN_DIR)$(MAZERUNNER)strategies/ $(TOOL_OUTPUT)strategies/
 	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)third-party/lib/* $(INST)InstrumentationTool $(RUN_DIR)$(MAZERUNNER)strategies/datastructure/ $(TOOL_OUTPUT)strategies/datastructure/

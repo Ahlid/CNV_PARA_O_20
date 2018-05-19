@@ -22,7 +22,6 @@ public class Messenger {
     
     private static final String METRICS_TOPIC = "Metrics";
     private static final String METRICS_TABLE = "Metrics";
-    private static final String JOBS_TABLE = "Jobs";
     
     public Messenger() throws Exception {
         db = new AmazonDynamoDB();
@@ -34,7 +33,7 @@ public class Messenger {
         createConfigTable();
         createIDTable(WORKERS_TABLE);
         createIDTable(METRICS_TABLE);
-        createIDTable(JOBS_TABLE);
+        //getWorkersTable();
     }
     
     /*
@@ -44,9 +43,17 @@ public class Messenger {
     */
     
     // put messages in Metrics table
-    public int newWorker(String id, String ip){
+    public int newWorker(String id, String hostname){
         // puts messages in Metrics table
-        Map<String, AttributeValue> item = newWorkerItem(id, "pending", 0.0, ip, false, 0.0);
+        Map<String, AttributeValue> item = newWorkerItem(id, "pending", 0.0, hostname, false, 0.0);
+        PutItemRequest putItemRequest = new PutItemRequest(WORKERS_TABLE, item);
+        PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
+        return 1;
+    }
+    // put messages in Metrics table
+    public int workerUpdate(String id, String status,Double cpu, String hostname, Boolean working, Double progress){
+        // puts messages in Metrics table
+        Map<String, AttributeValue> item = newWorkerItem(id, status, cpu, hostname, working, progress);
         PutItemRequest putItemRequest = new PutItemRequest(WORKERS_TABLE, item);
         PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
         return 1;
@@ -76,21 +83,50 @@ public class Messenger {
         return item;
     }
 
+    public static LinkedHashMap<String, String> getWorkersTable() {
+        // get messages from Metrics table
+        LinkedHashMap<String, String> result = new LinkedHashMap<>();
+        try {
+            
+            ScanRequest scanRequest = new ScanRequest(WORKERS_TABLE);
+            ScanResult scanResult = db.dynamoDB.scan(scanRequest);
+            for (Map<String, AttributeValue> i : scanResult.getItems()){
+                logger.info((String)i.get("id").getS() +  " : " + (String)i.get("status").getS());
+                result.put((String)i.get("id").getS(),(String)i.get("status").getS());
+                // TODO missing, return rest of items
+            }
+            return result;
+        }
+        catch (Exception e){
+            logger.error( "exception: " + e.getMessage());
+        }
+        return result;
+    }
+
     /*
     * 
     * Metrics Functions
     *
     */
+    private static Map<String, AttributeValue> newMetricsItem(String id, String request, String bb, Boolean finished) {
+        Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
+        item.put("id", new AttributeValue(id));
+        item.put("request", new AttributeValue(request));
+        item.put("bb", new AttributeValue(bb));
+        item.put("finished", new AttributeValue().withBOOL(finished));
+        return item;
+    }
 
-    // put messages in Jobs table
-    public int workerUpdate(String id, String progress,int size ,Boolean finish){
+
+    // put messages in Metrics table
+    public int newMetrics(String id, String request,String bb, Boolean finished){
         // puts messages in Metrics table
-        Map<String, AttributeValue> item = newJobItem(id, progress,size,finish );
-        PutItemRequest putItemRequest = new PutItemRequest(JOBS_TABLE, item);
+        Map<String, AttributeValue> item = newMetricsItem(id, request, bb, finished );
+        PutItemRequest putItemRequest = new PutItemRequest(METRICS_TABLE, item);
         PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
         return 1;
     }
-    
+
     public List<String> getProgress(String id){
         // get messages from Metrics table
         List<String> result = null;
@@ -101,39 +137,12 @@ public class Messenger {
             .withComparisonOperator(ComparisonOperator.EQ.toString())
             .withAttributeValueList(new AttributeValue(id));
             scanFilter.put("id", condition);
-            ScanRequest scanRequest = new ScanRequest(JOBS_TABLE).withScanFilter(scanFilter);
-            ScanResult scanResult = db.dynamoDB.scan(scanRequest);
-            for (Map<String, AttributeValue> i : scanResult.getItems()){
-                result.add(i.get("progress").getS());
-                result.add(i.get("size").getS());
-                result.add(String.valueOf(i.get("finish").getBOOL()));
-            }
-            return result;
-        }
-        catch (Exception e){
-            logger.error( "exception: " + e.getMessage());
-        }
-        return result;
-    }
-    
-    
-    // retrieve metrics for given worker from Metrics table
-    public List<String> getMessage(WorkerInstance worker){
-        // get messages from Metrics table
-        List<String> result = new ArrayList<>();
-        System.out.println(worker.getId());
-        try {
-            HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
-            Condition condition = new Condition()
-            .withComparisonOperator(ComparisonOperator.EQ.toString())
-            .withAttributeValueList(new AttributeValue(worker.getId()));
-            scanFilter.put("id", condition);
             ScanRequest scanRequest = new ScanRequest(METRICS_TABLE).withScanFilter(scanFilter);
             ScanResult scanResult = db.dynamoDB.scan(scanRequest);
             for (Map<String, AttributeValue> i : scanResult.getItems()){
-                result.add(i.get("id").getS());
-                result.add(i.get("state").getS());
-                result.add(i.get("cpu").getS());
+                result.add(i.get("request").getS());
+                result.add(i.get("bb").getS());
+                result.add(String.valueOf(i.get("finished").getBOOL()));
             }
             return result;
         }
@@ -143,33 +152,6 @@ public class Messenger {
         return result;
     }
     
-    private static Map<String, AttributeValue> newItem(String name, String value) {
-        Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
-        item.put("name", new AttributeValue(name));
-        item.put("value", new AttributeValue(value));
-        
-        return item;
-    }
-    
-    private static Map<String, AttributeValue> newMetricsItem(String id, String state, Double cpu, String address) {
-        Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
-        item.put("id", new AttributeValue(id));
-        item.put("state", new AttributeValue(state));
-        item.put("cpu", new AttributeValue().withS(cpu.toString()));
-        item.put("address", new AttributeValue(address));
-        
-        return item;
-    }
-    
-    private static Map<String, AttributeValue> newJobItem(String id, String progress,int size, Boolean finish) {
-        Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
-        item.put("id", new AttributeValue(id));
-        item.put("progress", new AttributeValue(progress));
-        item.put("size", new AttributeValue(String.valueOf(size)));
-        item.put("finish", new AttributeValue().withBOOL(finish));
-        
-        return item;
-    }
     
     /*
     *
@@ -196,11 +178,20 @@ public class Messenger {
         TableDescription tableDescription = db.dynamoDB.describeTable(describeTableRequest).getTable();
         //System.out.println("Config Table Description: " + tableDescription + "\n");
     }
+
+    // Config item 
+    private static Map<String, AttributeValue> newConfigItem(String name, String value) {
+        Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
+        item.put("name", new AttributeValue(name));
+        item.put("value", new AttributeValue(value));
+        
+        return item;
+    }
     
     // change name of AMI image for workers instances
     public int changeAmiName(String payload){
         // puts messages in Configuration table
-        Map<String, AttributeValue> item = newItem("AMI_Name", payload);
+        Map<String, AttributeValue> item = newConfigItem("AMI_Name", payload);
         PutItemRequest putItemRequest = new PutItemRequest(CONFIG_TABLE, item);
         PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
         return 1;
@@ -209,7 +200,7 @@ public class Messenger {
     // change name of AMI image for workers instances
     public int changeConfig(String name, String value){
         // puts messages in Configuration table
-        Map<String, AttributeValue> item = newItem(name, value);
+        Map<String, AttributeValue> item = newConfigItem(name, value);
         PutItemRequest putItemRequest = new PutItemRequest(CONFIG_TABLE, item);
         PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
         return 1;
