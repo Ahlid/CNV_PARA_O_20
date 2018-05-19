@@ -35,8 +35,8 @@ public class WebServer {
     public static String HOME_FOLDER = "/home/ec2-user/";
     private static final Set<Long> threads = new HashSet<>();
     public static HashMap<Long, Object> requestParams = new HashMap<>();
-    private static HashMap<Long, Long> requestID = new HashMap<>();
-    private static AtomicLong highestRequestID = new AtomicLong();
+    private static HashMap<Long, Long> requestId = new HashMap<>();
+    private static AtomicLong highestRequestId = new AtomicLong();
     private static Messenger messenger = null;
     private static String instanceId = null;
     private static String endpoint = null;
@@ -54,7 +54,7 @@ public class WebServer {
         // instance public address
         instanceId = EC2MetadataUtils.getInstanceId();
         logger.info("Instance Id: " + instanceId);
-        endpoint = EC2MetadataUtils.getData("/latest/meta-data/public-hostname") + PORT;
+        endpoint = EC2MetadataUtils.getData("/latest/meta-data/public-hostname") + ":" + PORT;
         logger.info("Public endpoint: " + endpoint);
 
         // Create new Messenger, to place information at Dynamo
@@ -103,16 +103,16 @@ public class WebServer {
             Long threadId = Thread.currentThread().getId();
             boolean res = threads.add(threadId);
 
-            System.out.println();
-            System.out.println("Thread Id: " + threadId);
+            logger.info("Thread Id: " + threadId);
             if (!res) {
-                System.out.println("Error: Separate requests have the same threadId=" + threadId);
+                logger.error("Separate requests have the same threadId=" + threadId);
                 throw new RuntimeException("This should not happen!");
             }
 
             // Create unique requestId for current request
-            requestID.put(threadID, highestRequestID.getAndIncrement();
-            logger.info("Request ID: " + requestID);
+            Long newRequestId = highestRequestId.getAndIncrement();
+            requestId.put(threadId, newRequestId);
+            logger.info("Request Id: " + requestId);
 
             // Keep track of URL parameters for each thread
             LinkedHashMap<String, String> params = new LinkedHashMap<>();
@@ -129,7 +129,7 @@ public class WebServer {
                 params.put(paramName, paramValue);
             }
 
-            System.out.println("Request params: " + params);
+            logger.info("Request params: " + params);
 
             // Main class expects parameters in order <x0,y0,x1,y1,v,s,m,mazeNameOut>
 
@@ -164,10 +164,10 @@ public class WebServer {
                 outputStream.write(bytes, 0, bytes.length);
                 outputStream.close();
 
-                System.out.println("Finished!");
+                logger.info("Finished processing request: " + newRequestId);
 
             } catch(Exception e) {
-                System.out.println(e.toString());
+                logger.error(e.toString());
                 response = "<html><title>maze runner </title><br><body>" +
                 ""+ e.toString() + "<hr>" +
                 "</body></html>";
@@ -183,14 +183,14 @@ public class WebServer {
 
             // Remove thread from running list
             threads.remove(threadId);
-            requestID.remove(threadId);
+            requestId.remove(threadId);
             requestParams.remove(threadId);
 
         }
     }
 
     public static void updateMetrics(long bb, Boolean finished){
-        messenger.newMetrics(instanceId + "+" + requestID,requestID.toString(),String.valueOf(bb), finished);
+        messenger.newMetrics(instanceId + "+" + requestId,requestId.toString(),String.valueOf(bb), finished);
     }
 
     public static void updateWorker(String status, Boolean working){
