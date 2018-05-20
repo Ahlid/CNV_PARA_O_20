@@ -39,37 +39,12 @@ echo output=json >> ~/.aws/config &&
 echo =======================================
 echo = Creating worker and balancer AMIs   =
 echo =======================================
-INSTANCE_ID=$(ec2-metadata --instance-id | cut -d ' ' -f2) &&
-
-echo "Creating AMI: worker-ami"
-# Delete AMI with the name worker-ami if it exists
-OLD_WORKER_AMI_ID=$(aws ec2 describe-images --owners self --filters Name=name,Values=worker-ami | sed -n 's/\s*"ImageId": "\(.*\)",/\1/gp') &&
-[ -n $OLD_WORKER_AMI_ID ] && aws ec2 deregister-image --image-id $OLD_WORKER_AMI_ID
-
 # Copy rc.local of worker to /etc/rc.local
 sudo cp ~/CNV_PARA_O_20/scripts/rc.local.worker /etc/rc.local && sync &&
-
-# Create worker AMI and wait until it is available
-WORKER_AMI_ID=$(aws ec2 create-image --instance-id $INSTANCE_ID --no-reboot --name worker-ami | grep -o "ami-[a-zA-Z0-9]*") &&
-aws ec2 wait image-available --image-ids $WORKER_AMI_ID &&
-echo "Worker AMI Id: $WORKER_AMI_ID"
-
-echo "Updating Worker AMI on DynamoDB"
-cd CNV_PARA_O_20/ && make updateami name=$WORKER_AMI_ID &> /dev/null && cd .. &&
-
-echo "Creating AMI: balancer-ami"
-# Delete AMI with the name balancer-ami if it exists
-OLD_BALANCER_AMI_ID=$(aws ec2 describe-images --owners self --filters Name=name,Values=balancer-ami | sed -n 's/\s*"ImageId": "\(.*\)",/\1/gp') &&
-[ -n $OLD_BALANCER_AMI_ID ] && aws ec2 deregister-image --image-id $OLD_BALANCER_AMI_ID
-
+source ~/CNV_PARA_O_20/scripts/update-worker-ami.sh &&
 # Copy rc.local of balancer to /etc/rc.local
 sudo cp ~/CNV_PARA_O_20/scripts/rc.local.balancer /etc/rc.local && sync &&
-
-# Create balancer AMI and wait until it is available
-BALANCER_AMI_ID=$(aws ec2 create-image --instance-id $INSTANCE_ID --no-reboot --name balancer-ami | grep -o "ami-[a-zA-Z0-9]*") &&
-aws ec2 wait image-available --image-ids $BALANCER_AMI_ID &&
-echo "Balancer AMI Id: $BALANCER_AMI_ID"
-
+source ~/CNV_PARA_O_20/scripts/update-balancer-ami.sh &&
 echo =======================================
 echo = Creating worker and balancer SGs    =
 echo =======================================
