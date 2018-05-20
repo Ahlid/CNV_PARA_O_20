@@ -23,6 +23,18 @@ delete_sg_if_exists() {
   fi
 }
 
+choose_key_name() {
+  KEY_NAMES=$(aws ec2 describe-key-pairs | sed -n 's/\s*"KeyName": "\(.*\)",\s*/\1/gp' | tr '\n' ' ') &&
+  echo "Choose a valid key pair for logging in to the balancer and worker instances"
+  echo "Available key pairs: $KEY_NAMES"
+  while true; do
+    echo "Key name: "
+    read key_name
+    echo "$KEY_NAMES" | grep -q "\<$key_name\>" && break
+    echo "Invalid key name"
+  done
+}
+
 cd ~ &&
 echo =======================================
 echo = Installing Java SDK and Git         =
@@ -86,10 +98,7 @@ aws ec2 authorize-security-group-ingress --group-name CNV-balancer-sg --protocol
 echo =======================================
 echo = Launching a load balancer instance  =
 echo =======================================
-KEY_NAMES=$(aws ec2 describe-key-pairs | sed -n 's/\s*"KeyName": "\(.*\)",/\1/gp' | tr '\n' ' ') &&
-echo "Choose a valid key pair for logging in to the balancer"
-echo "Available key pairs: $KEY_NAMES"
-read key_name &&
+choose_key_name
 aws ec2 run-instances --image-id $BALANCER_AMI_ID --count 1 --instance-type t2.micro --security-groups CNV-balancer-sg --key-name $key_name &> /dev/null &&
 
 echo Done
