@@ -43,7 +43,7 @@ INSTANCE_ID=$(ec2-metadata --instance-id | cut -d ' ' -f2) &&
 
 echo "Creating AMI: worker-ami"
 # Delete AMI with the name worker-ami if it exists
-OLD_WORKER_AMI_ID=$(aws ec2 describe-images --owners self --filters Name=name,Values=worker-ami | sed -n 's/\s*"ImageId": "\(.*\)",/\1/gp')
+OLD_WORKER_AMI_ID=$(aws ec2 describe-images --owners self --filters Name=name,Values=worker-ami | sed -n 's/\s*"ImageId": "\(.*\)",/\1/gp') &&
 [ -n $OLD_WORKER_AMI_ID ] && aws ec2 deregister-image --image-id $OLD_WORKER_AMI_ID
 
 # Copy rc.local of worker to /etc/rc.local
@@ -59,7 +59,7 @@ cd CNV_PARA_O_20/ && make updateami name=$WORKER_AMI_ID &> /dev/null && cd .. &&
 
 echo "Creating AMI: balancer-ami"
 # Delete AMI with the name balancer-ami if it exists
-OLD_BALANCER_AMI_ID=$(aws ec2 describe-images --owners self --filters Name=name,Values=balancer-ami | sed -n 's/\s*"ImageId": "\(.*\)",/\1/gp')
+OLD_BALANCER_AMI_ID=$(aws ec2 describe-images --owners self --filters Name=name,Values=balancer-ami | sed -n 's/\s*"ImageId": "\(.*\)",/\1/gp') &&
 [ -n $OLD_BALANCER_AMI_ID ] && aws ec2 deregister-image --image-id $OLD_BALANCER_AMI_ID
 
 # Copy rc.local of balancer to /etc/rc.local
@@ -73,6 +73,16 @@ echo "Balancer AMI Id: $BALANCER_AMI_ID"
 echo =======================================
 echo = Creating worker and balancer SGs    =
 echo =======================================
+# In order to delete security groups we must first
+# terminate any instances associated with them
+INSTANCES_TERMINATE=$(aws ec2 describe-instances --filters Name=instance.group-name,Values=CNV-worker-sg,CNV-balancer-sg | sed -n 's/\s*"InstanceId": "\(.*\)",/\1/gp' | tr '\n' ' ') &&
+[ -n $INSTANCES_TERMINATE ] && aws ec2 terminate-instances --instance-ids $INSTANCES_TERMINATE
+[ -n $INSTANCES_TERMINATE ] && aws ec2 wait instance-terminated --instance-ids $INSTANCES_TERMINATE
+
+# Delete security groups if they previously existed
+aws ec2 delete-security-group --group-name CNV-worker-sg &> /dev/null
+aws ec2 delete-security-group --group-name CNV-balancer-sg &> /dev/null
+
 echo "Creating Security Group: CNV-worker-sg"
 aws ec2 create-security-group --description "Allows SSH + HTTP at a worker instance" --group-name CNV-worker-sg
 aws ec2 authorize-security-group-ingress --group-name CNV-worker-sg --protocol tcp --port 8000 --cidr 0.0.0.0/0
