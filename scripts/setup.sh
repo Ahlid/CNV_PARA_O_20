@@ -93,7 +93,7 @@ aws ec2 authorize-security-group-ingress --group-name CNV-worker-sg --protocol t
 delete_sg_if_exists CNV-balancer-sg
 echo "Creating new Security Group: CNV-balancer-sg"
 aws ec2 create-security-group --description "Allows SSH + HTTP at the load balancer instance" --group-name CNV-balancer-sg &> /dev/null &&
-aws ec2 authorize-security-group-ingress --group-name CNV-balancer-sg --protocol tcp --port 80 --cidr 0.0.0.0/0 &&
+aws ec2 authorize-security-group-ingress --group-name CNV-balancer-sg --protocol tcp --port 8080 --cidr 0.0.0.0/0 &&
 aws ec2 authorize-security-group-ingress --group-name CNV-balancer-sg --protocol tcp --port 22 --cidr 0.0.0.0/0 &&
 echo ==========================================
 echo = Creating a Launch Template for workers =
