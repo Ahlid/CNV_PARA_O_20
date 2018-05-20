@@ -50,7 +50,7 @@ OLD_WORKER_AMI_ID=$(aws ec2 describe-images --owners self --filters Name=name,Va
 sudo cp ~/CNV_PARA_O_20/scripts/rc.local.worker /etc/rc.local && sync &&
 
 # Create worker AMI and wait until it is available
-WORKER_AMI_ID=$(aws ec2 create-image --instance-id $INSTANCE_ID --no-reboot --name worker-ami) &&
+WORKER_AMI_ID=$(aws ec2 create-image --instance-id $INSTANCE_ID --no-reboot --name worker-ami | grep -o "ami-[a-zA-Z0-9]*") &&
 aws ec2 wait image-available --image-ids $WORKER_AMI_ID &&
 echo "Worker AMI Id: $WORKER_AMI_ID"
 
@@ -66,7 +66,7 @@ OLD_BALANCER_AMI_ID=$(aws ec2 describe-images --owners self --filters Name=name,
 sudo cp ~/CNV_PARA_O_20/scripts/rc.local.balancer /etc/rc.local && sync &&
 
 # Create balancer AMI and wait until it is available
-BALANCER_AMI_ID=$(aws ec2 create-image --instance-id $INSTANCE_ID --no-reboot --name balancer-ami) &&
+BALANCER_AMI_ID=$(aws ec2 create-image --instance-id $INSTANCE_ID --no-reboot --name balancer-ami | grep -o "ami-[a-zA-Z0-9]*") &&
 aws ec2 wait image-available --image-ids $BALANCER_AMI_ID &&
 echo "Balancer AMI Id: $BALANCER_AMI_ID"
 
