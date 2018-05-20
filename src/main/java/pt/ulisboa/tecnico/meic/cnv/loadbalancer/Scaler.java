@@ -57,7 +57,8 @@ public class Scaler extends Thread {
             // Setup AMI Name
             configs = messenger.fetchConfig();
 
-            aws.setupInstances(configs.get("AMI_Name"));
+            aws.setupInstanceRequest(1, 1);
+            aws.setWorkerAmiId(configs.get("AMI_Name"));
             workers = aws.getInstances();
 
             resetPool();
@@ -211,7 +212,7 @@ public class Scaler extends Thread {
             String value = entry.getValue();
             messenger.changeConfig(name, value);
             configs = messenger.fetchConfig();
-            aws.setupInstances(configs.get("AMI_Name"));
+            aws.setupInstanceRequest(1, 1);
         }
     }
 

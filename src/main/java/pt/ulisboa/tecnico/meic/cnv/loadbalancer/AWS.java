@@ -12,6 +12,7 @@ import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
+import com.amazonaws.services.ec2.model.LaunchTemplateSpecification;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.*;
@@ -22,56 +23,21 @@ import org.apache.log4j.Logger;
 import java.util.*;
 
 public class AWS {
-    /*
-    * Before running the code:
-    *      Fill in your AWS access credentials in the provided credentials
-    *      file template, and be sure to move the file to the default location
-    *      (~/.aws/credentials) where the sample code will load the
-    *      credentials from.
-    *      https://console.aws.amazon.com/iam/home?#security_credential
-    *
-    * WARNING:
-    *      To avoid accidental leakage of your credentials, DO NOT keep
-    *      the credentials file in your source directory.
-    */
     
     static AmazonEC2 ec2;
     static AmazonCloudWatch cloudWatch;
     
-    /**
-    * The only information needed to create a client are security credentials
-    * consisting of the AWS Access Key ID and Secret Access Key. All other
-    * configuration, such as the service endpoints, are performed
-    * automatically. Client parameters, such as proxies, can be specified in an
-    * optional ClientConfiguration object when constructing a client.
-    *
-    * @see com.amazonaws.auth.BasicAWSCredentials
-    * @see com.amazonaws.auth.PropertiesCredentials
-    * @see com.amazonaws.ClientConfiguration
-    */
-    
     final static Logger logger = Logger.getLogger(AWS.class);
     // AWS EC2 Endpoint (US - East North Virginia)
     private static final String REGION = "us-east-1";
-    // Instance id to be used
-    private static String AMI_ID = "ami-5ba10224";
-    // Instance type to be used
-    private static final String INST_TYPE = "t2.micro";
-    // Key name
-    private static final String KEY_NAME = "cnv1718";
-    // Security Group that opens port 22 (ssh) and 8080 (http)
-    private static final String SEC_GROUP = "CNV-ssh+http";
+    // Worker launch template
+    private static final String WORKER_TEMPLATE_NAME = "CNV-worker-template";
+    private static String workerAmiId = null;
     
     private static RunInstancesRequest runInstanceReq = null;
     
     public static void init() throws Exception {
         
-        
-        /*
-        * The ProfileCredentialsProvider will return your [default]
-        * credential profile by reading from the credentials file located at
-        * (~/.aws/credentials).
-        */
         AWSCredentials credentials = null;
         try {
             credentials = new ProfileCredentialsProvider().getCredentials();
@@ -87,18 +53,14 @@ public class AWS {
         cloudWatch = AmazonCloudWatchClientBuilder.standard().withRegion(REGION).withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
     }
     
-    public void setupInstances (String amiId){
-        AMI_ID = amiId;
+    public void setupInstanceRequest(int min, int max) {
         runInstanceReq = new RunInstancesRequest();
-        runInstanceReq.withImageId(AMI_ID)
-        .withInstanceType(INST_TYPE)
-        .withMinCount(1)
-        .withMaxCount(1)
-        .withKeyName(KEY_NAME)
-        .withSecurityGroups(SEC_GROUP)
-        .withMonitoring(true);
+        runInstanceReq.withLaunchTemplate(new LaunchTemplateSpecification()
+        .withLaunchTemplateName(WORKER_TEMPLATE_NAME))
+        .withMinCount(min)
+        .withMaxCount(max)
+        ;
     }
-    
     
     // Creates a new instance and returns the Instance ID
     public static WorkerInstance createInstance() {
@@ -143,7 +105,7 @@ public class AWS {
         for (Instance instance : instances) {
             String instID = instance.getImageId();
             //System.out.println("image:" + instID);
-            if (instID.equals(AMI_ID)) {
+            if (instID.equals(workerAmiId)) {
                 String name = instance.getInstanceId();
                 String state = instance.getState().getName();
                 String address = instance.getPublicDnsName();
@@ -189,6 +151,14 @@ public class AWS {
         //logger.info("Running instances: " + runningInstances);
         
         return workers;
+    }
+    
+    public void setWorkerAmiId(String amiId) {
+        workerAmiId = amiId;
+    }
+
+    public String getWorkerAmiId() {
+        return workerAmiId;
     }
     
     public static String getInstance(String instanceId) {
