@@ -7,24 +7,22 @@ public class UpdateAmiName {
 
     public static void main(String[] args) throws Exception {
         Messenger m = null;
-        int res=0;
-        String result=null;
+        int res = 0;
+        String result = null;
 
         try {
-            m = new Messenger();
+            m = Messenger.getInstance();
             m.setup();
-            if (args.length >= 1){
+            if (args.length >= 1) {
                 System.out.println("Changing Worker AMI to: " + args[0]);
                 res = m.changeAmiName(args[0]);
                 System.out.println("Result: " + res);
-            }
-            else {
+            } else {
                 result = m.getAMIName();
                 System.out.println("Current AMI is: " + result);
             }
 
-        }
-        catch (AmazonServiceException ase) {
+        } catch (AmazonServiceException ase) {
             System.out.println("Caught an AmazonServiceException, which means your request made it "
                     + "to AWS, but was rejected with an error response for some reason.");
             System.out.println("Error Message:    " + ase.getMessage());

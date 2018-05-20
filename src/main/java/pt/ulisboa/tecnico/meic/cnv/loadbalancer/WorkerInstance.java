@@ -7,7 +7,7 @@ public class WorkerInstance {
     private String address = "unknown";
     private Double cpu = 0.0;
     private Double progress = 0.0;
-    private Integer size = 0;
+    private Integer jobs = 0;
     private Boolean working = false;
 
 
@@ -16,7 +16,7 @@ public class WorkerInstance {
     public String getAddress() {return address; }
     public Double getCPU() {return cpu; }
     public Double getProgress() {return progress;}
-    public Integer getSize() {return size;}
+    public Integer getJobs() {return jobs;}
     public Boolean working() {return working;}
 
 
@@ -24,9 +24,10 @@ public class WorkerInstance {
     public void setStatus(String status) { this.status = status; }
     public void setAddress(String address) { this.address = address; }
     public void setCPU(Double cpu) { this.cpu = cpu; }
+    public void setJobs(Integer jobs) {this.jobs = jobs;}
     public void setProgress(Double progress, Integer size) {
         this.progress = progress;
-        this.size = size;
+        this.jobs = jobs;
     }
     public void setWork(Boolean work){ this.working = work;}
 }

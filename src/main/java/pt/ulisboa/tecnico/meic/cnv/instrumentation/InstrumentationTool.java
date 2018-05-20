@@ -27,7 +27,7 @@ public class InstrumentationTool {
                 for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
 
                     Routine routine = (Routine) e.nextElement();
-                    routine.addBefore(metricsInstrClass, "dynMethodCount", new String(routine.getMethodName()));
+                    //routine.addBefore(metricsInstrClass, "dynMethodCount", new String(routine.getMethodName()));
 
                         for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
                             BasicBlock bb = (BasicBlock) b.nextElement();

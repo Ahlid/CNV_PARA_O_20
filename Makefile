@@ -1,5 +1,5 @@
-JVM = java 
-JAVAC = javac
+JVM = /usr/bin/java
+JAVAC = /usr/bin/javac
 JFLAGS = 
 SHELL = /bin/bash
 SRC_DIR = src/main/java/
@@ -23,7 +23,7 @@ export _JAVA_OPTIONS=-XX:-UseSplitVerifier
 refresh: | clean all
 
 ## Make all : (warning: changing this order WILL break things)
-all: | create_bin maze bit worker storage loadbalancer httpserver instrumentation
+all: | create_bin maze bit worker storage loadbalancer httpserver instrumentation run_instr
 
 ############### Sub sections #####################
 ## Create bin directory
@@ -52,9 +52,9 @@ instrumentation:
 worker:
 	$(JAVAC) $(JFLAGS) -cp $(RUN_DIR) $(SRC_DIR)$(LOADBALANCER)WorkerInstance.java -d $(RUN_DIR)
 
-ref_instr: instrumentation maze run_inst
+ref_instr: instrumentation maze run_instr
 
-run_inst:
+run_instr:
 	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)third-party/lib/* $(INST)InstrumentationTool $(RUN_DIR)$(MAZERUNNER) $(TOOL_OUTPUT)
 	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)third-party/lib/* $(INST)InstrumentationTool $(RUN_DIR)$(MAZERUNNER)strategies/ $(TOOL_OUTPUT)strategies/
 	$(JVM) $(JFLAGS) -cp $(RUN_DIR):$(LOG4J):$(AWS)lib/aws-java-sdk-$(AWS_VERSION).jar:$(AWS)third-party/lib/* $(INST)InstrumentationTool $(RUN_DIR)$(MAZERUNNER)strategies/datastructure/ $(TOOL_OUTPUT)strategies/datastructure/
