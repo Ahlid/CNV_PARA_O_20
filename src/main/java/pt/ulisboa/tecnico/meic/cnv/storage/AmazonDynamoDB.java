@@ -15,6 +15,7 @@
 
 package pt.ulisboa.tecnico.meic.cnv.storage;
 
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -86,8 +87,8 @@ public class AmazonDynamoDB {
         } catch (Exception e) {
             throw new AmazonClientException(
                     "Cannot load the credentials from the credential profiles file. " +
-                    "Please make sure that your credentials file is at the correct " +
-                    "location (~/.aws/credentials), and is in valid format.",
+                            "Please make sure that your credentials file is at the correct " +
+                            "location (~/.aws/credentials), and is in valid format.",
                     e);
         }
         dynamoDB = new AmazonDynamoDBClient(credentials);
@@ -95,7 +96,7 @@ public class AmazonDynamoDB {
         dynamoDB.setRegion(usEast1);
     }
 
-    public String getAMIImage() throws Exception{
+    public String getAMIImage() throws Exception {
         String name = null;
         HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
         Condition condition = new Condition()
@@ -105,7 +106,7 @@ public class AmazonDynamoDB {
         ScanRequest scanRequest = new ScanRequest("myConfig").withScanFilter(scanFilter);
         ScanResult scanResult = dynamoDB.scan(scanRequest);
         System.out.println("Result: " + scanResult);
-        for (Map<String, AttributeValue> i : scanResult.getItems()){
+        for (Map<String, AttributeValue> i : scanResult.getItems()) {
             name = i.get("value").getS();
         }
         return name;

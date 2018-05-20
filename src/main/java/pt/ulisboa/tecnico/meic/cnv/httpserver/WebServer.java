@@ -45,14 +45,14 @@ public class WebServer {
         
 
         // LOCAL TESTING
-        //instanceId = "i-04d65d02f3cea064d";
-        //endpoint = "localhost";
+        instanceId = "i-002563b5019e4f04c";
+        endpoint = "localhost";
         
         // Read worker machine details at startup
         // instance public address
-        instanceId = EC2MetadataUtils.getInstanceId();
+     //   instanceId = EC2MetadataUtils.getInstanceId();
         logger.info("Instance Id: " + instanceId);
-        endpoint = EC2MetadataUtils.getData("/latest/meta-data/public-hostname") + PORT;
+      //  endpoint = EC2MetadataUtils.getData("/latest/meta-data/public-hostname") + PORT;
         logger.info("Public endpoint: " + endpoint);
 
         // Create new Messenger, to place information at Dynamo
