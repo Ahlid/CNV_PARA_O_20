@@ -36,30 +36,30 @@ choose_key_name() {
 }
 
 cd ~ &&
-echo =======================================
-echo = Installing Java SDK and Git         =
-echo =======================================
+echo ==========================================
+echo = Installing Java SDK and Git            =
+echo ==========================================
 sudo yum -y install java-1.7.0-devel git &&
-echo =======================================
-echo = Fetching and unzipping AWS SDK      =
-echo =======================================
+echo ==========================================
+echo = Fetching and unzipping AWS SDK         =
+echo ==========================================
 wget http://sdk-for-java.amazonwebservices.com/latest/aws-java-sdk.zip &&
 unzip aws-java-sdk.zip &&
 rm aws-java-sdk.zip &&
-echo =======================================
-echo = Cloning Git Repo                    =
-echo =======================================
+echo ==========================================
+echo = Cloning Git Repo                       =
+echo ==========================================
 git clone https://github.com/Ahlid/CNV_PARA_O_20.git &&
-echo =======================================
-echo = Compiling project                   =
-echo =======================================
+echo ==========================================
+echo = Compiling project                      =
+echo ==========================================
 AWS_SDK_DIR=$(echo aws-java-sdk-*)
 AWS_SDK_VERSION=${AWS_SDK_DIR#aws-java-sdk-}
 sed -i "s/AWS_VERSION=.*/AWS_VERSION=$AWS_SDK_VERSION/" ~/CNV_PARA_O_20/Makefile &&
 cd CNV_PARA_O_20/ && make all && cd .. &&
-echo =======================================
-echo = Creating AWS Credentials            =
-echo =======================================
+echo ==========================================
+echo = Creating AWS Credentials               =
+echo ==========================================
 echo "Access Key:"
 read key &&
 echo "Secret Access Key:"
@@ -71,18 +71,18 @@ echo aws_secret_access_key=$secret >> ~/.aws/credentials &&
 echo [default] >> ~/.aws/config &&
 echo region=us-east-1 >> ~/.aws/config &&
 echo output=json >> ~/.aws/config &&
-echo =======================================
-echo = Creating worker and balancer AMIs   =
-echo =======================================
+echo ==========================================
+echo = Creating worker and balancer AMIs      =
+echo ==========================================
 # Copy rc.local of worker to /etc/rc.local
 sudo cp ~/CNV_PARA_O_20/scripts/rc.local.worker /etc/rc.local && sync &&
 source ~/CNV_PARA_O_20/scripts/update-worker-ami.sh &&
 # Copy rc.local of balancer to /etc/rc.local
 sudo cp ~/CNV_PARA_O_20/scripts/rc.local.balancer /etc/rc.local && sync &&
 source ~/CNV_PARA_O_20/scripts/update-balancer-ami.sh &&
-echo =======================================
-echo = Creating worker and balancer SGs    =
-echo =======================================
+echo ==========================================
+echo = Creating worker and balancer SGs       =
+echo ==========================================
 # Security Group for workers
 delete_sg_if_exists CNV-worker-sg
 echo "Creating new Security Group: CNV-worker-sg"
@@ -95,10 +95,22 @@ echo "Creating new Security Group: CNV-balancer-sg"
 aws ec2 create-security-group --description "Allows SSH + HTTP at the load balancer instance" --group-name CNV-balancer-sg &> /dev/null &&
 aws ec2 authorize-security-group-ingress --group-name CNV-balancer-sg --protocol tcp --port 80 --cidr 0.0.0.0/0 &&
 aws ec2 authorize-security-group-ingress --group-name CNV-balancer-sg --protocol tcp --port 22 --cidr 0.0.0.0/0 &&
-echo =======================================
-echo = Launching a load balancer instance  =
-echo =======================================
+echo ==========================================
+echo = Creating a Launch Template for workers =
+echo ==========================================
 choose_key_name
+LT_EXISTS=$(aws ec2 describe-launch-templates | grep CNV-worker-template)
+if [ "$LT_EXISTS" ]; then
+  echo "Deleting previously created Launch Template: CNV-worker-template"
+  aws ec2 delete-launch-template --launch-template-name CNV-worker-template &> /dev/null
+fi
+
+# Create Launch Configuration that scaler will use to create worker instances
+echo "Creating new Launch Template: CNV-worker-template"
+aws ec2 create-launch-template --launch-template-name CNV-worker-template --version-description "Autoscaler uses this Launch Template to create worker instances" --launch-template-data "{\"ImageId\": \"$WORKER_AMI_ID\", \"InstanceType\": \"t2.micro\", \"KeyName\": \"$key_name\", \"Monitoring\": {\"Enabled\": true}, \"SecurityGroups\": [\"CNV-worker-sg\"]}" &> /dev/null
+echo ==========================================
+echo = Launching a load balancer instance     =
+echo ==========================================
 aws ec2 run-instances --image-id $BALANCER_AMI_ID --count 1 --instance-type t2.micro --security-groups CNV-balancer-sg --key-name $key_name &> /dev/null &&
 
 echo Done
