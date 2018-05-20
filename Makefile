@@ -1,5 +1,5 @@
-JVM = java 
-JAVAC = javac
+JVM = /usr/bin/java
+JAVAC = /usr/bin/javac
 JFLAGS = 
 SHELL = /bin/bash
 SRC_DIR = src/main/java/

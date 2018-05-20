@@ -9,7 +9,7 @@ import pt.ulisboa.tecnico.meic.cnv.storage.Messenger;
 import javax.swing.text.StyledEditorKit;
 
 
-public class Scaler extends Thread{
+public class Scaler extends Thread {
     final static Logger logger = Logger.getLogger(Scaler.class);
     private final static Integer CLEANUP = 3;
     private final static Double CPU_THRESHOLD = 60.0;
@@ -25,26 +25,25 @@ public class Scaler extends Thread{
     private Double cpu = 0.0;
     private ArrayList<WorkerInstance> workers;
     private LinkedHashMap<String, String> configs = new LinkedHashMap<>();
-    
+
 
     TimerTask sayHello = new TimerTask() {
         @Override
         public void run() {
             try {
                 ping();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 logger.error("Error checking if scaling is needed..." + e.getMessage());
             }
         }
     };
 
 
-/**
- *  Default constructor, initialize AWS and if no instances are running, start one.
- */
+    /**
+     * Default constructor, initialize AWS and if no instances are running, start one.
+     */
 
-    public Scaler(){ 
+    public Scaler() {
         try {
             logger.info("Initializing Scaler...");
             // New AWS connection
@@ -52,7 +51,7 @@ public class Scaler extends Thread{
             // Setup credentials
             aws.init();
             // New messenger
-            messenger = new Messenger();
+            messenger = Messenger.getInstance();
             // Setup db
             messenger.setup();
             // Setup AMI Name
@@ -60,46 +59,49 @@ public class Scaler extends Thread{
 
             aws.setupInstances(configs.get("AMI_Name"));
             workers = aws.getInstances();
-            
+
             resetPool();
             logger.info("Starting with " + workers.size() + " workers.");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             logger.fatal(getDefaultUncaughtExceptionHandler().toString());
         }
     }
 
-    public void ping(){
-        
+    public void ping() {
+
         cpu = 0.0;
         Boolean createInstance = false;
         try {
-            if(cleanCounter == CLEANUP){ 
-                cleanCounter = 0; 
+            if (cleanCounter == CLEANUP) {
+                cleanCounter = 0;
                 syncWorkers();
                 // TODO we need to remove dead instances from dynamoDB
                 workers = aws.getInstances();
             }
             cleanCounter++;
-            
+
             // THIS SHOULD NOT BE DONE EVERY TIME
             //workers = aws.getInstances();
 
-            if (workers.size() < 1){ createInstance = true;}
+            if (workers.size() < 1) {
+                createInstance = true;
+            }
 
             // TODO we need to check if we need new workers
             // or to delete unused workers
-            for (WorkerInstance w : workers){
+            for (WorkerInstance w : workers) {
 
-                if (w.getJobs() >= SIZE_THRESHOLD) {createInstance = true;}
+                if (w.getJobs() >= SIZE_THRESHOLD) {
+                    createInstance = true;
+                }
                 List<String> progress = messenger.getProgress(w.getId());
                 logger.info("Progress: " + progress.toString());
-                if (progress != null && progress.size() ==3) {
+                if (progress != null && progress.size() == 3) {
                     if (progress.get(2).equals("false")) {
                         w.setProgress(Double.valueOf(progress.get(0)), Integer.valueOf(progress.get(1)));
                         w.setWork(true);
-                    }
-                    else {
+                    } else {
                         w.setProgress(Double.valueOf(progress.get(0)), Integer.valueOf(progress.get(1)));
                         w.setWork(false);
                     }
@@ -109,28 +111,27 @@ public class Scaler extends Thread{
                     }
                 }
             }
-            logger.info("Create instance?: " + createInstance + " | Threshold: " + (Double.valueOf(cpu)/Double.valueOf(workers.size())>CPU_THRESHOLD));
-            if(createInstance || (Double.valueOf(cpu)/Double.valueOf(workers.size())>CPU_THRESHOLD)){ 
-                startWorker(); 
+            logger.info("Create instance?: " + createInstance + " | Threshold: " + (Double.valueOf(cpu) / Double.valueOf(workers.size()) > CPU_THRESHOLD));
+            if (createInstance || (Double.valueOf(cpu) / Double.valueOf(workers.size()) > CPU_THRESHOLD)) {
+                startWorker();
             }
 
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             logger.error("Error retreiving workers:" + e.getMessage());
         }
-        for(WorkerInstance w : workers){
+        for (WorkerInstance w : workers) {
             logger.info("Id: " + w.getId() + " | State: " + w.getStatus() + " | CPU: " + w.getCPU().toString() + "| Working: " + w.working());
             messenger.putMessage(w);
         }
     }
 
-    public List<WorkerInstance> syncWorkers(){
-        LinkedHashMap<String, Map<String,String>> workerData =  messenger.getWorkersTable();
+    public List<WorkerInstance> syncWorkers() {
+        LinkedHashMap<String, Map<String, String>> workerData = messenger.getWorkersTable();
         List<WorkerInstance> w = new ArrayList<>();
         logger.info("sync data: " + workerData.toString());
 
-        for (WorkerInstance wo : workers){
+        for (WorkerInstance wo : workers) {
             logger.info("exists:" + workerData.containsKey(wo.getId()));
         }
 
@@ -144,20 +145,19 @@ public class Scaler extends Thread{
         return w;
     }
 
-    public List<WorkerInstance> getWorkers(){
+    public List<WorkerInstance> getWorkers() {
         return this.workers;
     }
 
-    public ArrayList<WorkerInstance> getInstances(){
-        try{
+    public ArrayList<WorkerInstance> getInstances() {
+        try {
             return aws.getInstances();
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             return null;
         }
     }
 
-    public void startWorker(){
+    public void startWorker() {
         WorkerInstance worker = aws.createInstance();
         workers.add(worker);
         // instances start with and empty address
@@ -167,23 +167,23 @@ public class Scaler extends Thread{
         balancer.addWorkerBalancer(worker);
     }
 
-    public void terminateWorker(WorkerInstance worker){
+    public void terminateWorker(WorkerInstance worker) {
         balancer.removeWorkerBalancer(worker);
         aws.terminateInstance(worker.getId());
     }
 
-    public synchronized void resetPool(){
+    public synchronized void resetPool() {
 
-        LinkedHashMap<String, Map<String,String>> workerData = messenger.getWorkersTable();
-        for (Map.Entry<String, Map<String,String>> entry : workerData.entrySet()) {
+        LinkedHashMap<String, Map<String, String>> workerData = messenger.getWorkersTable();
+        for (Map.Entry<String, Map<String, String>> entry : workerData.entrySet()) {
             String key = entry.getKey();
-            Map<String,String> value = entry.getValue();
+            Map<String, String> value = entry.getValue();
             logger.info("key: " + key + " value: " + value.get("status"));
             messenger.endWorker(key);
         }
 
-        for (WorkerInstance w : workers){
-            if(!w.getStatus().equals("running")) {
+        for (WorkerInstance w : workers) {
+            if (!w.getStatus().equals("running")) {
                 terminateWorker(w);
                 w.setStatus("dead");
                 messenger.putMessage(w);
@@ -201,11 +201,11 @@ public class Scaler extends Thread{
         this.balancer = balancer;
     }
 
-    public void setState(Boolean state){
+    public void setState(Boolean state) {
         this.running = state;
     }
 
-    public void setupConfig(LinkedHashMap<String,String> configs){
+    public void setupConfig(LinkedHashMap<String, String> configs) {
         for (Map.Entry<String, String> entry : configs.entrySet()) {
             String name = entry.getKey();
             String value = entry.getValue();
@@ -215,10 +215,9 @@ public class Scaler extends Thread{
         }
     }
 
-    public LinkedHashMap<String,String> getConfigs(){
+    public LinkedHashMap<String, String> getConfigs() {
         return configs;
     }
 
-    
 
 }

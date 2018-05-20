@@ -45,27 +45,27 @@ public class WebServer {
 
     public static void main(String[] args) throws Exception {
 
-        
 
         // LOCAL TESTING
-        //instanceId = "i-04d65d02f3cea064d";
-        //endpoint = "localhost";
-        
+        instanceId = "i-002563b5019e4f04c";
+        endpoint = "localhost";
+
         // Read worker machine details at startup
         // instance public address
-        instanceId = EC2MetadataUtils.getInstanceId();
+        //   instanceId = EC2MetadataUtils.getInstanceId();
         logger.info("Instance Id: " + instanceId);
-        endpoint = EC2MetadataUtils.getData("/latest/meta-data/public-hostname") + ":" + PORT;
+
+        //  endpoint = EC2MetadataUtils.getData("/latest/meta-data/public-hostname") + PORT;
+
         logger.info("Public endpoint: " + endpoint);
 
         // Create new Messenger, to place information at Dynamo
-        messenger = new Messenger();
+        messenger = Messenger.getInstance();
         // send machine data to dynamo
         // update dynamo with info about worker
         messenger.newWorker(instanceId, endpoint);
         // status , working
         updateWorker("running", false);
-        
 
 
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
@@ -146,19 +146,19 @@ public class WebServer {
             try {
 
                 String[] paramsArray = {params.get("x0"), params.get("y0"),
-                                        params.get("x1"),params.get("y1"),
-                                        params.get("v"),params.get("s"),
-                                        params.get("m"),params.get("out")};
+                        params.get("x1"), params.get("y1"),
+                        params.get("v"), params.get("s"),
+                        params.get("m"), params.get("out")};
                 Main.main(paramsArray);
 
                 File file = new File(mazeNameOut);
                 byte[] bytes = new byte[(int) file.length()];
-    
+
                 FileInputStream fileInputStream = new FileInputStream(file);
                 BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
                 bufferedInputStream.read(bytes, 0, bytes.length);
                 bufferedInputStream.close();
-    
+
                 t.sendResponseHeaders(responseCode_OK, file.length());
                 OutputStream outputStream = t.getResponseBody();
                 outputStream.write(bytes, 0, bytes.length);
@@ -166,11 +166,11 @@ public class WebServer {
 
                 logger.info("Finished processing request: " + newRequestId);
 
-            } catch(Exception e) {
+            } catch (Exception e) {
                 logger.error(e.toString());
                 response = "<html><title>maze runner </title><br><body>" +
-                ""+ e.toString() + "<hr>" +
-                "</body></html>";
+                        "" + e.toString() + "<hr>" +
+                        "</body></html>";
                 t.sendResponseHeaders(responseCode_OK, response.length());
                 OutputStream os = t.getResponseBody();
                 os.write(response.getBytes());
@@ -189,19 +189,30 @@ public class WebServer {
         }
     }
 
-    public static void updateMetrics(long inst,long bb, Boolean finished){
-        Long threadId = Thread.currentThread().getId();
-        messenger.newMetrics(instanceId,
-                            String.valueOf(requestId.get(threadId)),
-                            String.valueOf(inst),
-                            String.valueOf(bb), 
-                            finished,
-                            pureRequest.toString());
-    }
 
-    public static void updateWorker(String status, Boolean working){
+
+    public static void updateWorker(String status, Boolean working) {
         // instanceId, status, cpu, endpoint, working, jobs
-        messenger.workerUpdate(instanceId,status,0.0,endpoint,working,requestId.size());
+        messenger.workerUpdate(instanceId, status, 0.0, endpoint, working, requestId.size());
     }
 
+    public static HashMap<Long, Object> getRequestParams() {
+        return requestParams;
+    }
+
+    public static HashMap<String, Object> getPureRequest() {
+        return pureRequest;
+    }
+
+    public static HashMap<Long, Long> getRequestId() {
+        return requestId;
+    }
+
+    public static AtomicLong getHighestRequestId() {
+        return highestRequestId;
+    }
+
+    public static String getInstanceId() {
+        return instanceId;
+    }
 }

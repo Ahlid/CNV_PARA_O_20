@@ -1,6 +1,8 @@
 package pt.ulisboa.tecnico.meic.cnv.instrumentation;
 
+
 import pt.ulisboa.tecnico.meic.cnv.httpserver.WebServer;
+import pt.ulisboa.tecnico.meic.cnv.storage.Messenger;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -54,7 +56,7 @@ public class MetricsInstrumentation {
         metrics.setDyn_bb_count(metrics.getDyn_bb_count() + 1);
         // Notifier
         if( metrics.getDyn_bb_count() % BB_SIZE == 0 ){
-            WebServer.updateMetrics(metrics.getDyn_instr_count(), metrics.getDyn_bb_count(), false);
+            updateMetrics(metrics.getDyn_instr_count(), metrics.getDyn_bb_count(), false);
         }
     }
 
@@ -71,7 +73,7 @@ public class MetricsInstrumentation {
         Long threadId = Thread.currentThread().getId();
         Metrics metrics = getMetricsForThread();
         // Notify about end of execution
-        WebServer.updateMetrics(metrics.getDyn_instr_count(), metrics.getDyn_bb_count(), true);
+        updateMetrics(metrics.getDyn_instr_count(), metrics.getDyn_bb_count(), true);
         threadMetrics.put(threadId, new Metrics());
     }
 
@@ -81,11 +83,22 @@ public class MetricsInstrumentation {
         System.out.println(threadId);
         Metrics metrics = getMetricsForThread();
         // Notify about end of execution
-        WebServer.updateMetrics((long) 0, (long) 0, false);
+        updateMetrics((long) 0, (long) 0, false);
 
         metrics.setThreadID((int) (long) threadId);
         metrics.setRequestParams((LinkedHashMap) WebServer.requestParams.get(threadId));
 
+    }
+
+    public static void updateMetrics(long inst, long bb, Boolean finished) {
+        Messenger messenger = Messenger.getInstance();
+        Long threadId = Thread.currentThread().getId();
+        messenger.newMetrics(WebServer.getInstanceId(),
+                String.valueOf(WebServer.getRequestId().get(threadId)),
+                String.valueOf(inst),
+                String.valueOf(bb),
+                finished,
+                WebServer.getPureRequest().toString());
     }
 
 }
