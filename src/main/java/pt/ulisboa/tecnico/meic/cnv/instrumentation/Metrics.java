@@ -14,6 +14,7 @@ public class Metrics {
     private long dyn_instr_count = 0;
 
     private LinkedHashMap<String, String> requestParams;
+    private String params;
 
     public LinkedHashMap<String, String> getRequestParams() {
         return requestParams;
@@ -21,6 +22,14 @@ public class Metrics {
 
     public void setRequestParams(LinkedHashMap<String, String> requestParams) {
         this.requestParams = requestParams;
+    }
+
+    public String getParams() {
+        return params;
+    }
+
+    public void setParams(String params) {
+        this.params = params;
     }
 
     public int getThreadID() {
