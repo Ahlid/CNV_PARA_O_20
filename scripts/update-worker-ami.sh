@@ -4,7 +4,7 @@ cd ~ &&
 INSTANCE_ID=$(ec2-metadata --instance-id | cut -d ' ' -f2) &&
 
 echo "Recreating AMI: worker-ami"
-OLD_WORKER_AMI_ID=$(aws ec2 describe-images --owners self --filters Name=name,Values=worker-ami | grep -o "ami-[a-zA-Z0-9]*")
+OLD_WORKER_AMI_ID=$(aws ec2 describe-images --owners self --filters Name=name,Values=worker-ami | sed -n 's/\s*"ImageId": "\(.*\)",/\1/gp')
 [ -n $OLD_WORKER_AMI_ID ] && aws ec2 deregister-image --image-id $OLD_WORKER_AMI_ID
 
 WORKER_AMI_ID=$(aws ec2 create-image --instance-id $INSTANCE_ID --no-reboot --name worker-ami) &&
