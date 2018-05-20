@@ -96,7 +96,11 @@ aws ec2 authorize-security-group-ingress --group-name CNV-balancer-sg --protocol
 echo =======================================
 echo = Launching a load balancer instance  =
 echo =======================================
-aws ec2 run-instances --image-id $BALANCER_AMI_ID --count 1 --instance-type t2.micro --security-groups CNV-balancer-sg &> /dev/null &&
+KEY_NAMES=$(aws ec2 describe-key-pairs | sed -n 's/\s*"KeyName": "\(.*\)",/\1/gp' | tr '\n' ' ') &&
+echo "Choose a valid key pair for logging in to the balancer"
+echo "Available key pairs: $KEY_NAMES"
+read key_name &&
+aws ec2 run-instances --image-id $BALANCER_AMI_ID --count 1 --instance-type t2.micro --security-groups CNV-balancer-sg --key-name $key_name &> /dev/null &&
 
 echo Done
 echo "You may stop the load balancer instance anytime to stop incurring costs"
