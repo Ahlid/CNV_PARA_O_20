@@ -35,17 +35,6 @@ public class MetricsInstrumentation {
     }
 
     /**
-     * Method to be called when a new routine starts
-     *
-     * @param name - the name of the method
-     */
-    public static synchronized void dynMethodCount(String name) {
-
-        Metrics metrics = getMetricsForThread();
-        metrics.setDyn_method_count(metrics.getDyn_method_count() + 1);
-    }
-
-    /**
      * Method to be called when a basic block is executed
      *
      * @param incr - number of instructions inside basic block
