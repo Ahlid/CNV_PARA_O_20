@@ -50,7 +50,7 @@ public class WebServer {
         instanceId = EC2MetadataUtils.getInstanceId();
         logger.info("Instance Id: " + instanceId);
 
-        endpoint = EC2MetadataUtils.getData("/latest/meta-data/public-hostname") + PORT;
+        endpoint = EC2MetadataUtils.getData("/latest/meta-data/public-hostname") + ":" + PORT;
 
         logger.info("Public endpoint: " + endpoint);
 
