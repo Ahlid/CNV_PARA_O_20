@@ -17,3 +17,93 @@ params:
   # Maze 50 - DFS
   - { m: Maze50.maze, x0: 0, y0: 1, x1: 10, y1: 15, v: 100, s: dfs}
   - { m: Maze50.maze, x0: 0, y0: 1, x1: 25, y1: 25, v: 100, s: dfs}
+  # Maze 100 - A*
+  - { m: Maze100.maze, x0: 0, y0: 1, x1: 10, y1: 15, v: 100, s: astar}
+  - { m: Maze100.maze, x0: 0, y0: 1, x1: 25, y1: 25, v: 100, s: astar}
+  - { m: Maze100.maze, x0: 0, y0: 49, x1: 25, y1: 25, v: 100, s: astar}
+  - { m: Maze100.maze, x0: 0, y0: 1, x1: 98, y1: 1, v: 100, s: astar}
+  - { m: Maze100.maze, x0: 0, y0: 1, x1: 98, y1: 49, v: 100, s: astar}
+  # Maze 100 - BFS
+  - { m: Maze100.maze, x0: 0, y0: 1, x1: 10, y1: 15, v: 100, s: bfs}
+  - { m: Maze100.maze, x0: 0, y0: 1, x1: 45, y1: 25, v: 100, s: bfs}
+  - { m: Maze100.maze, x0: 0, y0: 49, x1: 45, y1: 25, v: 100, s: bfs}
+  - { m: Maze100.maze, x0: 0, y0: 1, x1: 98, y1: 1, v: 100, s: bfs}
+  - { m: Maze100.maze, x0: 0, y0: 1, x1: 98, y1: 49, v: 100, s: bfs}
+  # Maze 100 - DFS
+  - { m: Maze100.maze, x0: 0, y0: 1, x1: 10, y1: 15, v: 100, s: dfs}
+  - { m: Maze100.maze, x0: 0, y0: 1, x1: 50, y1: 25, v: 100, s: dfs}
+  # Maze 250 - A*
+  - { m: Maze250.maze, x0: 0, y0: 1, x1: 100, y1: 150, v: 100, s: astar}
+  - { m: Maze250.maze, x0: 0, y0: 1, x1: 125, y1: 125, v: 100, s: astar}
+  - { m: Maze250.maze, x0: 0, y0: 49, x1: 125, y1: 125, v: 100, s: astar}
+  - { m: Maze250.maze, x0: 0, y0: 1, x1: 198, y1: 10, v: 100, s: astar}
+  - { m: Maze250.maze, x0: 0, y0: 1, x1: 198, y1: 49, v: 100, s: astar}
+  # Maze 250 - BFS
+  - { m: Maze250.maze, x0: 0, y0: 1, x1: 100, y1: 150, v: 100, s: bfs}
+  - { m: Maze250.maze, x0: 0, y0: 1, x1: 125, y1: 125, v: 100, s: bfs}
+  - { m: Maze250.maze, x0: 0, y0: 49, x1: 125, y1: 125, v: 100, s: bfs}
+  - { m: Maze250.maze, x0: 0, y0: 1, x1: 198, y1: 10, v: 100, s: bfs}
+  - { m: Maze250.maze, x0: 0, y0: 1, x1: 198, y1: 49, v: 100, s: bfs}
+  # Maze 250 - DFS
+  - { m: Maze250.maze, x0: 0, y0: 1, x1: 100, y1: 150, v: 100, s: dfs}
+  - { m: Maze250.maze, x0: 0, y0: 1, x1: 150, y1: 25, v: 100, s: dfs}
+  # Maze 300 - A*
+  - { m: Maze300.maze, x0: 0, y0: 1, x1: 200, y1: 150, v: 100, s: astar}
+  - { m: Maze300.maze, x0: 0, y0: 1, x1: 225, y1: 250, v: 100, s: astar}
+  - { m: Maze300.maze, x0: 0, y0: 49, x1: 225, y1: 250, v: 100, s: astar}
+  - { m: Maze300.maze, x0: 0, y0: 1, x1: 298, y1: 10, v: 100, s: astar}
+  - { m: Maze300.maze, x0: 0, y0: 1, x1: 298, y1: 49, v: 100, s: astar}
+  # Maze 300 - BFS
+  - { m: Maze300.maze, x0: 0, y0: 1, x1: 200, y1: 150, v: 100, s: bfs}
+  - { m: Maze300.maze, x0: 0, y0: 1, x1: 225, y1: 250, v: 100, s: bfs}
+  - { m: Maze300.maze, x0: 0, y0: 49, x1: 225, y1: 250, v: 100, s: bfs}
+  - { m: Maze300.maze, x0: 0, y0: 1, x1: 298, y1: 10, v: 100, s: bfs}
+  - { m: Maze300.maze, x0: 0, y0: 1, x1: 298, y1: 49, v: 100, s: bfs}
+  # Maze 300 - DFS
+  - { m: Maze300.maze, x0: 0, y0: 1, x1: 200, y1: 150, v: 100, s: dfs}
+  - { m: Maze300.maze, x0: 0, y0: 1, x1: 250, y1: 250, v: 100, s: dfs}
+  # Maze 500 - A*
+  - { m: Maze500.maze, x0: 0, y0: 1, x1: 200, y1: 150, v: 100, s: astar}
+  - { m: Maze500.maze, x0: 0, y0: 1, x1: 225, y1: 250, v: 100, s: astar}
+  - { m: Maze500.maze, x0: 0, y0: 490, x1: 225, y1: 250, v: 100, s: astar}
+  - { m: Maze500.maze, x0: 0, y0: 1, x1: 298, y1: 10, v: 100, s: astar}
+  - { m: Maze500.maze, x0: 0, y0: 1, x1: 298, y1: 490, v: 100, s: astar}
+  # Maze 500 - BFS
+  - { m: Maze500.maze, x0: 0, y0: 1, x1: 200, y1: 150, v: 100, s: bfs}
+  - { m: Maze500.maze, x0: 0, y0: 1, x1: 225, y1: 250, v: 100, s: bfs}
+  - { m: Maze500.maze, x0: 0, y0: 490, x1: 225, y1: 250, v: 100, s: bfs}
+  - { m: Maze500.maze, x0: 0, y0: 1, x1: 298, y1: 10, v: 100, s: bfs}
+  - { m: Maze500.maze, x0: 0, y0: 1, x1: 298, y1: 490, v: 100, s: bfs}
+  # Maze 500 - DFS
+  - { m: Maze500.maze, x0: 0, y0: 1, x1: 200, y1: 150, v: 100, s: dfs}
+  - { m: Maze500.maze, x0: 0, y0: 1, x1: 250, y1: 250, v: 100, s: dfs}
+  # Maze 700 - A*
+  - { m: Maze700.maze, x0: 0, y0: 1, x1: 200, y1: 150, v: 100, s: astar}
+  - { m: Maze700.maze, x0: 0, y0: 1, x1: 225, y1: 250, v: 100, s: astar}
+  - { m: Maze700.maze, x0: 0, y0: 490, x1: 225, y1: 250, v: 100, s: astar}
+  - { m: Maze700.maze, x0: 0, y0: 1, x1: 298, y1: 10, v: 100, s: astar}
+  - { m: Maze700.maze, x0: 0, y0: 1, x1: 298, y1: 490, v: 100, s: astar}
+  # Maze 700 - BFS
+  - { m: Maze700.maze, x0: 0, y0: 1, x1: 200, y1: 150, v: 100, s: bfs}
+  - { m: Maze700.maze, x0: 0, y0: 1, x1: 225, y1: 250, v: 100, s: bfs}
+  - { m: Maze700.maze, x0: 0, y0: 490, x1: 225, y1: 250, v: 100, s: bfs}
+  - { m: Maze700.maze, x0: 0, y0: 1, x1: 298, y1: 10, v: 100, s: bfs}
+  - { m: Maze700.maze, x0: 0, y0: 1, x1: 298, y1: 490, v: 100, s: bfs}
+  # Maze 700 - DFS
+  - { m: Maze700.maze, x0: 0, y0: 1, x1: 200, y1: 150, v: 100, s: dfs}
+  - { m: Maze700.maze, x0: 0, y0: 1, x1: 250, y1: 250, v: 100, s: dfs}
+  # Maze 1000 - A*
+  - { m: Maze1000.maze, x0: 0, y0: 1, x1: 200, y1: 150, v: 100, s: astar}
+  - { m: Maze1000.maze, x0: 0, y0: 1, x1: 225, y1: 250, v: 100, s: astar}
+  - { m: Maze1000.maze, x0: 0, y0: 490, x1: 225, y1: 250, v: 100, s: astar}
+  - { m: Maze1000.maze, x0: 0, y0: 1, x1: 298, y1: 10, v: 100, s: astar}
+  - { m: Maze1000.maze, x0: 0, y0: 1, x1: 298, y1: 490, v: 100, s: astar}
+  # Maze 1000 - BFS
+  - { m: Maze1000.maze, x0: 0, y0: 1, x1: 200, y1: 150, v: 100, s: bfs}
+  - { m: Maze1000.maze, x0: 0, y0: 1, x1: 225, y1: 250, v: 100, s: bfs}
+  - { m: Maze1000.maze, x0: 0, y0: 490, x1: 225, y1: 250, v: 100, s: bfs}
+  - { m: Maze1000.maze, x0: 0, y0: 1, x1: 298, y1: 10, v: 100, s: bfs}
+  - { m: Maze1000.maze, x0: 0, y0: 1, x1: 298, y1: 490, v: 100, s: bfs}
+  # Maze 1000 - DFS
+  - { m: Maze1000.maze, x0: 0, y0: 1, x1: 200, y1: 150, v: 100, s: dfs}
+  - { m: Maze1000.maze, x0: 0, y0: 1, x1: 250, y1: 250, v: 100, s: dfs}
