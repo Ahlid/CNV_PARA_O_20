@@ -90,7 +90,7 @@ aws ec2 authorize-security-group-ingress --group-name CNV-worker-sg --protocol t
 
 echo "Creating Security Group: CNV-balancer-sg"
 aws ec2 create-security-group --description "Allows SSH + HTTP at the load balancer instance" --group-name CNV-balancer-sg
-aws ec2 authorize-security-group-ingress --group-name CNV-balancer-sg --protocol tcp --port 80 --cidr 0.0.0.0/0
+aws ec2 authorize-security-group-ingress --group-name CNV-balancer-sg --protocol tcp --port 8080 --cidr 0.0.0.0/0
 aws ec2 authorize-security-group-ingress --group-name CNV-balancer-sg --protocol tcp --port 22 --cidr 0.0.0.0/0
 
 echo =======================================
