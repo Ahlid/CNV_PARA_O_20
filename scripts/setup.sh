@@ -1,5 +1,28 @@
 #!/bin/bash
 
+delete_sg_if_exists() {
+  if [ ! $1 ]; then
+    echo "Please indicate a Security Group name"
+    exit
+  fi 
+  GROUP_NAME=$1
+  SG_EXISTS=$(aws ec2 describe-security-groups --filters Name=group-name,Values=$GROUP_NAME | grep "GroupName") &&
+  if [ "$SG_EXISTS" ]; then
+    # Terminating instances which use a SG is a prerequisite for deleting that SG
+    # Retrieve all instance ids which use this Security Group
+    INSTANCES_TERMINATE=$(aws ec2 describe-instances --filters Name=instance.group-name,Values=$GROUP_NAME | sed -n 's/\s*"InstanceId": "\(.*\)",/\1/gp' | tr '\n' ' ') &&
+    if [ "$INSTANCES_TERMINATE" ]; then
+      echo "The following instances use the Security Group $GROUP_NAME: $INSTANCES_TERMINATE"
+      echo "Terminating these instances in order to be able to delete the Security Group"
+      aws ec2 terminate-instances --instance-ids $INSTANCES_TERMINATE &> /dev/null &&
+      aws ec2 wait instance-terminated --instance-ids $INSTANCES_TERMINATE
+    fi
+    # Delete security group if it previously existed
+    echo "Deleting previously created Security Group: $GROUP_NAME"
+    aws ec2 delete-security-group --group-name $GROUP_NAME &> /dev/null
+  fi
+}
+
 cd ~ &&
 echo =======================================
 echo = Installing Java SDK and Git         =
@@ -48,26 +71,18 @@ source ~/CNV_PARA_O_20/scripts/update-balancer-ami.sh &&
 echo =======================================
 echo = Creating worker and balancer SGs    =
 echo =======================================
-# In order to delete security groups we must first
-# terminate any instances associated with them
-INSTANCES_TERMINATE=$(aws ec2 describe-instances --filters Name=instance.group-name,Values=CNV-worker-sg,CNV-balancer-sg | sed -n 's/\s*"InstanceId": "\(.*\)",/\1/gp' | tr '\n' ' ') &&
-[ -n $INSTANCES_TERMINATE ] && aws ec2 terminate-instances --instance-ids $INSTANCES_TERMINATE
-[ -n $INSTANCES_TERMINATE ] && aws ec2 wait instance-terminated --instance-ids $INSTANCES_TERMINATE
-
-# Delete security groups if they previously existed
-aws ec2 delete-security-group --group-name CNV-worker-sg &> /dev/null
-aws ec2 delete-security-group --group-name CNV-balancer-sg &> /dev/null
-
-echo "Creating Security Group: CNV-worker-sg"
-aws ec2 create-security-group --description "Allows SSH + HTTP at a worker instance" --group-name CNV-worker-sg
-aws ec2 authorize-security-group-ingress --group-name CNV-worker-sg --protocol tcp --port 8000 --cidr 0.0.0.0/0
-aws ec2 authorize-security-group-ingress --group-name CNV-worker-sg --protocol tcp --port 22 --cidr 0.0.0.0/0
-
-echo "Creating Security Group: CNV-balancer-sg"
-aws ec2 create-security-group --description "Allows SSH + HTTP at the load balancer instance" --group-name CNV-balancer-sg
-aws ec2 authorize-security-group-ingress --group-name CNV-balancer-sg --protocol tcp --port 80 --cidr 0.0.0.0/0
-aws ec2 authorize-security-group-ingress --group-name CNV-balancer-sg --protocol tcp --port 22 --cidr 0.0.0.0/0
-
+# Security Group for workers
+delete_sg_if_exists CNV-worker-sg
+echo "Creating new Security Group: CNV-worker-sg"
+aws ec2 create-security-group --description "Allows SSH + HTTP at a worker instance" --group-name CNV-worker-sg &> /dev/null &&
+aws ec2 authorize-security-group-ingress --group-name CNV-worker-sg --protocol tcp --port 8000 --cidr 0.0.0.0/0 &&
+aws ec2 authorize-security-group-ingress --group-name CNV-worker-sg --protocol tcp --port 22 --cidr 0.0.0.0/0 &&
+# Security Group for the balancer
+delete_sg_if_exists CNV-balancer-sg
+echo "Creating new Security Group: CNV-balancer-sg"
+aws ec2 create-security-group --description "Allows SSH + HTTP at the load balancer instance" --group-name CNV-balancer-sg &> /dev/null &&
+aws ec2 authorize-security-group-ingress --group-name CNV-balancer-sg --protocol tcp --port 80 --cidr 0.0.0.0/0 &&
+aws ec2 authorize-security-group-ingress --group-name CNV-balancer-sg --protocol tcp --port 22 --cidr 0.0.0.0/0 &&
 echo =======================================
 echo = Launching a load balancer instance  =
 echo =======================================
