@@ -112,7 +112,7 @@ public class Scaler extends Thread {
             syncJobs();
             
             if (workers.size() < minWorkers) {
-                
+                createInstance = true;
             }
 
             for (WorkerInstance w : this.workers) {
@@ -140,7 +140,7 @@ public class Scaler extends Thread {
             }
 
             // destroy instances ??
-            if (sizeBB < 3*shortRequestLimit+longRequestLimit || sizeBB < shortRequestLimit+2*longRequestLimit && ((int)System.currentTimeMillis() - lastCreation) > timeLimit){
+            if ((workers.size() < maxWorkers) && ((int)System.currentTimeMillis() - lastCreation) > timeLimit && sizeBB < 3*shortRequestLimit+longRequestLimit || sizeBB < shortRequestLimit+2*longRequestLimit){
                 WorkerInstance workerToDestroy = lessRelevant();
                 if (workerToDestroy.getJobsSize() == 0){
                     terminateWorker(workerToDestroy);
