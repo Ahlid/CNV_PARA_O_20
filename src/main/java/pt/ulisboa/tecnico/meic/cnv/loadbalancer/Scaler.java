@@ -24,7 +24,7 @@ public class Scaler extends Thread {
     private final static Integer CLEANUP = 3;
     private final static Double CPU_THRESHOLD = 60.0;
     private final static Integer SIZE_THRESHOLD = 500;
-    public final static Long longRequesLimit = 2000000000L;
+    public final static Long longRequesLimit = 5000000000L;
     public final static Long rapidRequesLimit = 20000000L;
     
     private static final String METRICS_TOPIC = "Metrics";
@@ -97,11 +97,12 @@ public class Scaler extends Thread {
             if (cleanCounter == CLEANUP) {
                 cleanCounter = 0;
                 
-                syncWorkers();
+                
                 
                 // TODO we need to remove dead instances from dynamoDB
                 workers = aws.getInstances();
             }
+            syncWorkers();
             cleanCounter++;
             
             syncJobs();
@@ -283,4 +284,59 @@ public class Scaler extends Thread {
             
             
         }
+        // clean and delete everything
+    }
+
+    /**
+     * Takes a balancer as argument to be able
+     * to notify it when a new instance is running
+     */
+    public Scaler(Balancer balancer) throws Exception {
+        this();
+        this.balancer = balancer;
+    }
+
+    public void setState(Boolean state) {
+        this.running = state;
+    }
+
+    public void setupConfig(LinkedHashMap<String, String> configs) {
+        for (Map.Entry<String, String> entry : configs.entrySet()) {
+            String name = entry.getKey();
+            String value = entry.getValue();
+            messenger.changeConfig(name, value);
+        }
         
+        configs = messenger.fetchConfig();
+        aws.setWorkerAmiId(configs.get("AMI_Name"));
+        aws.setupInstances();
+
+        //aws.setupInstanceRequest(1, 1);
+    }
+
+    public LinkedHashMap<String, String> getConfigs() {
+        return configs;
+    }
+
+    public WorkerInstance getBestWorker() {
+        synchronized (this.workers) {
+
+            WorkerInstance chosenWorker = null;
+
+            for (WorkerInstance w : this.workers) {
+
+                if (!w.isAcceptingRequests() || !w.getStatus().equals("running"))
+                    continue;
+
+                if (chosenWorker == null) {
+                    chosenWorker = w;
+                } else if (chosenWorker.getBBtoBeProcessed() > w.getBBtoBeProcessed()) {
+                    chosenWorker = w;
+                }
+            }
+
+            return chosenWorker;
+        }
+    }
+
+}

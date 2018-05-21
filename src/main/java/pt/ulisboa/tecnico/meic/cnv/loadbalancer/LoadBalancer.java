@@ -1,4 +1,5 @@
 package pt.ulisboa.tecnico.meic.cnv.loadbalancer;
+
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -11,16 +12,18 @@ public class LoadBalancer implements Balancer {
     protected List<WorkerInstance> workers;
     protected Scaler scaler;
 
-    public LoadBalancer() throws Exception{
+    public LoadBalancer() throws Exception {
         logger.info("Initializing Balancer...");
         workers = new ArrayList<>();
 
     }
 
-    public void setScaler(Scaler scaler) { this.scaler = scaler; }
+    public void setScaler(Scaler scaler) {
+        this.scaler = scaler;
+    }
 
-    public WorkerInstance getInstance(){
-        Double cpu = 100.0;
+    public WorkerInstance getInstance() {
+        /*Double cpu = 100.0;
         Integer size = 150;
         WorkerInstance faster=null;
         workers = scaler.getWorkers();
@@ -38,7 +41,8 @@ public class LoadBalancer implements Balancer {
             else { return workers.get(0); }
         }
 
-        return workers.get(workers.indexOf(faster));
+        return workers.get(workers.indexOf(faster));*/
+        return this.scaler.getBestWorker();
     }
 
     @Override

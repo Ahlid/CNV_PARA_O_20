@@ -5,7 +5,7 @@ import java.util.List;
 
 public class WorkerInstance {
 
-    public final static Long longRequesLimit = 2000000000L;
+    public final static Long longRequesLimit = 5000000000L;
     public final static Long rapidRequesLimit = 20000000L;
 
     private String id = "unknown";
@@ -16,6 +16,7 @@ public class WorkerInstance {
     private Integer jobs = 0;
     private Boolean working = false;
     private List<Job> myJobs = new ArrayList<>();
+    private boolean isAcceptingRequests = true;
 
 
     public String getId() {
@@ -71,6 +72,14 @@ public class WorkerInstance {
         this.jobs = jobs;
     }
 
+    public boolean isAcceptingRequests() {
+        return isAcceptingRequests;
+    }
+
+    public void setAcceptingRequests(boolean acceptingRequests) {
+        isAcceptingRequests = acceptingRequests;
+    }
+
     public void setWork(Boolean work) {
         this.working = work;
     }
@@ -120,6 +129,30 @@ public class WorkerInstance {
                     total += j.getExpecteCost();
                 } else {
                     total += j.getCurrentBBprocessed();
+                }
+            }
+
+            return total;
+        }
+
+
+    }
+
+
+    public double getBBtoBeProcessed() {
+
+        synchronized (this.myJobs) {
+            if (this.myJobs.size() == 0) {
+                return 0;
+            }
+
+            double total = 0;
+
+            for (Job j : myJobs) {
+                if (j.getCurrentBBprocessed() > j.getExpecteCost()) {
+                    total += 0;
+                } else {
+                    total += j.getExpecteCost() - j.getCurrentBBprocessed();
                 }
             }
 
@@ -226,7 +259,6 @@ public class WorkerInstance {
                     ", requestType='" + requestType + '\'' +
                     '}';
         }
-
     }
 }
 
