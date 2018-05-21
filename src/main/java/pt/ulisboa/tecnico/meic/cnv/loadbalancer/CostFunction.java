@@ -1,6 +1,8 @@
 package pt.ulisboa.tecnico.meic.cnv.loadbalancer;
 
-import java.util.ArrayList;
+import pt.ulisboa.tecnico.meic.cnv.storage.Messenger;
+
+import java.util.*;
 
 public class CostFunction {
 
@@ -76,7 +78,7 @@ public class CostFunction {
         int expectedCase = (int) (selectedSample.getBasicBlocks() + distanceExpected * distanceExpected * multiplier *
                 ASTAR_DISTANCE_COST);
 
-        if(expectedCase <0 )
+        if (expectedCase < 0)
             return worstCase;
 
         if (distanceExpected == 0)
@@ -132,7 +134,7 @@ public class CostFunction {
                 BFS_DISTANCE_COST);
 
 
-        if(expectedCase <0 )
+        if (expectedCase < 0)
             return worstCase;
 
         if (distanceExpected == 0)
@@ -191,7 +193,7 @@ public class CostFunction {
             return expectedCase;
 
 
-        if(expectedCase <0 )
+        if (expectedCase < 0)
             return worstCase;
 
         //  System.out.println(expectedCase);
@@ -201,6 +203,45 @@ public class CostFunction {
 
         return (expectedCase + worstCase) / 2;
 
+    }
 
+
+    public static int calculateCost(String request) {
+
+        try {
+            System.out.println("COST");
+            System.out.println(request);
+            String maze = request.split("m=")[1].split("&")[0].substring(0, request.split("m=")[1].split("&")[0].length() - 5);
+            String strategy = request.split("s=")[1];
+
+            System.out.println(maze);
+            System.out.println(strategy);
+
+            LinkedHashMap<String, Map<String, String>> cache = Messenger.getCacheTable();
+            Set<String> keys = cache.keySet();
+            Iterator it = keys.iterator();
+
+            ArrayList<ResultValue> resultValues = new ArrayList<>();
+
+            while (it.hasNext()) {
+
+                Map<String, String> entry = cache.get(it.next());
+
+                System.out.println(entry);
+                //todo: if maze equal & same stretegy add it to the list
+
+
+            }
+
+            //todo return the value of the cost
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        //todo: read from dynamo
+        //todo: transform into resultvalue
+        //todo: calculate expected cost
+
+        return 0;
     }
 }

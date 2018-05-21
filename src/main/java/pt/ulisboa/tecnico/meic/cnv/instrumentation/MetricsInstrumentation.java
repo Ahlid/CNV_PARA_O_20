@@ -78,7 +78,14 @@ public class MetricsInstrumentation {
 
         // Notify about end of execution
         updateMetrics((long) 0, (long) 0, false);
+        initCostRequestTable(WebServer.getInstanceId(), WebServer.getRequestId().get(threadId), WebServer.getPureRequest().get(threadId));
 
+    }
+
+    private static void initCostRequestTable(String instanceId, Long aLong, String params) {
+        Messenger messenger = Messenger.getInstance();
+
+        messenger.newRequestCost(instanceId, aLong, params);
     }
 
     public static void updateMetrics(long inst, long bb, Boolean finished) {
@@ -102,7 +109,7 @@ public class MetricsInstrumentation {
         Messenger messenger = Messenger.getInstance();
 
 
-        messenger.newCacheMetrics(request,bb);
+        messenger.newCacheMetrics(request, bb);
     }
 
 

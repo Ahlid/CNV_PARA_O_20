@@ -3,6 +3,7 @@ package pt.ulisboa.tecnico.meic.cnv.loadbalancer;
 import org.apache.log4j.Logger;
 
 import java.util.*;
+
 import com.amazonaws.services.autoscaling.AmazonAutoScaling;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClientBuilder;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
@@ -69,10 +70,9 @@ public class Scaler extends Thread {
             // Create an Auto Scaling group for workers
             CreateAutoScalingGroupRequest request = new CreateAutoScalingGroupRequest().withAutoScalingGroupName("worker-autoscaler")
                     .withLaunchTemplate(new LaunchTemplateSpecification()
-                    .withLaunchTemplateName(WORKER_TEMPLATE_NAME))
+                            .withLaunchTemplateName(WORKER_TEMPLATE_NAME))
                     .withMinSize(1).withMaxSize(3)
-                    .withAvailabilityZones("us-east-1a")
-                    ;
+                    .withAvailabilityZones("us-east-1a");
             CreateAutoScalingGroupResult response = autoScaler.createAutoScalingGroup(request);
 
             aws.setupInstanceRequest(1, 1);

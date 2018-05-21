@@ -3,6 +3,7 @@ package pt.ulisboa.tecnico.meic.cnv.loadbalancer;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.apache.log4j.Logger;
+
 import java.net.HttpURLConnection;
 import java.net.URLConnection;
 
@@ -31,32 +32,33 @@ public class HandleRequest implements HttpHandler {
     @Override
     public void handle(HttpExchange t) throws IOException {
         if (t.getRequestMethod().equals("GET")) {
-            String query =  t.getRequestURI().getQuery();
+            String query = t.getRequestURI().getQuery();
             String response = "";
             LinkedHashMap<String, String> params = new LinkedHashMap<>();
 
             if (query != null) {
 
-                while (response == ""){
+                int cost = CostFunction.calculateCost(query);
 
-                WorkerInstance worker = balancer.getInstance();
+                while (response == "") {
 
-                try {
-                    String link = "http://" + worker.getAddress() + ":8000" + t.getRequestURI().toString();
-                    logger.info("Sending request to: " + worker.getId());
-                    URL url = new URL(link);
-                    HttpURLConnection wc = (HttpURLConnection) url.openConnection();
+                    WorkerInstance worker = balancer.getInstance();
 
-                    BufferedReader in = new BufferedReader(
-                            new InputStreamReader(wc.getResponseCode() / 100 == 2 ? wc.getInputStream() : wc.getErrorStream()));
+                    try {
+                        String link = "http://" + worker.getAddress() + ":8000" + t.getRequestURI().toString();
+                        logger.info("Sending request to: " + worker.getId());
+                        URL url = new URL(link);
+                        HttpURLConnection wc = (HttpURLConnection) url.openConnection();
 
-                    for (String line; (line = in.readLine()) != null; response += line + "\n");
-                    in.close();
-                }
-                catch (Exception e){
-                    logger.error("error in request: " + e.getMessage());
-                    logger.error("need to do something and re-do request");
-                }
+                        BufferedReader in = new BufferedReader(
+                                new InputStreamReader(wc.getResponseCode() / 100 == 2 ? wc.getInputStream() : wc.getErrorStream()));
+
+                        for (String line; (line = in.readLine()) != null; response += line + "\n") ;
+                        in.close();
+                    } catch (Exception e) {
+                        logger.error("error in request: " + e.getMessage());
+                        logger.error("need to do something and re-do request");
+                    }
                 }
                 if (response != "") {
                     t.sendResponseHeaders(responseCode_OK, response.length());
