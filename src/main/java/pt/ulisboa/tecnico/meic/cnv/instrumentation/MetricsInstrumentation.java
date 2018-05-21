@@ -78,7 +78,7 @@ public class MetricsInstrumentation {
 
         // Notify about end of execution
         updateMetrics((long) 0, (long) 0, false);
-        initCostRequestTable(WebServer.getInstanceId(), WebServer.getRequestId().get(threadId), WebServer.getPureRequest().get(threadId));
+        //initCostRequestTable(WebServer.getInstanceId(), WebServer.getRequestId().get(threadId), WebServer.getPureRequest().get(threadId));
 
     }
 
