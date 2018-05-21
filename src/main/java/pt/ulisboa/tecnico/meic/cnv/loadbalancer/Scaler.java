@@ -132,8 +132,6 @@ public class Scaler extends Thread {
             
             // destroy instances ??
             if (workers.size() > maxWorkers){
-                // destroy instance
-                // TODO
                 WorkerInstance workerToDestroy = lessRelevant();
                 if (workerToDestroy.getJobs() == 0){
                     terminateWorker(workerToDestroy);
@@ -160,8 +158,6 @@ public class Scaler extends Thread {
 }
 
     public WorkerInstance lessRelevant(){
-        logger.info("less relevant");
-        logger.info(workers.size());
         WorkerInstance worker = workers.get(0);
         
         for (WorkerInstance w : workers) {
