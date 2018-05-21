@@ -44,7 +44,7 @@ public class MetricsInstrumentation {
         metrics.setDyn_instr_count(metrics.getDyn_instr_count() + incr);
         metrics.setDyn_bb_count(metrics.getDyn_bb_count() + 1);
         // Notifier
-        if( metrics.getDyn_bb_count() % BB_SIZE == 0 ){
+        if (metrics.getDyn_bb_count() % BB_SIZE == 0) {
             updateMetrics(metrics.getDyn_instr_count(), metrics.getDyn_bb_count(), false);
         }
     }
@@ -81,9 +81,12 @@ public class MetricsInstrumentation {
     }
 
     public static void updateMetrics(long inst, long bb, Boolean finished) {
+
+
         Messenger messenger = Messenger.getInstance();
         Long threadId = Thread.currentThread().getId();
         Metrics metrics = getMetricsForThread();
+
         messenger.newMetrics(WebServer.getInstanceId(),
                 String.valueOf(WebServer.getRequestId().get(threadId)),
                 String.valueOf(inst),

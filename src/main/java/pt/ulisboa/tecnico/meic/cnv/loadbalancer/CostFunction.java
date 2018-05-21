@@ -76,6 +76,9 @@ public class CostFunction {
         int expectedCase = (int) (selectedSample.getBasicBlocks() + distanceExpected * distanceExpected * multiplier *
                 ASTAR_DISTANCE_COST);
 
+        if(expectedCase <0 )
+            return worstCase;
+
         if (distanceExpected == 0)
             return expectedCase;
 
@@ -127,6 +130,10 @@ public class CostFunction {
 
         int expectedCase = (int) (selectedSample.getBasicBlocks() + distanceExpected * distanceExpected * multiplier *
                 BFS_DISTANCE_COST);
+
+
+        if(expectedCase <0 )
+            return worstCase;
 
         if (distanceExpected == 0)
             return expectedCase;
@@ -182,6 +189,10 @@ public class CostFunction {
 
         if (distanceExpected == 0)
             return expectedCase;
+
+
+        if(expectedCase <0 )
+            return worstCase;
 
         //  System.out.println(expectedCase);
         // System.out.println(worstCase);
