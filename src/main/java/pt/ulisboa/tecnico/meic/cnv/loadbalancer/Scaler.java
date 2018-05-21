@@ -20,8 +20,8 @@ public class Scaler extends Thread {
     private final static Integer CLEANUP = 3;
     private final static Double CPU_THRESHOLD = 60.0;
     private final static Integer SIZE_THRESHOLD = 500;
-    public final static Long longRequestLimit = 2000000000L;
-    public final static Long rapidRequestLimit = 20000000L;
+    public final static Long longRequesLimit = 2000000000L;
+    public final static Long rapidRequesLimit = 20000000L;
 
     private static final String METRICS_TOPIC = "Metrics";
 

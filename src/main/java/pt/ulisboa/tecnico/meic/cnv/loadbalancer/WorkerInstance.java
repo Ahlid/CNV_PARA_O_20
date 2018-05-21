@@ -5,6 +5,9 @@ import java.util.List;
 
 public class WorkerInstance {
 
+    public final static Long longRequesLimit = 2000000000L;
+    public final static Long rapidRequesLimit = 20000000L;
+
     private String id = "unknown";
     private String status = "pending";
     private String address = "unknown";
@@ -201,11 +204,11 @@ public class WorkerInstance {
         }
 
         public static String getTypeOfRequest(long basicBlocks) {
-            if (basicBlocks < Scaler.rapidRequestLimit) {
+            if (basicBlocks < rapidRequesLimit) {
                 return RAPID_REQUEST;
             }
 
-            if (basicBlocks > Scaler.longRequestLimit) {
+            if (basicBlocks > longRequesLimit) {
                 return LONG_REQUEST;
             }
 
