@@ -82,7 +82,7 @@ public class MetricsInstrumentation {
 
     }
 
-    private static void initCostRequestTable(String instanceId, Long aLong, String params) {
+    private static void initCostRequestTable(String instanceId, String aLong, String params) {
         Messenger messenger = Messenger.getInstance();
 
         messenger.newRequestCost(instanceId, aLong, params);

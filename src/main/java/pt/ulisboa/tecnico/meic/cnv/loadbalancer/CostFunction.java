@@ -209,14 +209,25 @@ public class CostFunction {
     public static int calculateCost(String request) {
 
         try {
-            System.out.println("COST");
-            System.out.println(request);
+            //  System.out.println("COST");
+            // System.out.println(request);
             String maze = request.split("m=")[1].split("&")[0].substring(0, request.split("m=")[1].split("&")[0].length() - 5);
             String strategy = request.split("s=")[1];
+            String velocity = request.split("v=")[1].split("&")[0];
+            int x0 = Integer.parseInt(request.split("x0=")[1].split("&")[0]);
+            int x1 = Integer.parseInt(request.split("x1=")[1].split("&")[0]);
+            int y0 = Integer.parseInt(request.split("y0=")[1].split("&")[0]);
+            int y1 = Integer.parseInt(request.split("y1=")[1].split("&")[0]);
 
-            System.out.println(maze);
+           /* System.out.println(maze);
             System.out.println(strategy);
-
+            System.out.println(velocity);
+            System.out.println(x0);
+            System.out.println(x1);
+            System.out.println(y0);
+            System.out.println(y1);
+*/
+            System.out.println("Getting cache");
             LinkedHashMap<String, Map<String, String>> cache = Messenger.getCacheTable();
             Set<String> keys = cache.keySet();
             Iterator it = keys.iterator();
@@ -228,12 +239,35 @@ public class CostFunction {
                 Map<String, String> entry = cache.get(it.next());
 
                 System.out.println(entry);
-                //todo: if maze equal & same stretegy add it to the list
+                if (entry.get("maze").equals(maze) && entry.get("strategy").equals(strategy)) {
+
+                    String entryParams = entry.get("request");
+                    int entryBB = Integer.parseInt(entry.get("bb"));
+                    int x00 = Integer.parseInt(entryParams.split("x0=")[1].split(",")[0]);
+                    int x11 = Integer.parseInt(entryParams.split("x1=")[1].split(",")[0]);
+                    int y00 = Integer.parseInt(entryParams.split("y0=")[1].split(",")[0]);
+                    int y11 = Integer.parseInt(entryParams.split("y1=")[1].split(",")[0]);
+                    int v = Integer.parseInt(entryParams.split("v=")[1].split(",")[0]);
+
+
+                    if (Integer.parseInt(velocity) == v) {
+                        resultValues.add(new ResultValue(x00, x11, y00, y11, entryBB, maze));
+
+                    }
+
+
+                }
 
 
             }
 
-            //todo return the value of the cost
+            if (strategy.equals("astar")) {
+                return calculateAstarCost(resultValues, x0, x1, y0, y1);
+            } else if (strategy.equals("bfs")) {
+                return calculateBfsCost(resultValues, x0, x1, y0, y1);
+            } else {
+                return calculateDfsCost(resultValues, x0, x1, y0, y1);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();

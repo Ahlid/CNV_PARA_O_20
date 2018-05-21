@@ -15,12 +15,15 @@ import java.io.OutputStream;
 import java.net.URL;
 
 public class HandleRequest implements HttpHandler {
-    final static Logger logger = Logger.getLogger(HandleRequest.class);
 
+    final static Logger logger = Logger.getLogger(HandleRequest.class);
     static final int responseCode_OK = 200;
 
     private Scaler scaler;
     private Balancer balancer;
+
+    private static String TIMESTAMP = System.currentTimeMillis() + "";
+    private static int LAST_JOB_ID = 0;
 
     public HandleRequest(Scaler scaler, Balancer balancer) {
         super();
@@ -32,6 +35,9 @@ public class HandleRequest implements HttpHandler {
     @Override
     public void handle(HttpExchange t) throws IOException {
         if (t.getRequestMethod().equals("GET")) {
+
+            String jobId = TIMESTAMP + (++LAST_JOB_ID);
+
             String query = t.getRequestURI().getQuery();
             String response = "";
             LinkedHashMap<String, String> params = new LinkedHashMap<>();
@@ -39,16 +45,25 @@ public class HandleRequest implements HttpHandler {
             if (query != null) {
 
                 int cost = CostFunction.calculateCost(query);
+                System.out.println("MY COST WASSSSS");
+                System.out.println(cost);
+
+                Job thisJob = new Job(jobId, cost);
+                JobsPool.getInstance().addJob(thisJob);
 
                 while (response == "") {
 
                     WorkerInstance worker = balancer.getInstance();
+                    thisJob.setWorkerInstance(worker);
+
 
                     try {
-                        String link = "http://" + worker.getAddress() + ":8000" + t.getRequestURI().toString();
+                        String link = "http://" + worker.getAddress() + ":8000" + t.getRequestURI().toString() + "&jobId=" + thisJob.getId();
                         logger.info("Sending request to: " + worker.getId());
                         URL url = new URL(link);
+
                         HttpURLConnection wc = (HttpURLConnection) url.openConnection();
+
 
                         BufferedReader in = new BufferedReader(
                                 new InputStreamReader(wc.getResponseCode() / 100 == 2 ? wc.getInputStream() : wc.getErrorStream()));
@@ -60,6 +75,9 @@ public class HandleRequest implements HttpHandler {
                         logger.error("need to do something and re-do request");
                     }
                 }
+
+                thisJob.setFinished(true);
+
                 if (response != "") {
                     t.sendResponseHeaders(responseCode_OK, response.length());
                     OutputStream os = t.getResponseBody();

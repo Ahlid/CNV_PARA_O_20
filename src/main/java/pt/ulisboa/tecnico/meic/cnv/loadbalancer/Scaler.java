@@ -65,7 +65,7 @@ public class Scaler extends Thread {
             // Setup AMI Name
             configs = messenger.fetchConfig();
 
-            AmazonAutoScaling autoScaler = AmazonAutoScalingClientBuilder.standard().build();
+          /*  AmazonAutoScaling autoScaler = AmazonAutoScalingClientBuilder.standard().build();
 
             // Create an Auto Scaling group for workers
             CreateAutoScalingGroupRequest request = new CreateAutoScalingGroupRequest().withAutoScalingGroupName("worker-autoscaler")
@@ -80,7 +80,7 @@ public class Scaler extends Thread {
             workers = aws.getInstances();
 
             resetPool();
-            logger.info("Starting with " + workers.size() + " workers.");
+            logger.info("Starting with " + workers.size() + " workers.");*/
         } catch (Exception e) {
             e.printStackTrace();
             logger.fatal(getDefaultUncaughtExceptionHandler().toString());
