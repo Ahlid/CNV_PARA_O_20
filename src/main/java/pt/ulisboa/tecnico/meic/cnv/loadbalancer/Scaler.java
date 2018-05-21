@@ -137,7 +137,7 @@ public class Scaler extends Thread {
                 }
             }
 			
-            if(createInstance && (System.currentTimeMillis() - lastCreation) > timeLimit) {
+            if(createInstance &&((int)System.currentTimeMillis() - lastCreation) > timeLimit || lastCreation == 0) {
                 startWorker();
                 lastCreation = (int) System.currentTimeMillis();
             }
