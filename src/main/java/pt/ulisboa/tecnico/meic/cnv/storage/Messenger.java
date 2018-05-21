@@ -151,23 +151,26 @@ public class Messenger {
         return result;
     }
 
-    public static LinkedHashMap<String, Map<String, String>> getWorkersTable() {
+    public static HashMap<String, Map<String, String>> getWorkersTable() {
         // get messages from workers table
-        LinkedHashMap<String, Map<String, String>> result = new LinkedHashMap<>();
-        Map<String, String> stats = new LinkedHashMap<>();
+        HashMap<String, Map<String, String>> result = new HashMap<>();
+        Map<String, String> stats = new HashMap<>();
         try {
 
-            ScanRequest scanRequest = new ScanRequest(WORKERS_TABLE);
+            HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
+            Condition condition = new Condition()
+                    .withComparisonOperator(ComparisonOperator.EQ.toString())
+                    .withAttributeValueList(new AttributeValue("running"));
+            scanFilter.put("status", condition);
+            ScanRequest scanRequest = new ScanRequest(WORKERS_TABLE).withScanFilter(scanFilter);
             ScanResult scanResult = db.dynamoDB.scan(scanRequest);
             for (Map<String, AttributeValue> i : scanResult.getItems()) {
-                stats.put("cpu", i.get("stats").getM().get("address").getS());
+                stats.put("cpu", i.get("stats").getM().get("cpu").getS());
                 stats.put("address", i.get("stats").getM().get("address").getS());
                 stats.put("working", String.valueOf(i.get("stats").getM().get("working").getBOOL()));
-                stats.put("progress", i.get("stats").getM().get("progress").getS());
-                stats.put("status", i.get("status").getS());
+                stats.put("jobs", i.get("stats").getM().get("jobs").getS());
                 result.put((String) i.get("id").getS(), stats);
             }
-            return result;
         } catch (Exception e) {
             logger.error("exception: " + e.getMessage());
         }

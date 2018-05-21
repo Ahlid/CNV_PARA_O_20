@@ -193,8 +193,11 @@ public class WebServer {
                 os.close();
             }
 
+            
             // Notify that this worker is not working
+            if (requestId.size()==0){
             updateWorker("running", false);
+            }
 
 
             // Remove thread from running list
