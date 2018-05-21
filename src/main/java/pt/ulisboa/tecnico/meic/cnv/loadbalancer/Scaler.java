@@ -106,6 +106,7 @@ public class Scaler extends Thread {
             for (WorkerInstance w : workers) {
 
                 if (w.getJobs() >= SIZE_THRESHOLD) {
+                    
                     createInstance = true;
                 }
 
