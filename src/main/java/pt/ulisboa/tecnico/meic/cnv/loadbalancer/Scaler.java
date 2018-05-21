@@ -283,40 +283,7 @@ public class Scaler extends Thread {
             }
             
             
-        }
-        // clean and delete everything
-    }
 
-    /**
-     * Takes a balancer as argument to be able
-     * to notify it when a new instance is running
-     */
-    public Scaler(Balancer balancer) throws Exception {
-        this();
-        this.balancer = balancer;
-    }
-
-    public void setState(Boolean state) {
-        this.running = state;
-    }
-
-    public void setupConfig(LinkedHashMap<String, String> configs) {
-        for (Map.Entry<String, String> entry : configs.entrySet()) {
-            String name = entry.getKey();
-            String value = entry.getValue();
-            messenger.changeConfig(name, value);
-        }
-        
-        configs = messenger.fetchConfig();
-        aws.setWorkerAmiId(configs.get("AMI_Name"));
-        aws.setupInstances();
-
-        //aws.setupInstanceRequest(1, 1);
-    }
-
-    public LinkedHashMap<String, String> getConfigs() {
-        return configs;
-    }
 
     public WorkerInstance getBestWorker() {
         synchronized (this.workers) {
