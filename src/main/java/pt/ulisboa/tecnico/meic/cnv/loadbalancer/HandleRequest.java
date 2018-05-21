@@ -60,12 +60,15 @@ public class HandleRequest implements HttpHandler {
 
 
                     try {
-                        String link = "http://" + worker.getAddress() + ":8000" + t.getRequestURI().toString() + "&jobId=" + thisJob.getId();
+                        URL url = new URL("http://" + worker.getAddress() + ":8000" + t.getRequestURI().toString() + "&jobId=" + thisJob.getId());
                         logger.info("Sending request to: " + worker.getId());
-                        URL url = new URL(link);
 
                         HttpURLConnection wc = (HttpURLConnection) url.openConnection();
-
+                        wc.setRequestMethod("GET");
+                        wc.setRequestProperty("Content-length", "0");
+                        wc.setUseCaches(false);
+                        wc.setAllowUserInteraction(false);
+                        wc.connect();
 
                         BufferedReader in = new BufferedReader(
                                 new InputStreamReader(wc.getResponseCode() / 100 == 2 ? wc.getInputStream() : wc.getErrorStream()));

@@ -30,6 +30,15 @@ public class AWS {
     final static Logger logger = Logger.getLogger(AWS.class);
     // AWS EC2 Endpoint (US - East North Virginia)
     private static final String REGION = "us-east-1";
+    // Instance id to be used
+    private static String AMI_ID = "ami-5ba10224";
+    // Instance type to be used
+    private static final String INST_TYPE = "t2.micro";
+    // Key name
+    private static final String KEY_NAME = "cnv1718";
+    // Security Group that opens port 22 (ssh) and 8080 (http)
+    private static final String SEC_GROUP = "CNV-worker-sg";
+    
     // Worker launch template
     private static final String WORKER_TEMPLATE_NAME = "CNV-worker-template";
     private static String workerAmiId = null;
@@ -51,6 +60,17 @@ public class AWS {
         ec2 = AmazonEC2ClientBuilder.standard().withRegion(REGION).withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
         
         cloudWatch = AmazonCloudWatchClientBuilder.standard().withRegion(REGION).withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
+    }
+
+    public void setupInstances(){
+        runInstanceReq = new RunInstancesRequest();
+        runInstanceReq.withImageId(workerAmiId)
+        .withInstanceType(INST_TYPE)
+        .withMinCount(1)
+        .withMaxCount(1)
+        .withKeyName(KEY_NAME)
+        .withSecurityGroups(SEC_GROUP)
+        .withMonitoring(true);
     }
     
     public void setupInstanceRequest(int min, int max) {

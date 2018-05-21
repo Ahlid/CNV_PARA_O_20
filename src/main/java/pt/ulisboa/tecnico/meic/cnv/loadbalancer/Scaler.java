@@ -71,8 +71,10 @@ public class Scaler extends Thread {
             // TODO use configs from dynamo
 
             //logger.info(Integer.parseInt(configs.get("MIN_WORKER")) + ":" + Integer.parseInt(configs.get("MAX_WORKER")));
-            aws.setupInstanceRequest(1, 1);
+            //aws.setupInstanceRequest(1, 1);
             aws.setWorkerAmiId(configs.get("AMI_Name"));
+            aws.setupInstances();
+            
             workers = aws.getInstances();
 
             resetPool();
@@ -206,9 +208,13 @@ public class Scaler extends Thread {
             String name = entry.getKey();
             String value = entry.getValue();
             messenger.changeConfig(name, value);
-            configs = messenger.fetchConfig();
-            aws.setupInstanceRequest(1, 1);
         }
+        
+        configs = messenger.fetchConfig();
+        aws.setWorkerAmiId(configs.get("AMI_Name"));
+        aws.setupInstances();
+
+        //aws.setupInstanceRequest(1, 1);
     }
 
     public LinkedHashMap<String, String> getConfigs() {
