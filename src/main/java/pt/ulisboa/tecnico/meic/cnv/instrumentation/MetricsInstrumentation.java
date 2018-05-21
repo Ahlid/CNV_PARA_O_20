@@ -63,6 +63,7 @@ public class MetricsInstrumentation {
         Metrics metrics = getMetricsForThread();
         // Notify about end of execution
         updateMetrics(metrics.getDyn_instr_count(), metrics.getDyn_bb_count(), true);
+        updateCache(metrics.getParams(), metrics.getDyn_bb_count());
         threadMetrics.put(threadId, new Metrics());
     }
 
@@ -94,5 +95,15 @@ public class MetricsInstrumentation {
                 finished,
                 metrics.getParams().toString());
     }
+
+    public static void updateCache(String request, long bb) {
+
+
+        Messenger messenger = Messenger.getInstance();
+
+
+        messenger.newCacheMetrics(request,bb);
+    }
+
 
 }

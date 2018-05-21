@@ -46,15 +46,15 @@ public class WebServer {
     public static void main(String[] args) throws Exception {
 
         // LOCAL TESTING
-        //instanceId = "i-222563b5019e4f222";
-        //endpoint = "localhost";
+        instanceId = "i-222563b5019e4f222";
+        endpoint = "localhost";
 
         // Read worker machine details at startup
         // instance public address
-        instanceId = EC2MetadataUtils.getInstanceId();
+        //instanceId = EC2MetadataUtils.getInstanceId();
         logger.info("Instance Id: " + instanceId);
 
-        endpoint = EC2MetadataUtils.getData("/latest/meta-data/public-hostname") + ":" + PORT;
+        //endpoint = EC2MetadataUtils.getData("/latest/meta-data/public-hostname") + ":" + PORT;
 
         logger.info("Public endpoint: " + endpoint);
 

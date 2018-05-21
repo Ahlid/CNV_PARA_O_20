@@ -19,6 +19,7 @@ public class Messenger {
     private static final String CONFIG_TABLE = "myConfig";
 
     private static final String WORKERS_TABLE = "WORKERS";
+    private static final String WORKERS_CACHE = "CACHE";
 
     private static final String METRICS_TOPIC = "Metrics";
     private static final String METRICS_TABLE = "Metrics";
@@ -34,9 +35,10 @@ public class Messenger {
         logger.info("Initializing DynamoDB...");
         createTable(CONFIG_TABLE, "name");
         createTable(WORKERS_TABLE, "id");
+        createTable(WORKERS_CACHE, "request");
         createMetricTable();
+        createCacheTable();
     }
-
 
     public static Messenger getInstance() {
         if (instance == null) {
@@ -159,6 +161,30 @@ public class Messenger {
         //createTableRequest.withLocalSecondaryIndexes(makeLocalSecondaryIndexes());
         createTableRequest.withAttributeDefinitions(new AttributeDefinition().withAttributeName("id").withAttributeType(ScalarAttributeType.S),
                 new AttributeDefinition().withAttributeName("requestId").withAttributeType(ScalarAttributeType.S));
+        createTableRequest.withProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(10L));
+
+        // Create table if it does not exist yet
+        TableUtils.createTableIfNotExists(db.dynamoDB, createTableRequest);
+        // wait for the table to move into ACTIVE state
+        TableUtils.waitUntilActive(db.dynamoDB, tableName);
+
+        // Describe our new table
+        DescribeTableRequest describeTableRequest1 = new DescribeTableRequest().withTableName(tableName);
+        TableDescription tableDescription1 = db.dynamoDB.describeTable(describeTableRequest1).getTable();
+    }
+
+
+    private void createCacheTable() throws Exception {
+        // Create table to keep settings
+        String tableName = WORKERS_CACHE;
+
+        // Create a table with a primary hash key named 'id', which holds a string
+        CreateTableRequest createTableRequest = new CreateTableRequest().withTableName(tableName);
+        createTableRequest.withKeySchema(new KeySchemaElement().withAttributeName("request").withKeyType(KeyType.HASH),
+                new KeySchemaElement().withAttributeName("bb").withKeyType(KeyType.RANGE));
+        //createTableRequest.withLocalSecondaryIndexes(makeLocalSecondaryIndexes());
+        createTableRequest.withAttributeDefinitions(new AttributeDefinition().withAttributeName("id").withAttributeType(ScalarAttributeType.S),
+                new AttributeDefinition().withAttributeName("bb").withAttributeType(ScalarAttributeType.S));
         createTableRequest.withProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(10L));
 
         // Create table if it does not exist yet
@@ -351,5 +377,18 @@ public class Messenger {
             logger.error("DeleteTable request failed for " + tableName);
             logger.error(e.getMessage());
         }
+    }
+
+    public void newCacheMetrics(String request, long bb) {
+        // puts messages in cache table
+        Map<String, AttributeValue> item = new HashMap<>();
+
+        item.put("request", new AttributeValue(request));
+        item.put("bb", new AttributeValue(bb + ""));
+        item.put("strategy", new AttributeValue(request.split("s=")[1].split("}")[0]));
+
+        PutItemRequest putItemRequest = new PutItemRequest(WORKERS_CACHE, item);
+        PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
+
     }
 }
