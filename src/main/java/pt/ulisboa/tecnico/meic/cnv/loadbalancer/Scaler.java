@@ -21,7 +21,7 @@ public class Scaler extends Thread {
     private final static Integer CLEANUP = 3;
     private final static Double CPU_THRESHOLD = 60.0;
     private final static Integer SIZE_THRESHOLD = 500;
-    public final static Long longRequesLimit = 2000000000L;
+    public final static Long longRequesLimit = 5000000000L;
     public final static Long rapidRequesLimit = 20000000L;
 
     private static final String METRICS_TOPIC = "Metrics";
@@ -92,12 +92,12 @@ public class Scaler extends Thread {
             if (cleanCounter == CLEANUP) {
                 cleanCounter = 0;
                 syncWorkers();
-                syncJobs();
+
                 // TODO we need to remove dead instances from dynamoDB
                 workers = aws.getInstances();
             }
             cleanCounter++;
-
+            syncJobs();
             // THIS SHOULD NOT BE DONE EVERY TIME
             //workers = aws.getInstances();
 
@@ -241,5 +241,25 @@ public class Scaler extends Thread {
         return configs;
     }
 
+    public WorkerInstance getBestWorker() {
+        synchronized (this.workers) {
+
+            WorkerInstance chosenWorker = null;
+
+            for (WorkerInstance w : this.workers) {
+
+                if (!w.isAcceptingRequests() || !w.getStatus().equals("running"))
+                    continue;
+
+                if (chosenWorker == null) {
+                    chosenWorker = w;
+                } else if (chosenWorker.getBBtoBeProcessed() > w.getBBtoBeProcessed()) {
+                    chosenWorker = w;
+                }
+            }
+
+            return chosenWorker;
+        }
+    }
 
 }

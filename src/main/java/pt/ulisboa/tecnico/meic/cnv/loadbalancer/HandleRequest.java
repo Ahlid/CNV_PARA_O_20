@@ -60,15 +60,12 @@ public class HandleRequest implements HttpHandler {
                     WorkerInstance worker = balancer.getInstance();
                     thisJob.setWorkerInstance(worker);
 
-
-
                     try {
                         String link = "http://" + worker.getAddress() + ":8000" + t.getRequestURI().toString() + "&jobId=" + thisJob.getId();
                         logger.info("Sending request to: " + worker.getId());
                         URL url = new URL(link);
 
                         HttpURLConnection wc = (HttpURLConnection) url.openConnection();
-
 
                         BufferedReader in = new BufferedReader(
                                 new InputStreamReader(wc.getResponseCode() / 100 == 2 ? wc.getInputStream() : wc.getErrorStream()));
@@ -80,10 +77,9 @@ public class HandleRequest implements HttpHandler {
                         logger.error("error in request: " + e.getMessage());
                         logger.error("need to do something and re-do request");
                     }
-                    try{
+                    try {
                         Thread.sleep(retryRequestTime);
-                    }
-                    catch (Exception e){
+                    } catch (Exception e) {
                         logger.error("Error reprocessing request: " + e.getMessage());
                     }
                 }

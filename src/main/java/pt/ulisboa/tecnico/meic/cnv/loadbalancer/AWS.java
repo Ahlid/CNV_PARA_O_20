@@ -23,79 +23,79 @@ import org.apache.log4j.Logger;
 import java.util.*;
 
 public class AWS {
-    
+
     static AmazonEC2 ec2;
     static AmazonCloudWatch cloudWatch;
-    
+
     final static Logger logger = Logger.getLogger(AWS.class);
     // AWS EC2 Endpoint (US - East North Virginia)
     private static final String REGION = "us-east-1";
     // Worker launch template
     private static final String WORKER_TEMPLATE_NAME = "CNV-worker-template";
     private static String workerAmiId = null;
-    
+
     private static RunInstancesRequest runInstanceReq = null;
-    
+
     public static void init() throws Exception {
-        
+
         AWSCredentials credentials = null;
         try {
             credentials = new ProfileCredentialsProvider().getCredentials();
         } catch (Exception e) {
             throw new AmazonClientException(
-            "Cannot load the credentials from the credential profiles file. " +
-            "Please make sure that your credentials file is at the correct " +
-            "location (~/.aws/credentials), and is in valid format.",
-            e);
+                    "Cannot load the credentials from the credential profiles file. " +
+                            "Please make sure that your credentials file is at the correct " +
+                            "location (~/.aws/credentials), and is in valid format.",
+                    e);
         }
         ec2 = AmazonEC2ClientBuilder.standard().withRegion(REGION).withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
-        
+
         cloudWatch = AmazonCloudWatchClientBuilder.standard().withRegion(REGION).withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
     }
-    
+
     public void setupInstanceRequest(int min, int max) {
         runInstanceReq = new RunInstancesRequest();
         runInstanceReq.withLaunchTemplate(new LaunchTemplateSpecification()
-        .withLaunchTemplateName(WORKER_TEMPLATE_NAME))
-        .withMinCount(min)
-        .withMaxCount(max)
+                .withLaunchTemplateName(WORKER_TEMPLATE_NAME))
+                .withMinCount(min)
+                .withMaxCount(max)
         ;
     }
-    
+
     // Creates a new instance and returns the Instance ID
     public static WorkerInstance createInstance() {
         String result;
         RunInstancesResult instanceResult = ec2.runInstances(runInstanceReq);
         WorkerInstance worker = new WorkerInstance();
-        
+
         worker.setId(instanceResult.getReservation().getInstances().get(0).getInstanceId());
         worker.setStatus(instanceResult.getReservation().getInstances().get(0).getState().toString());
         worker.setAddress(instanceResult.getReservation().getInstances().get(0).getPublicDnsName());
         return worker;
     }
-    
+
     // Terminates the instance with the given ID
     public static void terminateInstance(String instanceId) {
         TerminateInstancesRequest termInstanceReq = new TerminateInstancesRequest();
         termInstanceReq.withInstanceIds(instanceId);
         ec2.terminateInstances(termInstanceReq);
     }
-    
+
     // Get all instances and reservations
-    public static ArrayList<WorkerInstance> getInstances() throws Exception{
+    public static ArrayList<WorkerInstance> getInstances() throws Exception {
         int runningInstances = 0;
         ArrayList<WorkerInstance> workers = new ArrayList<WorkerInstance>();
-        
+
         // Get instances
         DescribeInstancesResult describeInstancesResult = AWS.ec2.describeInstances();
         List<Reservation> reservations = describeInstancesResult.getReservations();
         Set<Instance> instances = new HashSet<Instance>();
-        
+
         //System.out.println("total reservations = " + reservations.size());
         for (Reservation reservation : reservations) {
             instances.addAll(reservation.getInstances());
         }
-        
+
         /* TODO total observation time in milliseconds */
         long offsetInMilliseconds = 1000 * 60 * 24;
         Dimension instanceDimension = new Dimension();
@@ -115,19 +115,19 @@ public class AWS {
                     worker.setId(name);
                     worker.setStatus(state);
                     worker.setAddress(address);
-                    
+
                     instanceDimension.setValue(name);
                     GetMetricStatisticsRequest request = new GetMetricStatisticsRequest()
-                    .withStartTime(new Date(new Date().getTime() - offsetInMilliseconds))
-                    .withNamespace("AWS/EC2")
-                    .withPeriod(60)
-                    .withMetricName("CPUUtilization")
-                    .withStatistics("Average", "Maximum")
-                    .withDimensions(instanceDimension)
-                    .withEndTime(new Date());
+                            .withStartTime(new Date(new Date().getTime() - offsetInMilliseconds))
+                            .withNamespace("AWS/EC2")
+                            .withPeriod(60)
+                            .withMetricName("CPUUtilization")
+                            .withStatistics("Average", "Maximum")
+                            .withDimensions(instanceDimension)
+                            .withEndTime(new Date());
                     GetMetricStatisticsResult getMetricStatisticsResult =
-                    cloudWatch.getMetricStatistics(request);
-                    
+                            cloudWatch.getMetricStatistics(request);
+
                     List<Datapoint> datapoints = getMetricStatisticsResult.getDatapoints();
                     Collections.sort(datapoints, new Comparator<Datapoint>() {
                         @Override
@@ -141,18 +141,16 @@ public class AWS {
                         worker.setCPU(dp.getAverage());
                     }
                     workers.add(worker);
-                }
-                
-                else {
+                } else {
                 }
             }
         }
-        
+
         //logger.info("Running instances: " + runningInstances);
-        
+
         return workers;
     }
-    
+
     public void setWorkerAmiId(String amiId) {
         workerAmiId = amiId;
     }
@@ -160,7 +158,7 @@ public class AWS {
     public String getWorkerAmiId() {
         return workerAmiId;
     }
-    
+
     public static String getInstance(String instanceId) {
         DescribeInstancesRequest describeInstanceRequest = new DescribeInstancesRequest().withInstanceIds(instanceId);
         DescribeInstancesResult instanceResult = ec2.describeInstances(describeInstanceRequest);
@@ -170,7 +168,7 @@ public class AWS {
         //instance.setDns(describeInstanceResult.getReservations().get(0).getInstances().get(0).getPublicDnsName());
         return instanceResult.toString();
     }
-    
+
     public static InstanceStatus getInstanceStatus(String instanceId) {
         DescribeInstanceStatusRequest disreq = new DescribeInstanceStatusRequest().withInstanceIds(instanceId);
         DescribeInstanceStatusResult disres = ec2.describeInstanceStatus(disreq);
@@ -180,6 +178,6 @@ public class AWS {
             return null;
         }
     }
-    
-    
+
+
 }
