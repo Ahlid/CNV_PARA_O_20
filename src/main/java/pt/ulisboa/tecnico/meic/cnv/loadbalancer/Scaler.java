@@ -64,18 +64,12 @@ public class Scaler extends Thread {
             messenger.setup();
             // Setup AMI Name
             configs = messenger.fetchConfig();
+            logger.info(configs);
 
-            AmazonAutoScaling autoScaler = AmazonAutoScalingClientBuilder.standard().build();
+            // TODO use configs from dynamo
 
-            // Create an Auto Scaling group for workers
-            CreateAutoScalingGroupRequest request = new CreateAutoScalingGroupRequest().withAutoScalingGroupName("worker-autoscaler")
-                    .withLaunchTemplate(new LaunchTemplateSpecification()
-                            .withLaunchTemplateName(WORKER_TEMPLATE_NAME))
-                    .withMinSize(1).withMaxSize(3)
-                    .withAvailabilityZones("us-east-1a");
-            CreateAutoScalingGroupResult response = autoScaler.createAutoScalingGroup(request);
-
-            aws.setupInstanceRequest(1, 1);
+            //logger.info(Integer.parseInt(configs.get("MIN_WORKER")) + ":" + Integer.parseInt(configs.get("MAX_WORKER")));
+            aws.setupInstanceRequest(1,1);
             aws.setWorkerAmiId(configs.get("AMI_Name"));
             workers = aws.getInstances();
 
@@ -146,13 +140,13 @@ public class Scaler extends Thread {
     }
 
     public List<WorkerInstance> syncWorkers() {
-        LinkedHashMap<String, Map<String, String>> workerData = messenger.getWorkersTable();
-        List<WorkerInstance> w = new ArrayList<>();
-        logger.info("sync data: " + workerData.toString());
+        // LinkedHashMap<String, Map<String, String>> workerData = messenger.getWorkersTable();
+         List<WorkerInstance> w = new ArrayList<>();
+        // logger.info("sync data: " + workerData.toString());
 
-        for (WorkerInstance wo : workers) {
-            logger.info("exists:" + workerData.containsKey(wo.getId()));
-        }
+        // for (WorkerInstance wo : workers) {
+        //     logger.info("exists:" + workerData.containsKey(wo.getId()));
+        // }
 
         // for (Map.Entry<String, Map<String,String>> entry : workerData.entrySet()) {
         //     String key = entry.getKey();
@@ -193,13 +187,7 @@ public class Scaler extends Thread {
 
     public synchronized void resetPool() {
 
-        LinkedHashMap<String, Map<String, String>> workerData = messenger.getWorkersTable();
-        for (Map.Entry<String, Map<String, String>> entry : workerData.entrySet()) {
-            String key = entry.getKey();
-            Map<String, String> value = entry.getValue();
-            logger.info("key: " + key + " value: " + value.get("status"));
-            messenger.endWorker(key);
-        }
+        messenger.resetWorkers();
 
         for (WorkerInstance w : workers) {
             if (!w.getStatus().equals("running")) {
