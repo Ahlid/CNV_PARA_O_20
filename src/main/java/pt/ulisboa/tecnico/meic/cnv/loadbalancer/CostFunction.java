@@ -7,14 +7,14 @@ import java.util.*;
 public class CostFunction {
 
 
-    private final static int ASTAR_INITIAL_COST = 83241;
-    private final static int DFS_INITIAL_COST = 90128;
-    private final static int BFS_INITIAL_COST = 90139;
+    private final static long ASTAR_INITIAL_COST = 83241L;
+    private final static long DFS_INITIAL_COST = 90128L;
+    private final static long BFS_INITIAL_COST = 90139L;
 
 
-    private final static int ASTAR_DISTANCE_COST = 88028;
-    private final static int DFS_DISTANCE_COST = 35929;
-    private final static int BFS_DISTANCE_COST = 6898;
+    private final static long ASTAR_DISTANCE_COST = 88028L;
+    private final static long DFS_DISTANCE_COST = 35929L;
+    private final static long BFS_DISTANCE_COST = 6898L;
 
 
     private static ArrayList<ResultValue> previousResultsA = new ArrayList<>();
@@ -84,6 +84,10 @@ public class CostFunction {
         if (distanceExpected == 0)
             return expectedCase;
 
+        if (Math.abs(distanceExpected) > 10) {
+            return worstCase;
+        }
+
         //  System.out.println(expectedCase);
         // System.out.println(worstCase);
         //  System.out.println(worstCase * 1.0 / expectedCase);
@@ -140,6 +144,10 @@ public class CostFunction {
         if (distanceExpected == 0)
             return expectedCase;
 
+        if (Math.abs(distanceExpected) > 10) {
+            return worstCase;
+        }
+
         //  System.out.println(expectedCase);
         // System.out.println(worstCase);
         //  System.out.println(worstCase * 1.0 / expectedCase);
@@ -152,8 +160,15 @@ public class CostFunction {
 
     public static long calculateDfsCost(ArrayList<ResultValue> previousResultsA, int x0, int x1, int y0, int y1) {
 
+        System.out.println(previousResultsA);
+
         long worstCase = (((Math.abs(x1 - x0) * Math.abs(y1 - y0) * DFS_DISTANCE_COST + DFS_INITIAL_COST) +
                 ((Math.abs(x1 - x0) + 1) * (Math.abs(y1 - y0) + 1) * DFS_DISTANCE_COST + DFS_INITIAL_COST)) / 2);
+
+        System.out.println("WORST CASE");
+        System.out.println(worstCase);
+        System.out.println((Math.abs(x1 - x0) * Math.abs(y1 - y0) * DFS_DISTANCE_COST + DFS_INITIAL_COST));
+        System.out.println(((Math.abs(x1 - x0) + 1) * (Math.abs(y1 - y0) + 1) * DFS_DISTANCE_COST + DFS_INITIAL_COST));
 
         if (previousResultsA == null || previousResultsA.size() == 0) {
             return worstCase;
@@ -189,12 +204,17 @@ public class CostFunction {
         long expectedCase = (selectedSample.getBasicBlocks() + distanceExpected * distanceExpected * multiplier *
                 DFS_DISTANCE_COST);
 
+        if (expectedCase < 0)
+            return worstCase;
+
+
         if (distanceExpected == 0)
             return expectedCase;
 
-
-        if (expectedCase < 0)
+        if (Math.abs(distanceExpected) > 10) {
             return worstCase;
+        }
+
 
         //  System.out.println(expectedCase);
         // System.out.println(worstCase);

@@ -52,6 +52,9 @@ public class HandleRequest implements HttpHandler {
                 WorkerInstance.Job thisJob = new WorkerInstance.Job(jobId, cost);
                 JobsPool.getInstance().addJob(thisJob);
 
+                System.out.println("current jobs");
+                System.out.println(JobsPool.getInstance().getJobs());
+
                 while (response == "") {
 
                     WorkerInstance worker = balancer.getInstance();

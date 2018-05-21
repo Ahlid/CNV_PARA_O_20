@@ -6,6 +6,7 @@ import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.TableCollection;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.amazonaws.services.dynamodbv2.util.TableUtils;
+import com.amazonaws.services.dynamodbv2.xspec.L;
 import pt.ulisboa.tecnico.meic.cnv.loadbalancer.*;
 
 import org.apache.log4j.Logger;
@@ -32,10 +33,10 @@ public class Messenger {
     }
 
     public void setup() throws Exception {
-        
+
         logger.info("Initializing DynamoDB...");
         //deleteTable(WORKERS_TABLE);
-        
+
         createPartitionKeyTable(CACHE_TABLE, "id", "strategy");
         createPartitionKeyTable(METRICS_TABLE, "id", "requestId");
         createTable(CONFIG_TABLE, "name");
@@ -123,16 +124,16 @@ public class Messenger {
         return item;
     }
 
-    public static void resetWorkers(){
+    public static void resetWorkers() {
         List<String> result = getWorkersIds();
 
-        for (String  s : result) {
+        for (String s : result) {
             endWorker(s);
         }
 
     }
 
-    public static List<String> getWorkersIds(){
+    public static List<String> getWorkersIds() {
         // get messages from workers table
         List<String> result = new ArrayList();
         try {
@@ -232,9 +233,9 @@ public class Messenger {
         return 1;
     }
 
-    public HashMap<String, String> getMetrics(String id) {
+    public HashMap<String, Long> getMetrics(String id) {
         // get messages from Metrics table
-        HashMap<String, String> result = new HashMap();
+        HashMap<String, Long> result = new HashMap();
         try {
             HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
             Condition condition = new Condition()
@@ -244,12 +245,12 @@ public class Messenger {
             ScanRequest scanRequest = new ScanRequest(METRICS_TABLE).withScanFilter(scanFilter);
             ScanResult scanResult = db.dynamoDB.scan(scanRequest);
             for (Map<String, AttributeValue> i : scanResult.getItems()) {
-                result.put(i.get("requestId").getS(),i.get("metrics").getM().get("bb").getS());
+                result.put(i.get("requestId").getS(), Long.parseLong(i.get("metrics").getM().get("bb").getS()));
             }
             return result;
         } catch (Exception e) {
             logger.error("exception: " + e.getMessage());
-            e.printStackTrace();    
+            e.printStackTrace();
         }
         return result;
     }

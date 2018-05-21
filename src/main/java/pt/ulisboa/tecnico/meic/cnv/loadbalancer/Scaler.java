@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.meic.cnv.loadbalancer;
 
+import com.amazonaws.services.dynamodbv2.xspec.M;
 import org.apache.log4j.Logger;
 
 import java.util.*;
@@ -93,6 +94,7 @@ public class Scaler extends Thread {
             if (cleanCounter == CLEANUP) {
                 cleanCounter = 0;
                 syncWorkers();
+                syncJobs();
                 // TODO we need to remove dead instances from dynamoDB
                 workers = aws.getInstances();
             }
@@ -110,7 +112,7 @@ public class Scaler extends Thread {
             for (WorkerInstance w : workers) {
 
                 if (w.getJobs() >= SIZE_THRESHOLD) {
-                    
+
                     createInstance = true;
                 }
 
@@ -147,6 +149,30 @@ public class Scaler extends Thread {
         //     //messenger.endWorker(key);
         // }
         return w;
+    }
+
+    public void syncJobs() {
+
+        Messenger m = Messenger.getInstance();
+
+        synchronized (this.workers) {
+            for (WorkerInstance w : this.workers) {
+                HashMap<String, Long> jobStatus = m.getMetrics(w.getId());
+
+                Set<String> jobIds = jobStatus.keySet();
+                Iterator<String> it = jobIds.iterator();
+
+                while (it.hasNext()) {
+                    String id = it.next();
+                    JobsPool.getInstance().serJobBBWork(id, jobStatus.get(id));
+                }
+
+            }
+
+            System.out.println(JobsPool.getInstance().getJobs());
+        }
+
+
     }
 
     public List<WorkerInstance> getWorkers() {
