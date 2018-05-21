@@ -39,9 +39,9 @@ public class CostFunction {
         System.out.printf("%d\n", calculateAstarCost(previousResultsA, 1, 20, 1, 15));
     }
 
-    public static int calculateAstarCost(ArrayList<ResultValue> previousResultsA, int x0, int x1, int y0, int y1) {
+    public static long calculateAstarCost(ArrayList<ResultValue> previousResultsA, int x0, int x1, int y0, int y1) {
 
-        int worstCase = (((Math.abs(x1 - x0) * Math.abs(y1 - y0) * ASTAR_DISTANCE_COST + ASTAR_INITIAL_COST) +
+        long worstCase = (((Math.abs(x1 - x0) * Math.abs(y1 - y0) * ASTAR_DISTANCE_COST + ASTAR_INITIAL_COST) +
                 ((Math.abs(x1 - x0) + 1) * (Math.abs(y1 - y0) + 1) * ASTAR_DISTANCE_COST + ASTAR_INITIAL_COST)) / 2);
 
         if (previousResultsA == null || previousResultsA.size() == 0) {
@@ -75,7 +75,7 @@ public class CostFunction {
         //  System.out.println(currentCombinedDistance);
         // System.out.println(distanceExpected);
 
-        int expectedCase = (int) (selectedSample.getBasicBlocks() + distanceExpected * distanceExpected * multiplier *
+        long expectedCase = (selectedSample.getBasicBlocks() + distanceExpected * distanceExpected * multiplier *
                 ASTAR_DISTANCE_COST);
 
         if (expectedCase < 0)
@@ -94,9 +94,9 @@ public class CostFunction {
 
     }
 
-    public static int calculateBfsCost(ArrayList<ResultValue> previousResultsA, int x0, int x1, int y0, int y1) {
+    public static long calculateBfsCost(ArrayList<ResultValue> previousResultsA, int x0, int x1, int y0, int y1) {
 
-        int worstCase = (((Math.abs(x1 - x0) * Math.abs(y1 - y0) * BFS_DISTANCE_COST + BFS_INITIAL_COST) +
+        long worstCase = (((Math.abs(x1 - x0) * Math.abs(y1 - y0) * BFS_DISTANCE_COST + BFS_INITIAL_COST) +
                 ((Math.abs(x1 - x0) + 1) * (Math.abs(y1 - y0) + 1) * BFS_DISTANCE_COST + BFS_INITIAL_COST)) / 2);
 
         if (previousResultsA == null || previousResultsA.size() == 0) {
@@ -119,7 +119,7 @@ public class CostFunction {
 
         System.out.println(selectedSample);
 
-        int distanceExpected = selectedSample.getX0() - x0 + x1 - selectedSample.getX1() + selectedSample.getY0() - y0 + y1 - selectedSample.getY1();
+        long distanceExpected = selectedSample.getX0() - x0 + x1 - selectedSample.getX1() + selectedSample.getY0() - y0 + y1 - selectedSample.getY1();
 
 
         int multiplier = 1;
@@ -130,7 +130,7 @@ public class CostFunction {
         //  System.out.println(currentCombinedDistance);
         // System.out.println(distanceExpected);
 
-        int expectedCase = (int) (selectedSample.getBasicBlocks() + distanceExpected * distanceExpected * multiplier *
+        long expectedCase = (selectedSample.getBasicBlocks() + distanceExpected * distanceExpected * multiplier *
                 BFS_DISTANCE_COST);
 
 
@@ -150,9 +150,9 @@ public class CostFunction {
 
     }
 
-    public static int calculateDfsCost(ArrayList<ResultValue> previousResultsA, int x0, int x1, int y0, int y1) {
+    public static long calculateDfsCost(ArrayList<ResultValue> previousResultsA, int x0, int x1, int y0, int y1) {
 
-        int worstCase = (((Math.abs(x1 - x0) * Math.abs(y1 - y0) * DFS_DISTANCE_COST + DFS_INITIAL_COST) +
+        long worstCase = (((Math.abs(x1 - x0) * Math.abs(y1 - y0) * DFS_DISTANCE_COST + DFS_INITIAL_COST) +
                 ((Math.abs(x1 - x0) + 1) * (Math.abs(y1 - y0) + 1) * DFS_DISTANCE_COST + DFS_INITIAL_COST)) / 2);
 
         if (previousResultsA == null || previousResultsA.size() == 0) {
@@ -186,7 +186,7 @@ public class CostFunction {
         //  System.out.println(currentCombinedDistance);
         // System.out.println(distanceExpected);
 
-        int expectedCase = (int) (selectedSample.getBasicBlocks() + distanceExpected * distanceExpected * multiplier *
+        long expectedCase = (selectedSample.getBasicBlocks() + distanceExpected * distanceExpected * multiplier *
                 DFS_DISTANCE_COST);
 
         if (distanceExpected == 0)
@@ -205,8 +205,7 @@ public class CostFunction {
 
     }
 
-
-    public static int calculateCost(String request) {
+    public static long calculateCost(String request) {
 
         try {
             //  System.out.println("COST");

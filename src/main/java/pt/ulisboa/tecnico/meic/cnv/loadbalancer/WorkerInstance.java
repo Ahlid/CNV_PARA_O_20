@@ -125,4 +125,90 @@ public class WorkerInstance {
 
 
     }
+    public static class Job {
+        private String id;
+        private long expecteCost;
+        private long currentBBprocessed;
+        private WorkerInstance workerInstance;
+        private boolean finished;
+        private String requestType;
+
+        public static final String RAPID_REQUEST = "RAPID_REQUEST";
+        public static final String MEDIUM_REQUEST = "MEDIUM_REQUEST";
+        public static final String LONG_REQUEST = "LONG_REQUEST";
+
+
+        public Job(String id, long expecteCost) {
+            this.id = id;
+            this.expecteCost = expecteCost;
+            this.currentBBprocessed = 0;
+            this.requestType = getTypeOfRequest(expecteCost);
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+
+        public long getExpecteCost() {
+            return expecteCost;
+        }
+
+        public void setExpecteCost(long expecteCost) {
+            this.expecteCost = expecteCost;
+        }
+
+        public long getCurrentBBprocessed() {
+            return currentBBprocessed;
+        }
+
+        public void setCurrentBBprocessed(long currentBBprocessed) {
+            this.currentBBprocessed = currentBBprocessed;
+        }
+
+        public String getRequestType() {
+            return requestType;
+        }
+
+        public void setRequestType(String requestType) {
+            this.requestType = requestType;
+        }
+
+        public WorkerInstance getWorkerInstance() {
+            return workerInstance;
+        }
+
+        public void setWorkerInstance(WorkerInstance workerInstance) {
+            this.workerInstance = workerInstance;
+        }
+
+        public boolean isFinished() {
+            return finished;
+        }
+
+        public void setFinished(boolean finished) {
+            this.finished = finished;
+        }
+
+        public void endJob() {
+            if (this.workerInstance != null)
+                this.workerInstance.removeJob(this);
+        }
+
+        public static String getTypeOfRequest(long basicBlocks) {
+            if (basicBlocks < Scaler.rapidRequestLimit) {
+                return RAPID_REQUEST;
+            }
+
+            if (basicBlocks > Scaler.longRequestLimit) {
+                return LONG_REQUEST;
+            }
+
+            return MEDIUM_REQUEST;
+        }
+
+    }
 }

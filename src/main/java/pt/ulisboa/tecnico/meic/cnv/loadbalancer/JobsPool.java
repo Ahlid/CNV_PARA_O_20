@@ -6,7 +6,7 @@ import java.util.List;
 public class JobsPool {
 
     private static JobsPool instance;
-    private List<Job> jobs;
+    private List<WorkerInstance.Job> jobs;
 
     private JobsPool() {
         this.jobs = new ArrayList<>();
@@ -20,11 +20,11 @@ public class JobsPool {
         return instance;
     }
 
-    public boolean addJob(Job b) {
+    public boolean addJob(WorkerInstance.Job b) {
         return this.jobs.add(b);
     }
 
-    public boolean endJob(Job b) {
+    public boolean endJob(WorkerInstance.Job b) {
         synchronized (jobs) {
             b.setFinished(true);
             b.endJob();

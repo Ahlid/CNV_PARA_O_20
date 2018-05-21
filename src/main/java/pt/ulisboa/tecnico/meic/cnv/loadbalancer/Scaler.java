@@ -20,6 +20,8 @@ public class Scaler extends Thread {
     private final static Integer CLEANUP = 3;
     private final static Double CPU_THRESHOLD = 60.0;
     private final static Integer SIZE_THRESHOLD = 500;
+    public final static Long longRequestLimit = 2000000000L;
+    public final static Long rapidRequestLimit = 20000000L;
 
     private static final String METRICS_TOPIC = "Metrics";
 
@@ -69,7 +71,7 @@ public class Scaler extends Thread {
             // TODO use configs from dynamo
 
             //logger.info(Integer.parseInt(configs.get("MIN_WORKER")) + ":" + Integer.parseInt(configs.get("MAX_WORKER")));
-            aws.setupInstanceRequest(1,1);
+            aws.setupInstanceRequest(1, 1);
             aws.setWorkerAmiId(configs.get("AMI_Name"));
             workers = aws.getInstances();
 
@@ -141,7 +143,7 @@ public class Scaler extends Thread {
 
     public List<WorkerInstance> syncWorkers() {
         // LinkedHashMap<String, Map<String, String>> workerData = messenger.getWorkersTable();
-         List<WorkerInstance> w = new ArrayList<>();
+        List<WorkerInstance> w = new ArrayList<>();
         // logger.info("sync data: " + workerData.toString());
 
         // for (WorkerInstance wo : workers) {

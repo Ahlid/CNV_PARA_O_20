@@ -44,11 +44,11 @@ public class HandleRequest implements HttpHandler {
 
             if (query != null) {
 
-                int cost = CostFunction.calculateCost(query);
+                long cost = CostFunction.calculateCost(query);
                 System.out.println("MY COST WASSSSS");
                 System.out.println(cost);
 
-                Job thisJob = new Job(jobId, cost);
+                WorkerInstance.Job thisJob = new WorkerInstance.Job(jobId, cost);
                 JobsPool.getInstance().addJob(thisJob);
 
                 while (response == "") {
