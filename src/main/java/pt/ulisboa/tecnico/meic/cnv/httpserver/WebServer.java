@@ -36,8 +36,9 @@ public class WebServer {
     private static final Set<Long> threads = new HashSet<>();
     public static HashMap<Long, Object> requestParams = new HashMap<>();
     public static HashMap<Long, String> pureRequest = new HashMap<>();
-    private static HashMap<Long, Long> requestId = new HashMap<>();
+    private static HashMap<Long, String> requestId = new HashMap<>();
     private static AtomicLong highestRequestId = new AtomicLong();
+    private static HashMap<Long, String> jobsId = new HashMap<>();
     private static Messenger messenger = null;
     private static String instanceId = null;
     private static String endpoint = null;
@@ -109,9 +110,21 @@ public class WebServer {
                 throw new RuntimeException("This should not happen!");
             }
 
+            String query = t.getRequestURI().getQuery();
+            String[] paramList = query.split("&");
+            String jobId = "";
+
+            for (String param : paramList) {
+                String paramName = param.split("=")[0];
+                String paramValue = param.split("=")[1];
+                if (paramName.equals("jobId")) {
+                    jobId = paramValue;
+                }
+            }
+
             // Create unique requestId for current request
             Long newRequestId = highestRequestId.getAndIncrement();
-            requestId.put(threadId, newRequestId);
+            requestId.put(threadId, jobId);
             logger.info("Request Id: " + requestId);
 
             // Keep track of URL parameters for each thread
@@ -119,12 +132,14 @@ public class WebServer {
             requestParams.put(threadId, params);
 
             // Process URL query string
-            String query = t.getRequestURI().getQuery();
-            String[] paramList = query.split("&");
 
             // Store query string parameters in LinkedHashMap(preserving insertion order)
             for (String param : paramList) {
+
                 String paramName = param.split("=")[0];
+                if (paramName.equals("jobId")) {
+                    continue;
+                }
                 String paramValue = param.split("=")[1];
                 params.put(paramName, paramValue);
             }
@@ -167,6 +182,7 @@ public class WebServer {
                 logger.info("Finished processing request: " + newRequestId);
 
             } catch (Exception e) {
+                e.printStackTrace();
                 logger.error(e.toString());
                 response = "<html><title>maze runner </title><br><body>" +
                         "" + e.toString() + "<hr>" +
@@ -190,7 +206,6 @@ public class WebServer {
     }
 
 
-
     public static void updateWorker(String status, Boolean working) {
         // instanceId, status, cpu, endpoint, working, jobs
         messenger.workerUpdate(instanceId, status, 0.0, endpoint, working, requestId.size());
@@ -204,7 +219,7 @@ public class WebServer {
         return pureRequest;
     }
 
-    public static HashMap<Long, Long> getRequestId() {
+    public static HashMap<Long, String> getRequestId() {
         return requestId;
     }
 

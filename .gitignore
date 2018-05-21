@@ -12,3 +12,4 @@ CNV_PARA_O_20.iml
 worker.log
 balancer.log
 CNV-key.pem
+out/
