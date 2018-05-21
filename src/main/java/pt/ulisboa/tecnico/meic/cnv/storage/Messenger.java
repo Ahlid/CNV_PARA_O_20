@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.document.TableCollection;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.amazonaws.services.dynamodbv2.util.TableUtils;
 import pt.ulisboa.tecnico.meic.cnv.loadbalancer.*;
+
 import org.apache.log4j.Logger;
 //import pt.tecnico.ulisboa.meic.cnv.storage.AmazonDynamoDB;
 
@@ -39,7 +40,6 @@ public class Messenger {
         createPartitionKeyTable(METRICS_TABLE, "id", "requestId");
         createTable(CONFIG_TABLE, "name");
         createTable(WORKERS_TABLE, "id");
-        System.out.println(getMetrics("i-222563b5019e4f222", "2").toString());
     }
 
     public static Messenger getInstance() {
@@ -182,11 +182,11 @@ public class Messenger {
             ScanRequest scanRequest = new ScanRequest(CACHE_TABLE);
             ScanResult scanResult = db.dynamoDB.scan(scanRequest);
             for (Map<String, AttributeValue> i : scanResult.getItems()) {
-                stats.put("request", i.get("request").getS());
+                stats.put("request", i.get("id").getS());
                 stats.put("bb", i.get("bb").getS());
                 stats.put("strategy", i.get("strategy").getS());
                 stats.put("maze", i.get("maze").getS());
-                result.put((String) i.get("request").getS(), stats);
+                result.put((String) i.get("id").getS(), stats);
             }
             return result;
         } catch (Exception e) {
@@ -232,11 +232,10 @@ public class Messenger {
         return 1;
     }
 
-    public List<String> getMetrics(String id, String key) {
+    public HashMap<String, String> getMetrics(String id) {
         // get messages from Metrics table
-        List<String> result = null;
+        HashMap<String, String> result = new HashMap();
         try {
-            result = new ArrayList<>();
             HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
             Condition condition = new Condition()
                     .withComparisonOperator(ComparisonOperator.EQ.toString())
@@ -245,11 +244,12 @@ public class Messenger {
             ScanRequest scanRequest = new ScanRequest(METRICS_TABLE).withScanFilter(scanFilter);
             ScanResult scanResult = db.dynamoDB.scan(scanRequest);
             for (Map<String, AttributeValue> i : scanResult.getItems()) {
-                result.add(i.get("bb").getS());
+                result.put(i.get("requestId").getS(),i.get("metrics").getM().get("bb").getS());
             }
             return result;
         } catch (Exception e) {
             logger.error("exception: " + e.getMessage());
+            e.printStackTrace();    
         }
         return result;
     }
