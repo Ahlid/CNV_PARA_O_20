@@ -1,0 +1,11 @@
+We provide a script named setup.sh on the scripts/ folder which runs on an "empty" EC2 machine and takes care of initializing the production environment using the AWS CLI support.
+More concretely, the script creates a worker and balancer AMIs, setups the worker and balancer Security Groups, creates a Launch Template for the worker and launches a ready-to-use balancer instance.
+The Load Balancer and Auto Scaler components are deployed onto a single EC2 instance, the Auto Scaler will launch and terminate Worker EC2 instances based on request demand. We use DynamoDB to implement the persistence layer in our application. In this setting, the workers act mainly as producers of metric data, while the load balancer and auto scaler operate as consumers of this data. The instrumentation of the code is done via BIT, which generates the metrics to be stored on DynamoDB. 
+Besides a table "metrics" which stores the metrics, we additionally store some configuration parameters such as the worker AMI ID, Min and Max number of worker instances, etc., on a DynamoDB table "myConfig" and keep a list of all workers(each worker is either starting, running or shut down) on a table "workers".
+
+Compile the whole project: make all
+Clean all binaries: make clean
+Update worker AMI name: make updateami name=ami-xxxxxxxx
+Run a worker instance: make run_worker
+Run a load balancer instance: make run_balancer
+
