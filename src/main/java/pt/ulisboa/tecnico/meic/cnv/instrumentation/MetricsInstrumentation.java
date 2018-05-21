@@ -82,11 +82,11 @@ public class MetricsInstrumentation {
 
     }
 
-    private static void initCostRequestTable(String instanceId, String aLong, String params) {
-        Messenger messenger = Messenger.getInstance();
+    //private static void initCostRequestTable(String instanceId, String aLong, String params) {
+    //    Messenger messenger = Messenger.getInstance();
 
-        messenger.newRequestCost(instanceId, aLong, params);
-    }
+    //    messenger.newRequestCost(instanceId, aLong, params);
+    //}
 
     public static void updateMetrics(long inst, long bb, Boolean finished) {
 

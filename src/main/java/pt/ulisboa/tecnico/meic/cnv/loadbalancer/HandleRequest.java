@@ -49,7 +49,7 @@ public class HandleRequest implements HttpHandler {
                 System.out.println("MY COST WASSSSS");
                 System.out.println(cost);
 
-                Job thisJob = new Job(jobId, cost);
+                WorkerInstance.Job thisJob = new WorkerInstance.Job(jobId, cost);
                 JobsPool.getInstance().addJob(thisJob);
 
                 while (response == "") {
@@ -77,7 +77,12 @@ public class HandleRequest implements HttpHandler {
                         logger.error("error in request: " + e.getMessage());
                         logger.error("need to do something and re-do request");
                     }
-                    Thread.sleep(retryRequestTime);
+                    try{
+                        Thread.sleep(retryRequestTime);
+                    }
+                    catch (Exception e){
+                        logger.error("Error reprocessing request: " + e.getMessage());
+                    }
                 }
 
                 JobsPool.getInstance().endJob(thisJob);
