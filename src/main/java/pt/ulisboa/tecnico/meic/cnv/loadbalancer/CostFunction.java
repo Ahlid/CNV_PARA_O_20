@@ -256,7 +256,7 @@ public class CostFunction {
             while (it.hasNext()) {
 
                 Map<String, String> entry = cache.get(it.next());
-
+                System.out.println("entry");
                 System.out.println(entry);
                 if (entry.get("maze").equals(maze) && entry.get("strategy").equals(strategy)) {
 
