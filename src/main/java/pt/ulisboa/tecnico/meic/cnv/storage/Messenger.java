@@ -19,10 +19,9 @@ public class Messenger {
     private static final String CONFIG_TABLE = "myConfig";
 
     private static final String WORKERS_TABLE = "WORKERS";
-    private static final String WORKERS_CACHE = "CACHE";
+    private static final String CACHE_TABLE = "CACHE";
     private static final String REQUEST_COST_TABLE = "REQUEST_COST_TABLE";
 
-    private static final String METRICS_TOPIC = "Metrics";
     private static final String METRICS_TABLE = "Metrics";
 
     private static Messenger instance;
@@ -36,8 +35,10 @@ public class Messenger {
         logger.info("Initializing DynamoDB...");
         createTable(CONFIG_TABLE, "name");
         createTable(WORKERS_TABLE, "id");
-        createMetricTable();
-        createCacheTable();
+        createPartitionKeyTable(CACHE_TABLE, "id", "strategy");
+        createPartitionKeyTable(METRICS_TABLE, "id", "requestId");
+        //System.out.println(getWorkersIds());
+        //System.out.println(getCache("{m=Maze50.maze, x0=1, y0=1, x1=6, y1=6, v=75, s=bfs}"));
         createRequestCostTable();
     }
 
@@ -123,6 +124,24 @@ public class Messenger {
         return item;
     }
 
+    public static List<String> getWorkersIds(){
+        // get messages from workers table
+        List<String> result = null;
+        try {
+
+            ScanRequest scanRequest = new ScanRequest(WORKERS_TABLE);
+            ScanResult scanResult = db.dynamoDB.scan(scanRequest);
+            for (Map<String, AttributeValue> i : scanResult.getItems()) {
+                logger.info(scanResult.getItems());
+                result.add((String) i.get("id").getS());
+            }
+            return result;
+        } catch (Exception e) {
+            logger.error("exception: " + e.getMessage());
+        }
+        return result;
+    }
+
     public static LinkedHashMap<String, Map<String, String>> getWorkersTable() {
         // get messages from workers table
         LinkedHashMap<String, Map<String, String>> result = new LinkedHashMap<>();
@@ -152,7 +171,7 @@ public class Messenger {
         Map<String, String> stats = new LinkedHashMap<>();
         try {
 
-            ScanRequest scanRequest = new ScanRequest(WORKERS_CACHE);
+            ScanRequest scanRequest = new ScanRequest(WORKERS_TABLE);
             ScanResult scanResult = db.dynamoDB.scan(scanRequest);
             for (Map<String, AttributeValue> i : scanResult.getItems()) {
                 stats.put("request", i.get("request").getS());
@@ -167,6 +186,25 @@ public class Messenger {
         return result;
     }
 
+    /*
+     *
+     * Request Cost Functions
+     *
+     */
+
+    public void newRequestCost(String instanceId, Long aLong, String params) {
+        // puts messages in cache table
+        Map<String, AttributeValue> item = new HashMap<>();
+
+        item.put("id", new AttributeValue(instanceId));
+        item.put("requestId", new AttributeValue(aLong + ""));
+        item.put("params", new AttributeValue(params));
+        item.put("cost", new AttributeValue("0"));
+        item.put("terminated", new AttributeValue().withBOOL(false));
+
+        PutItemRequest putItemRequest = new PutItemRequest(REQUEST_COST_TABLE, item);
+        PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
+    }
     public static LinkedHashMap<String, Map<String, String>> getRequestCostTable() {
         // get messages from workers table
         LinkedHashMap<String, Map<String, String>> result = new LinkedHashMap<>();
@@ -186,34 +224,6 @@ public class Messenger {
             logger.error("exception: " + e.getMessage());
         }
         return result;
-    }
-
-    /*
-     *
-     * Metrics Functions
-     *
-     */
-    private void createMetricTable() throws Exception {
-        // Create table to keep settings
-        String tableName = METRICS_TABLE;
-
-        // Create a table with a primary hash key named 'id', which holds a string
-        CreateTableRequest createTableRequest = new CreateTableRequest().withTableName(tableName);
-        createTableRequest.withKeySchema(new KeySchemaElement().withAttributeName("id").withKeyType(KeyType.HASH),
-                new KeySchemaElement().withAttributeName("requestId").withKeyType(KeyType.RANGE));
-        //createTableRequest.withLocalSecondaryIndexes(makeLocalSecondaryIndexes());
-        createTableRequest.withAttributeDefinitions(new AttributeDefinition().withAttributeName("id").withAttributeType(ScalarAttributeType.S),
-                new AttributeDefinition().withAttributeName("requestId").withAttributeType(ScalarAttributeType.S));
-        createTableRequest.withProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(10L));
-
-        // Create table if it does not exist yet
-        TableUtils.createTableIfNotExists(db.dynamoDB, createTableRequest);
-        // wait for the table to move into ACTIVE state
-        TableUtils.waitUntilActive(db.dynamoDB, tableName);
-
-        // Describe our new table
-        DescribeTableRequest describeTableRequest1 = new DescribeTableRequest().withTableName(tableName);
-        TableDescription tableDescription1 = db.dynamoDB.describeTable(describeTableRequest1).getTable();
     }
 
     private void createRequestCostTable() throws Exception {
@@ -239,29 +249,11 @@ public class Messenger {
         TableDescription tableDescription1 = db.dynamoDB.describeTable(describeTableRequest1).getTable();
     }
 
-    private void createCacheTable() throws Exception {
-        // Create table to keep settings
-        String tableName = WORKERS_CACHE;
-
-        // Create a table with a primary hash key named 'id', which holds a string
-        CreateTableRequest createTableRequest = new CreateTableRequest().withTableName(tableName);
-        createTableRequest.withKeySchema(new KeySchemaElement().withAttributeName("request").withKeyType(KeyType.HASH),
-                new KeySchemaElement().withAttributeName("bb").withKeyType(KeyType.RANGE));
-        //createTableRequest.withLocalSecondaryIndexes(makeLocalSecondaryIndexes());
-        createTableRequest.withAttributeDefinitions(new AttributeDefinition().withAttributeName("request").withAttributeType(ScalarAttributeType.S),
-                new AttributeDefinition().withAttributeName("bb").withAttributeType(ScalarAttributeType.S));
-        createTableRequest.withProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(10L));
-
-        // Create table if it does not exist yet
-        TableUtils.createTableIfNotExists(db.dynamoDB, createTableRequest);
-        // wait for the table to move into ACTIVE state
-        TableUtils.waitUntilActive(db.dynamoDB, tableName);
-
-        // Describe our new table
-        DescribeTableRequest describeTableRequest1 = new DescribeTableRequest().withTableName(tableName);
-        TableDescription tableDescription1 = db.dynamoDB.describeTable(describeTableRequest1).getTable();
-    }
-
+    /*
+     *
+     * Metrics Functions
+     *
+     */
     private static Map<String, AttributeValue> newMetricsItem(String instanceId, String requestId, String inst, String bb, Boolean finished, String params) {
         Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
         Map<String, AttributeValue> metric = newMItem(inst, bb);
@@ -316,7 +308,52 @@ public class Messenger {
         }
         return result;
     }
+    /*
+     *
+     * Cache Functions
+     *
+     */
+    private static Map<String, AttributeValue> newCacheItem(String request, String bb, String inst) {
+        Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
+        item.put("id", new AttributeValue(request));
+        item.put("bb", new AttributeValue(bb));
+        item.put("inst", new AttributeValue(inst));
+        item.put("strategy", new AttributeValue(request.split("s=")[1].split("}")[0]));
+        item.put("maze", new AttributeValue(request.split("m=")[1].split(",")[0].substring(0, request.split("m=")[1].split(",")[0].length() - 5)));
+        
+        return item;
+    }
 
+    // put messages in Metrics table
+    public int newCacheMetrics(String request, String bb, String inst) {
+        // puts messages in Metrics table
+        Map<String, AttributeValue> item = newCacheItem(request, bb, inst);
+        PutItemRequest putItemRequest = new PutItemRequest(CACHE_TABLE, item);
+        PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
+        return 1;
+    }
+
+    public List<String> getCache(String request) {
+        // get bb from Cache table
+        List<String> result = null;
+        try {
+            result = new ArrayList<>();
+            HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
+            Condition condition = new Condition()
+                    .withComparisonOperator(ComparisonOperator.EQ.toString())
+                    .withAttributeValueList(new AttributeValue(request));
+            scanFilter.put("id", condition);
+            ScanRequest scanRequest = new ScanRequest(CACHE_TABLE).withScanFilter(scanFilter);
+            ScanResult scanResult = db.dynamoDB.scan(scanRequest);
+            for (Map<String, AttributeValue> i : scanResult.getItems()) {
+                result.add(i.get("bb").getS());
+            }
+            return result;
+        } catch (Exception e) {
+            logger.error("exception: " + e.getMessage());
+        }
+        return result;
+    }
 
     /*
      *
@@ -415,6 +452,28 @@ public class Messenger {
         DescribeTableRequest describeTableRequest1 = new DescribeTableRequest().withTableName(tableName);
         TableDescription tableDescription1 = db.dynamoDB.describeTable(describeTableRequest1).getTable();
     }
+        // Create table with partition key
+        private void createPartitionKeyTable(String name, String key, String sort) throws Exception {
+            // Create table to keep settings
+            String tableName = name;
+    
+            // Create a table with a primary hash key named 'id', which holds a string
+            CreateTableRequest createTableRequest = new CreateTableRequest().withTableName(tableName);
+            createTableRequest.withKeySchema(new KeySchemaElement().withAttributeName(key).withKeyType(KeyType.HASH),
+                    new KeySchemaElement().withAttributeName(sort).withKeyType(KeyType.RANGE));
+            createTableRequest.withAttributeDefinitions(new AttributeDefinition().withAttributeName(key).withAttributeType(ScalarAttributeType.S),
+                    new AttributeDefinition().withAttributeName(sort).withAttributeType(ScalarAttributeType.S));
+            createTableRequest.withProvisionedThroughput(new ProvisionedThroughput().withReadCapacityUnits(1L).withWriteCapacityUnits(10L));
+    
+            // Create table if it does not exist yet
+            TableUtils.createTableIfNotExists(db.dynamoDB, createTableRequest);
+            // wait for the table to move into ACTIVE state
+            TableUtils.waitUntilActive(db.dynamoDB, tableName);
+    
+            // Describe our new table
+            DescribeTableRequest describeTableRequest1 = new DescribeTableRequest().withTableName(tableName);
+            TableDescription tableDescription1 = db.dynamoDB.describeTable(describeTableRequest1).getTable();
+        }
 
     public static void listMyTables() {
 
@@ -442,33 +501,5 @@ public class Messenger {
             logger.error("DeleteTable request failed for " + tableName);
             logger.error(e.getMessage());
         }
-    }
-
-    public void newCacheMetrics(String request, long bb) {
-        // puts messages in cache table
-        Map<String, AttributeValue> item = new HashMap<>();
-
-        item.put("request", new AttributeValue(request));
-        item.put("bb", new AttributeValue(bb + ""));
-        item.put("strategy", new AttributeValue(request.split("s=")[1].split("}")[0]));
-        item.put("maze", new AttributeValue(request.split("m=")[1].split(",")[0].substring(0, request.split("m=")[1].split(",")[0].length() - 5)));
-
-        PutItemRequest putItemRequest = new PutItemRequest(WORKERS_CACHE, item);
-        PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
-
-    }
-
-    public void newRequestCost(String instanceId, Long aLong, String params) {
-        // puts messages in cache table
-        Map<String, AttributeValue> item = new HashMap<>();
-
-        item.put("id", new AttributeValue(instanceId));
-        item.put("requestId", new AttributeValue(aLong + ""));
-        item.put("params", new AttributeValue(params));
-        item.put("cost", new AttributeValue("0"));
-        item.put("terminated", new AttributeValue().withBOOL(false));
-
-        PutItemRequest putItemRequest = new PutItemRequest(REQUEST_COST_TABLE, item);
-        PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
     }
 }

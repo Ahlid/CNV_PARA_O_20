@@ -32,7 +32,7 @@ public class InstrumentationTool {
 
                 if (ci.getClassName().equals("pt/ulisboa/tecnico/meic/cnv/mazerunner/maze/Main")) {
                     ci.addBefore(metricsInstrClass, "setRequest", "null");
-                    ci.addAfter(metricsInstrClass, "printDynamic", ci.getClassName());
+                    //ci.addAfter(metricsInstrClass, "printDynamic", ci.getClassName());
                     ci.addAfter(metricsInstrClass, "endOfThreadExecution", "null");
                 }
                 ci.write(out_filename);
