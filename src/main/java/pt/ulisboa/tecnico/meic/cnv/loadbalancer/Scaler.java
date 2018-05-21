@@ -108,23 +108,10 @@ public class Scaler extends Thread {
             for (WorkerInstance w : workers) {
 
                 if (w.getJobs() >= SIZE_THRESHOLD) {
+                    
                     createInstance = true;
                 }
-                List<String> progress = messenger.getProgress(w.getId());
-                logger.info("Progress: " + progress.toString());
-                if (progress != null && progress.size() == 3) {
-                    if (progress.get(2).equals("false")) {
-                        w.setProgress(Double.valueOf(progress.get(0)), Integer.valueOf(progress.get(1)));
-                        w.setWork(true);
-                    } else {
-                        w.setProgress(Double.valueOf(progress.get(0)), Integer.valueOf(progress.get(1)));
-                        w.setWork(false);
-                    }
-                    logger.info(progress.get(0) + " - " + progress.get(1) + " - " + w.getStatus() + " - " + progress.get(2));
-                    if (w.getStatus().equals("running")) {
-                        cpu += w.getCPU();
-                    }
-                }
+
             }
             logger.info("Create instance?: " + createInstance + " | Threshold: " + (Double.valueOf(cpu) / Double.valueOf(workers.size()) > CPU_THRESHOLD));
             if (createInstance || (Double.valueOf(cpu) / Double.valueOf(workers.size()) > CPU_THRESHOLD)) {

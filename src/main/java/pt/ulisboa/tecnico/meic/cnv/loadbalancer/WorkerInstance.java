@@ -125,6 +125,8 @@ public class WorkerInstance {
 
 
     }
+
+
     public static class Job {
         private String id;
         private long expecteCost;
@@ -212,3 +214,5 @@ public class WorkerInstance {
 
     }
 }
+
+

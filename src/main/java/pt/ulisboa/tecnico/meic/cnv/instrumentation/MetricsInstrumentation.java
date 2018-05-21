@@ -78,15 +78,15 @@ public class MetricsInstrumentation {
 
         // Notify about end of execution
         updateMetrics((long) 0, (long) 0, false);
-        initCostRequestTable(WebServer.getInstanceId(), WebServer.getRequestId().get(threadId), WebServer.getPureRequest().get(threadId));
+        //initCostRequestTable(WebServer.getInstanceId(), WebServer.getRequestId().get(threadId), WebServer.getPureRequest().get(threadId));
 
     }
 
-    private static void initCostRequestTable(String instanceId, String aLong, String params) {
-        Messenger messenger = Messenger.getInstance();
+    //private static void initCostRequestTable(String instanceId, String aLong, String params) {
+    //    Messenger messenger = Messenger.getInstance();
 
-        messenger.newRequestCost(instanceId, aLong, params);
-    }
+    //    messenger.newRequestCost(instanceId, aLong, params);
+    //}
 
     public static void updateMetrics(long inst, long bb, Boolean finished) {
 

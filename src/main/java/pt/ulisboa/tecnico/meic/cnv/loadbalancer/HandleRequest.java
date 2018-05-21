@@ -18,6 +18,7 @@ public class HandleRequest implements HttpHandler {
 
     final static Logger logger = Logger.getLogger(HandleRequest.class);
     static final int responseCode_OK = 200;
+    static final int retryRequestTime = 5000;
 
     private Scaler scaler;
     private Balancer balancer;
@@ -57,6 +58,7 @@ public class HandleRequest implements HttpHandler {
                     thisJob.setWorkerInstance(worker);
 
 
+
                     try {
                         String link = "http://" + worker.getAddress() + ":8000" + t.getRequestURI().toString() + "&jobId=" + thisJob.getId();
                         logger.info("Sending request to: " + worker.getId());
@@ -71,8 +73,15 @@ public class HandleRequest implements HttpHandler {
                         for (String line; (line = in.readLine()) != null; response += line + "\n") ;
                         in.close();
                     } catch (Exception e) {
+                        thisJob.setWorkerInstance(null);
                         logger.error("error in request: " + e.getMessage());
                         logger.error("need to do something and re-do request");
+                    }
+                    try{
+                        Thread.sleep(retryRequestTime);
+                    }
+                    catch (Exception e){
+                        logger.error("Error reprocessing request: " + e.getMessage());
                     }
                 }
 

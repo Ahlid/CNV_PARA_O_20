@@ -21,7 +21,6 @@ public class LoadBalancer implements Balancer {
 
     public WorkerInstance getInstance(){
         Double cpu = 100.0;
-        Double progress = 0.0;
         Integer size = 150;
         WorkerInstance faster=null;
         workers = scaler.getWorkers();
@@ -30,10 +29,9 @@ public class LoadBalancer implements Balancer {
         // TODO need to choose the best worker for the job!
         // according to things like metrics and cpu use, and progress done
         for (WorkerInstance w : workers){
-            logger.info("[lb] Id : " + w.getId() + ", cpu use: " + w.getCPU() + ", progress: " + w.getProgress() + ", Jobs: " + w.getJobs() + ", working: " + w.working());
-            if (!w.working() || (w.getCPU() < cpu) && (w.getProgress() > 0.50) || w.getJobs() == 0 ){
+            logger.info("[lb] Id : " + w.getId() + ", cpu use: " + w.getCPU() + ", Jobs: " + w.getJobs() + ", working: " + w.working());
+            if (!w.working() || (w.getCPU() < cpu) || w.getJobs() == 0 ){
                 cpu = w.getCPU();
-                progress = w.getProgress();
                 faster = w;
                 logger.info("Faster worker: " + w.getId());
             }
