@@ -4,6 +4,7 @@ import com.amazonaws.services.dynamodbv2.xspec.M;
 import org.apache.log4j.Logger;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.sql.Timestamp;
 import java.net.SocketTimeoutException;
 
 import java.util.*;
@@ -24,8 +25,8 @@ public class Scaler extends Thread {
     private final static Integer CLEANUP = 3;
     private final static Double CPU_THRESHOLD = 60.0;
     private final static Integer SIZE_THRESHOLD = 500;
-    public final static Long longRequesLimit = 5000000000L;
-    public final static Long rapidRequesLimit = 20000000L;
+    public final static Long longRequestLimit = 5000000000L;
+    public final static Long shortRequestLimit = 20000000L;  
     
     private static final String METRICS_TOPIC = "Metrics";
     
@@ -37,6 +38,7 @@ public class Scaler extends Thread {
     private Double cpu = 0.0;
     private Integer minWorkers = 0;
     private Integer maxWorkers = 0;
+    private Timestamp time = new Timestamp(0);
 
     private ArrayList<WorkerInstance> workers;
     private LinkedHashMap<String, String> configs = new LinkedHashMap<>();
@@ -77,11 +79,7 @@ public class Scaler extends Thread {
 
             minWorkers = Integer.parseInt(configs.get("MIN_WORKERS"));
             maxWorkers = Integer.parseInt(configs.get("MAX_WORKERS"));
-            
-            // TODO use configs from dynamo
-            
-            //logger.info(Integer.parseInt(configs.get("MIN_WORKER")) + ":" + Integer.parseInt(configs.get("MAX_WORKER")));
-            //aws.setupInstanceRequest(1, 1);
+
             aws.setWorkerAmiId(configs.get("AMI_Name"));
             aws.setupInstances();
             
@@ -99,6 +97,7 @@ public class Scaler extends Thread {
         
         Boolean createInstance = false;
         Boolean destroyInstance = false;
+        double sizeBB = 0;
 
         try {
             // check every timer*cleanup seconds if is alive
@@ -114,20 +113,40 @@ public class Scaler extends Thread {
             if (workers.size() < minWorkers) {
                 createInstance = true;
             }
-            else if (workers.size() > maxWorkers){
-                destroyInstance = true;
+
+            for (WorkerInstance w : this.workers) {
+                sizeBB += w.getBBtoBeProcessed();   
             }
 
-            if (destroyInstance) {
-                // TODO choose instance to destroy
+            if (sizeBB >= (3*shortRequestLimit+longRequestLimit) || sizeBB >= (shortRequestLimit+2*longRequestLimit)){
+                createInstance = true;
+            }
+            
+            // destroy instances ??
+            if (workers.size() > maxWorkers){
+                // destroy instance
+                // TODO
+                WorkerInstance workerToDestroy = new WorkerInstance();
+                //worker = workerWithLessJobs() or getBBtoBeProcessed();
+                if (workerToDestroy.getJobs() == 0){
+                    terminateWorker(workerToDestroy);
+                }
+                else{
+                    workerToDestroy.setAcceptingRequests(false);
                 }
             }
-            
-            
-            logger.info("Create instance?: " + createInstance + " | Threshold: " + (Double.valueOf(cpu) / Double.valueOf(workers.size()) > CPU_THRESHOLD));
-            if (createInstance || (Double.valueOf(cpu) / Double.valueOf(workers.size()) > CPU_THRESHOLD)) {
+			
+            if(createInstance){
+                // TODO check time (if time)
                 startWorker();
             }
+
+            
+            
+            // logger.info("Create instance?: " + createInstance + " | Threshold: " + (Double.valueOf(cpu) / Double.valueOf(workers.size()) > CPU_THRESHOLD));
+            // if (createInstance || (Double.valueOf(cpu) / Double.valueOf(workers.size()) > CPU_THRESHOLD)) {
+            //     startWorker();
+            // }
             
         } catch (Exception e) {
             e.printStackTrace();
