@@ -17,32 +17,55 @@ public class CostFunction {
     private final static long BFS_DISTANCE_COST = 6898L;
 
 
-    private static ArrayList<ResultValue> previousResultsA = new ArrayList<>();
+    public static HashMap<Integer, Double> astarV;
+    public static HashMap<Integer, Double> bfsV;
+    public static HashMap<Integer, Double> dfsV;
 
-    public static void main(String[] args) {
+    static {
+        astarV = new HashMap();
+        astarV.put(10, 1.0);
+        astarV.put(20, 1.0);
+        astarV.put(30, 1.0);
+        astarV.put(40, 1.0);
+        astarV.put(50, 1.0);
+        astarV.put(60, 1.0);
+        astarV.put(70, 1.0);
+        astarV.put(80, 1.0);
+        astarV.put(90, 1.0);
 
+        bfsV = new HashMap();
+        bfsV.put(10, 1.745786269);
+        bfsV.put(20, 1.331722142);
+        bfsV.put(30, 1.197415342);
+        bfsV.put(40, 1.134977036);
+        bfsV.put(50, 1.101060126);
+        bfsV.put(60, 1.076816376);
+        bfsV.put(70, 1.057542583);
+        bfsV.put(80, 1.049745343);
+        bfsV.put(90, 1.040675452);
 
-     /*   previousResultsA.add(new ResultValue(0, 1, 1, 1, 83107, "astar"));
-        previousResultsA.add(new ResultValue(0, 10, 1, 10, 9508827, "astar"));
-        previousResultsA.add(new ResultValue(0, 20, 1, 21, 18944537, "astar"));
-        previousResultsA.add(new ResultValue(25, 0, 25, 49, 16042320, "astar"));
-        previousResultsA.add(new ResultValue(25, 48, 25, 49, 49444678, "astar"));
-        previousResultsA.add(new ResultValue(25, 48, 25, 49, 49444678, "astar"));
-        previousResultsA.add(new ResultValue(25, 48, 25, 1, 51991158, "astar"));
-        previousResultsA.add(new ResultValue(1, 10, 1, 21, 3253813, "astar"));
-        previousResultsA.add(new ResultValue(1, 10, 1, 15, 6337247, "astar"));
-        previousResultsA.add(new ResultValue(1, 8, 1, 8, 5103073, "astar"));*/
+        dfsV = new HashMap();
+        dfsV.put(10, 1.94598237);
+        dfsV.put(20, 1.461898777);
+        dfsV.put(30, 1.297970488);
+        dfsV.put(40, 1.218769479);
+        dfsV.put(50, 1.174761305);
+        dfsV.put(60, 1.140720308);
+        dfsV.put(70, 1.110712347);
+        dfsV.put(80, 1.100321691);
+        dfsV.put(90, 1.085569101);
 
-        System.out.printf("%d\n", calculateAstarCost(previousResultsA, 1, 8, 1, 8));
-        System.out.printf("%d\n", calculateAstarCost(previousResultsA, 1, 6, 1, 6));
-        System.out.printf("%d\n", calculateAstarCost(previousResultsA, 1, 25, 1, 15));
-        System.out.printf("%d\n", calculateAstarCost(previousResultsA, 1, 20, 1, 15));
     }
 
-    public static long calculateAstarCost(ArrayList<ResultValue> previousResultsA, int x0, int x1, int y0, int y1) {
+
+    private static ArrayList<ResultValue> previousResultsA = new ArrayList<>();
+
+    public static long calculateAstarCost(ArrayList<ResultValue> previousResultsA, int x0, int x1, int y0, int y1, int velocity) {
 
         long worstCase = (((Math.abs(x1 - x0) * Math.abs(y1 - y0) * ASTAR_DISTANCE_COST + ASTAR_INITIAL_COST) +
                 ((Math.abs(x1 - x0) + 1) * (Math.abs(y1 - y0) + 1) * ASTAR_DISTANCE_COST + ASTAR_INITIAL_COST)) / 2);
+
+        worstCase = calculateVCost(velocity, worstCase, astarV);
 
         if (previousResultsA == null || previousResultsA.size() == 0) {
             return worstCase;
@@ -98,10 +121,12 @@ public class CostFunction {
 
     }
 
-    public static long calculateBfsCost(ArrayList<ResultValue> previousResultsA, int x0, int x1, int y0, int y1) {
+    public static long calculateBfsCost(ArrayList<ResultValue> previousResultsA, int x0, int x1, int y0, int y1, int velocity) {
 
         long worstCase = (((Math.abs(x1 - x0) * Math.abs(y1 - y0) * BFS_DISTANCE_COST + BFS_INITIAL_COST) +
                 ((Math.abs(x1 - x0) + 1) * (Math.abs(y1 - y0) + 1) * BFS_DISTANCE_COST + BFS_INITIAL_COST)) / 2);
+
+        worstCase = calculateVCost(velocity, worstCase, bfsV);
 
         if (previousResultsA == null || previousResultsA.size() == 0) {
             return worstCase;
@@ -158,12 +183,14 @@ public class CostFunction {
 
     }
 
-    public static long calculateDfsCost(ArrayList<ResultValue> previousResultsA, int x0, int x1, int y0, int y1) {
+    public static long calculateDfsCost(ArrayList<ResultValue> previousResultsA, int x0, int x1, int y0, int y1, int velocity) {
 
         System.out.println(previousResultsA);
 
         long worstCase = (((Math.abs(x1 - x0) * Math.abs(y1 - y0) * DFS_DISTANCE_COST + DFS_INITIAL_COST) +
                 ((Math.abs(x1 - x0) + 1) * (Math.abs(y1 - y0) + 1) * DFS_DISTANCE_COST + DFS_INITIAL_COST)) / 2);
+
+        worstCase = calculateVCost(velocity, worstCase, dfsV);
 
         System.out.println("WORST CASE");
         System.out.println(worstCase);
@@ -281,11 +308,11 @@ public class CostFunction {
             }
 
             if (strategy.equals("astar")) {
-                return calculateAstarCost(resultValues, x0, x1, y0, y1);
+                return calculateAstarCost(resultValues, x0, x1, y0, y1, Integer.parseInt(velocity));
             } else if (strategy.equals("bfs")) {
-                return calculateBfsCost(resultValues, x0, x1, y0, y1);
+                return calculateBfsCost(resultValues, x0, x1, y0, y1, Integer.parseInt(velocity));
             } else {
-                return calculateDfsCost(resultValues, x0, x1, y0, y1);
+                return calculateDfsCost(resultValues, x0, x1, y0, y1, Integer.parseInt(velocity));
             }
 
         } catch (Exception e) {
@@ -297,4 +324,20 @@ public class CostFunction {
 
         return 0;
     }
+
+    public static long calculateVCost(int v, long currentCost, HashMap<Integer, Double> statistics) {
+        if (v >= 95) {
+            return currentCost;
+        }
+
+        long result = currentCost;
+
+        for (int x = 90; x > v - 5; x -= 10) {
+            result = (long) (result * statistics.get(x));
+        }
+
+
+        return result;
+    }
+
 }
