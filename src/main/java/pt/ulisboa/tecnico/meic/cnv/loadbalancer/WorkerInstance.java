@@ -3,8 +3,9 @@ package pt.ulisboa.tecnico.meic.cnv.loadbalancer;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WorkerInstance {
 
+
+public class WorkerInstance {
     public final static Long longRequesLimit = 5000000000L;
     public final static Long rapidRequesLimit = 20000000L;
 
@@ -220,6 +221,12 @@ public class WorkerInstance {
         }
 
         public void setWorkerInstance(WorkerInstance workerInstance) {
+            if(this.workerInstance != null){
+             workerInstance.removeJob(this);
+            }
+            if(workerInstance != null){
+                workerInstance.addJob(this);
+            }
             this.workerInstance = workerInstance;
         }
 

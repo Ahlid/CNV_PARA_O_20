@@ -203,7 +203,7 @@ public class Scaler extends Thread {
                         
                     }
                     
-                    logger.info(JobsPool.getInstance().getJobs().toString());
+                    //logger.info(JobsPool.getInstance().getJobs().toString());
                 }
                 
                 
@@ -292,6 +292,9 @@ public class Scaler extends Thread {
 
             for (WorkerInstance w : this.workers) {
 
+                
+                logger.info("id: " + w.getId() + " BB: " + w.getBBtoBeProcessed());
+
                 if (!w.isAcceptingRequests() || !w.getStatus().equals("running"))
                     continue;
 
@@ -301,7 +304,7 @@ public class Scaler extends Thread {
                     chosenWorker = w;
                 }
             }
-
+            logger.info("Faster worker: " + chosenWorker.getId());
             return chosenWorker;
         }
     }
