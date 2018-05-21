@@ -38,7 +38,7 @@ public class Scaler extends Thread {
     private Double cpu = 0.0;
     private Integer minWorkers = 0;
     private Integer maxWorkers = 0;
-    private Integer timeLimit = 300000;
+    private Integer timeLimit = 240000;
     private Integer lastCreation = 0;
 
     private ArrayList<WorkerInstance> workers;
@@ -136,8 +136,8 @@ public class Scaler extends Thread {
                     workerToDestroy.setAcceptingRequests(false);
                 }
             }
-			
-            if(createInstance &&((int)System.currentTimeMillis() - lastCreation) > timeLimit || lastCreation == 0) {
+
+            if(createInstance &&((int)System.currentTimeMillis() - lastCreation) > timeLimit || lastCreation == 0 || workers.size() < minWorkers) {
                 startWorker();
                 lastCreation = (int) System.currentTimeMillis();
             }
