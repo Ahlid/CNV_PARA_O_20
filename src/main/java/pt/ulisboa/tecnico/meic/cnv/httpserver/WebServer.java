@@ -35,7 +35,7 @@ public class WebServer {
     public static String HOME_FOLDER = "/home/ec2-user/";
     private static final Set<Long> threads = new HashSet<>();
     public static HashMap<Long, Object> requestParams = new HashMap<>();
-    public static HashMap<String, Object> pureRequest = new HashMap<>();
+    public static HashMap<Long, String> pureRequest = new HashMap<>();
     private static HashMap<Long, Long> requestId = new HashMap<>();
     private static AtomicLong highestRequestId = new AtomicLong();
     private static Messenger messenger = null;
@@ -45,17 +45,16 @@ public class WebServer {
 
     public static void main(String[] args) throws Exception {
 
-
         // LOCAL TESTING
-        instanceId = "i-002563b5019e4f04c";
-        endpoint = "localhost";
+        //instanceId = "i-222563b5019e4f222";
+        //endpoint = "localhost";
 
         // Read worker machine details at startup
         // instance public address
-        //   instanceId = EC2MetadataUtils.getInstanceId();
+        instanceId = EC2MetadataUtils.getInstanceId();
         logger.info("Instance Id: " + instanceId);
 
-        //  endpoint = EC2MetadataUtils.getData("/latest/meta-data/public-hostname") + PORT;
+        endpoint = EC2MetadataUtils.getData("/latest/meta-data/public-hostname") + ":" + PORT;
 
         logger.info("Public endpoint: " + endpoint);
 
@@ -128,8 +127,9 @@ public class WebServer {
                 String paramName = param.split("=")[0];
                 String paramValue = param.split("=")[1];
                 params.put(paramName, paramValue);
-                pureRequest.put(paramName, paramValue);
             }
+
+            pureRequest.put(threadId, params.toString());
 
             logger.info("Request params: " + params);
 
@@ -200,7 +200,7 @@ public class WebServer {
         return requestParams;
     }
 
-    public static HashMap<String, Object> getPureRequest() {
+    public static HashMap<Long, String> getPureRequest() {
         return pureRequest;
     }
 

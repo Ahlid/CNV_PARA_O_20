@@ -35,17 +35,6 @@ public class MetricsInstrumentation {
     }
 
     /**
-     * Method to be called when a new routine starts
-     *
-     * @param name - the name of the method
-     */
-    public static synchronized void dynMethodCount(String name) {
-
-        Metrics metrics = getMetricsForThread();
-        metrics.setDyn_method_count(metrics.getDyn_method_count() + 1);
-    }
-
-    /**
      * Method to be called when a basic block is executed
      *
      * @param incr - number of instructions inside basic block
@@ -82,23 +71,25 @@ public class MetricsInstrumentation {
         Long threadId = Thread.currentThread().getId();
         System.out.println(threadId);
         Metrics metrics = getMetricsForThread();
-        // Notify about end of execution
-        updateMetrics((long) 0, (long) 0, false);
 
         metrics.setThreadID((int) (long) threadId);
-        metrics.setRequestParams((LinkedHashMap) WebServer.requestParams.get(threadId));
+        metrics.setParams(WebServer.getPureRequest().get(threadId));
+
+        // Notify about end of execution
+        updateMetrics((long) 0, (long) 0, false);
 
     }
 
     public static void updateMetrics(long inst, long bb, Boolean finished) {
         Messenger messenger = Messenger.getInstance();
         Long threadId = Thread.currentThread().getId();
+        Metrics metrics = getMetricsForThread();
         messenger.newMetrics(WebServer.getInstanceId(),
                 String.valueOf(WebServer.getRequestId().get(threadId)),
                 String.valueOf(inst),
                 String.valueOf(bb),
                 finished,
-                WebServer.getPureRequest().toString());
+                metrics.getParams().toString());
     }
 
 }

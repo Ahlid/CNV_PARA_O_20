@@ -4,11 +4,6 @@ import BIT.highBIT.*;
 
 import java.io.File;
 import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Vector;
-import java.util.List;
-import java.util.Arrays;
-import java.io.PrintWriter;
 
 public class InstrumentationTool {
 
@@ -27,13 +22,11 @@ public class InstrumentationTool {
                 for (Enumeration e = ci.getRoutines().elements(); e.hasMoreElements(); ) {
 
                     Routine routine = (Routine) e.nextElement();
-                    //routine.addBefore(metricsInstrClass, "dynMethodCount", new String(routine.getMethodName()));
 
                         for (Enumeration b = routine.getBasicBlocks().elements(); b.hasMoreElements(); ) {
                             BasicBlock bb = (BasicBlock) b.nextElement();
                             bb.addBefore(metricsInstrClass, "dynBasicBlockCount", new Integer(bb.size()));
                         }
-                    //}
 
                 }
 

@@ -1,30 +1,65 @@
 #!/bin/bash
 
+delete_sg_if_exists() {
+  if [ ! $1 ]; then
+    echo "Please indicate a Security Group name"
+    exit
+  fi 
+  GROUP_NAME=$1
+  SG_EXISTS=$(aws ec2 describe-security-groups --filters Name=group-name,Values=$GROUP_NAME | grep "GroupName") &&
+  if [ "$SG_EXISTS" ]; then
+    # Terminating instances which use a SG is a prerequisite for deleting that SG
+    # Retrieve all instance ids which use this Security Group
+    INSTANCES_TERMINATE=$(aws ec2 describe-instances --filters Name=instance.group-name,Values=$GROUP_NAME | sed -n 's/\s*"InstanceId": "\(.*\)",/\1/gp' | tr '\n' ' ') &&
+    if [ "$INSTANCES_TERMINATE" ]; then
+      echo "The following instances use the Security Group $GROUP_NAME: $INSTANCES_TERMINATE"
+      echo "Terminating these instances in order to be able to delete the Security Group"
+      aws ec2 terminate-instances --instance-ids $INSTANCES_TERMINATE &> /dev/null &&
+      aws ec2 wait instance-terminated --instance-ids $INSTANCES_TERMINATE
+    fi
+    # Delete security group if it previously existed
+    echo "Deleting previously created Security Group: $GROUP_NAME"
+    aws ec2 delete-security-group --group-name $GROUP_NAME &> /dev/null
+  fi
+}
+
+choose_key_name() {
+  KEY_NAMES=$(aws ec2 describe-key-pairs | sed -n 's/\s*"KeyName": "\(.*\)",\s*/\1/gp' | tr '\n' ' ') &&
+  echo "Choose a valid key pair for logging in to the balancer and worker instances"
+  echo "Available key pairs: $KEY_NAMES"
+  while true; do
+    echo "Key name: "
+    read key_name
+    echo "$KEY_NAMES" | grep -q "\<$key_name\>" && break
+    echo "Invalid key name"
+  done
+}
+
 cd ~ &&
-echo =======================================
-echo = Installing Java SDK and Git         =
-echo =======================================
+echo ==========================================
+echo = Installing Java SDK and Git            =
+echo ==========================================
 sudo yum -y install java-1.7.0-devel git &&
-echo =======================================
-echo = Fetching and unzipping AWS SDK      =
-echo =======================================
+echo ==========================================
+echo = Fetching and unzipping AWS SDK         =
+echo ==========================================
 wget http://sdk-for-java.amazonwebservices.com/latest/aws-java-sdk.zip &&
 unzip aws-java-sdk.zip &&
 rm aws-java-sdk.zip &&
-echo =======================================
-echo = Cloning Git Repo                    =
-echo =======================================
+echo ==========================================
+echo = Cloning Git Repo                       =
+echo ==========================================
 git clone https://github.com/Ahlid/CNV_PARA_O_20.git &&
-echo =======================================
-echo = Compiling project                   =
-echo =======================================
+echo ==========================================
+echo = Compiling project                      =
+echo ==========================================
 AWS_SDK_DIR=$(echo aws-java-sdk-*)
 AWS_SDK_VERSION=${AWS_SDK_DIR#aws-java-sdk-}
 sed -i "s/AWS_VERSION=.*/AWS_VERSION=$AWS_SDK_VERSION/" ~/CNV_PARA_O_20/Makefile &&
 cd CNV_PARA_O_20/ && make all && cd .. &&
-echo =======================================
-echo = Creating AWS Credentials            =
-echo =======================================
+echo ==========================================
+echo = Creating AWS Credentials               =
+echo ==========================================
 echo "Access Key:"
 read key &&
 echo "Secret Access Key:"
@@ -36,70 +71,46 @@ echo aws_secret_access_key=$secret >> ~/.aws/credentials &&
 echo [default] >> ~/.aws/config &&
 echo region=us-east-1 >> ~/.aws/config &&
 echo output=json >> ~/.aws/config &&
-echo =======================================
-echo = Creating worker and balancer AMIs   =
-echo =======================================
-INSTANCE_ID=$(ec2-metadata --instance-id | cut -d ' ' -f2) &&
-
-echo "Creating AMI: worker-ami"
-# Delete AMI with the name worker-ami if it exists
-OLD_WORKER_AMI_ID=$(aws ec2 describe-images --owners self --filters Name=name,Values=worker-ami | sed -n 's/\s*"ImageId": "\(.*\)",/\1/gp') &&
-[ -n $OLD_WORKER_AMI_ID ] && aws ec2 deregister-image --image-id $OLD_WORKER_AMI_ID
-
+echo ==========================================
+echo = Creating worker and balancer AMIs      =
+echo ==========================================
 # Copy rc.local of worker to /etc/rc.local
 sudo cp ~/CNV_PARA_O_20/scripts/rc.local.worker /etc/rc.local && sync &&
-
-# Create worker AMI and wait until it is available
-WORKER_AMI_ID=$(aws ec2 create-image --instance-id $INSTANCE_ID --no-reboot --name worker-ami | grep -o "ami-[a-zA-Z0-9]*") &&
-aws ec2 wait image-available --image-ids $WORKER_AMI_ID &&
-echo "Worker AMI Id: $WORKER_AMI_ID"
-
-echo "Updating Worker AMI on DynamoDB"
-cd CNV_PARA_O_20/ && make updateami name=$WORKER_AMI_ID &> /dev/null && cd .. &&
-
-echo "Creating AMI: balancer-ami"
-# Delete AMI with the name balancer-ami if it exists
-OLD_BALANCER_AMI_ID=$(aws ec2 describe-images --owners self --filters Name=name,Values=balancer-ami | sed -n 's/\s*"ImageId": "\(.*\)",/\1/gp') &&
-[ -n $OLD_BALANCER_AMI_ID ] && aws ec2 deregister-image --image-id $OLD_BALANCER_AMI_ID
-
+source ~/CNV_PARA_O_20/scripts/update-worker-ami.sh &&
 # Copy rc.local of balancer to /etc/rc.local
 sudo cp ~/CNV_PARA_O_20/scripts/rc.local.balancer /etc/rc.local && sync &&
+source ~/CNV_PARA_O_20/scripts/update-balancer-ami.sh &&
+echo ==========================================
+echo = Creating worker and balancer SGs       =
+echo ==========================================
+# Security Group for workers
+delete_sg_if_exists CNV-worker-sg
+echo "Creating new Security Group: CNV-worker-sg"
+aws ec2 create-security-group --description "Allows SSH + HTTP at a worker instance" --group-name CNV-worker-sg &> /dev/null &&
+aws ec2 authorize-security-group-ingress --group-name CNV-worker-sg --protocol tcp --port 8000 --cidr 0.0.0.0/0 &&
+aws ec2 authorize-security-group-ingress --group-name CNV-worker-sg --protocol tcp --port 22 --cidr 0.0.0.0/0 &&
+# Security Group for the balancer
+delete_sg_if_exists CNV-balancer-sg
+echo "Creating new Security Group: CNV-balancer-sg"
+aws ec2 create-security-group --description "Allows SSH + HTTP at the load balancer instance" --group-name CNV-balancer-sg &> /dev/null &&
+aws ec2 authorize-security-group-ingress --group-name CNV-balancer-sg --protocol tcp --port 8080 --cidr 0.0.0.0/0 &&
+aws ec2 authorize-security-group-ingress --group-name CNV-balancer-sg --protocol tcp --port 22 --cidr 0.0.0.0/0 &&
+echo ==========================================
+echo = Creating a Launch Template for workers =
+echo ==========================================
+choose_key_name
+LT_EXISTS=$(aws ec2 describe-launch-templates | grep CNV-worker-template)
+if [ "$LT_EXISTS" ]; then
+  echo "Deleting previously created Launch Template: CNV-worker-template"
+  aws ec2 delete-launch-template --launch-template-name CNV-worker-template &> /dev/null
+fi
 
-# Create balancer AMI and wait until it is available
-BALANCER_AMI_ID=$(aws ec2 create-image --instance-id $INSTANCE_ID --no-reboot --name balancer-ami | grep -o "ami-[a-zA-Z0-9]*") &&
-aws ec2 wait image-available --image-ids $BALANCER_AMI_ID &&
-echo "Balancer AMI Id: $BALANCER_AMI_ID"
-
-echo =======================================
-echo = Creating worker and balancer SGs    =
-echo =======================================
-# In order to delete security groups we must first
-# terminate any instances associated with them
-INSTANCES_TERMINATE=$(aws ec2 describe-instances --filters Name=instance.group-name,Values=CNV-worker-sg,CNV-balancer-sg | sed -n 's/\s*"InstanceId": "\(.*\)",/\1/gp' | tr '\n' ' ') &&
-[ -n $INSTANCES_TERMINATE ] && aws ec2 terminate-instances --instance-ids $INSTANCES_TERMINATE
-[ -n $INSTANCES_TERMINATE ] && aws ec2 wait instance-terminated --instance-ids $INSTANCES_TERMINATE
-
-# Delete security groups if they previously existed
-aws ec2 delete-security-group --group-name CNV-worker-sg &> /dev/null
-aws ec2 delete-security-group --group-name CNV-balancer-sg &> /dev/null
-
-echo "Creating Security Group: CNV-worker-sg"
-aws ec2 create-security-group --description "Allows SSH + HTTP at a worker instance" --group-name CNV-worker-sg
-aws ec2 authorize-security-group-ingress --group-name CNV-worker-sg --protocol tcp --port 8000 --cidr 0.0.0.0/0
-aws ec2 authorize-security-group-ingress --group-name CNV-worker-sg --protocol tcp --port 22 --cidr 0.0.0.0/0
-
-echo "Creating Security Group: CNV-balancer-sg"
-aws ec2 create-security-group --description "Allows SSH + HTTP at the load balancer instance" --group-name CNV-balancer-sg
-aws ec2 authorize-security-group-ingress --group-name CNV-balancer-sg --protocol tcp --port 8080 --cidr 0.0.0.0/0
-aws ec2 authorize-security-group-ingress --group-name CNV-balancer-sg --protocol tcp --port 22 --cidr 0.0.0.0/0
-
-echo =======================================
-echo = Launching a load balancer instance  =
-echo =======================================
-KEY_NAMES=$(aws ec2 describe-key-pairs | sed -n 's/\s*"KeyName": "\(.*\)",/\1/gp' | tr '\n' ' ') &&
-echo "Choose a valid key pair for logging in to the balancer"
-echo "Available key pairs: $KEY_NAMES"
-read key_name &&
+# Create Launch Configuration that scaler will use to create worker instances
+echo "Creating new Launch Template: CNV-worker-template"
+aws ec2 create-launch-template --launch-template-name CNV-worker-template --version-description "Autoscaler uses this Launch Template to create worker instances" --launch-template-data "{\"ImageId\": \"$WORKER_AMI_ID\", \"InstanceType\": \"t2.micro\", \"KeyName\": \"$key_name\", \"Monitoring\": {\"Enabled\": true}, \"SecurityGroups\": [\"CNV-worker-sg\"]}" &> /dev/null
+echo ==========================================
+echo = Launching a load balancer instance     =
+echo ==========================================
 aws ec2 run-instances --image-id $BALANCER_AMI_ID --count 1 --instance-type t2.micro --security-groups CNV-balancer-sg --key-name $key_name &> /dev/null &&
 
 echo Done

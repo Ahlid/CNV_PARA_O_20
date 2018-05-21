@@ -3,6 +3,11 @@ package pt.ulisboa.tecnico.meic.cnv.loadbalancer;
 import org.apache.log4j.Logger;
 
 import java.util.*;
+import com.amazonaws.services.autoscaling.AmazonAutoScaling;
+import com.amazonaws.services.autoscaling.AmazonAutoScalingClientBuilder;
+import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
+import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupResult;
+import com.amazonaws.services.autoscaling.model.LaunchTemplateSpecification;
 
 import pt.ulisboa.tecnico.meic.cnv.storage.Messenger;
 
@@ -25,6 +30,8 @@ public class Scaler extends Thread {
     private Double cpu = 0.0;
     private ArrayList<WorkerInstance> workers;
     private LinkedHashMap<String, String> configs = new LinkedHashMap<>();
+    private AmazonAutoScaling autoScaler = null;
+    private static final String WORKER_TEMPLATE_NAME = "CNV-worker-template";
 
 
     TimerTask sayHello = new TimerTask() {
@@ -57,7 +64,19 @@ public class Scaler extends Thread {
             // Setup AMI Name
             configs = messenger.fetchConfig();
 
-            aws.setupInstances(configs.get("AMI_Name"));
+            AmazonAutoScaling autoScaler = AmazonAutoScalingClientBuilder.standard().build();
+
+            // Create an Auto Scaling group for workers
+            CreateAutoScalingGroupRequest request = new CreateAutoScalingGroupRequest().withAutoScalingGroupName("worker-autoscaler")
+                    .withLaunchTemplate(new LaunchTemplateSpecification()
+                    .withLaunchTemplateName(WORKER_TEMPLATE_NAME))
+                    .withMinSize(1).withMaxSize(3)
+                    .withAvailabilityZones("us-east-1a")
+                    ;
+            CreateAutoScalingGroupResult response = autoScaler.createAutoScalingGroup(request);
+
+            aws.setupInstanceRequest(1, 1);
+            aws.setWorkerAmiId(configs.get("AMI_Name"));
             workers = aws.getInstances();
 
             resetPool();
@@ -211,7 +230,7 @@ public class Scaler extends Thread {
             String value = entry.getValue();
             messenger.changeConfig(name, value);
             configs = messenger.fetchConfig();
-            aws.setupInstances(configs.get("AMI_Name"));
+            aws.setupInstanceRequest(1, 1);
         }
     }
 
