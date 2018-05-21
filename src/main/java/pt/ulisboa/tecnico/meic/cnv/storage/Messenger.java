@@ -37,8 +37,6 @@ public class Messenger {
         createTable(WORKERS_TABLE, "id");
         createPartitionKeyTable(CACHE_TABLE, "id", "strategy");
         createPartitionKeyTable(METRICS_TABLE, "id", "requestId");
-        //System.out.println(getWorkersIds());
-        //System.out.println(getCache("{m=Maze50.maze, x0=1, y0=1, x1=6, y1=6, v=75, s=bfs}"));
         createRequestCostTable();
     }
 
@@ -70,11 +68,10 @@ public class Messenger {
     }
 
     // Set end state for worker in Workers table
-    public int endWorker(String id) {
+    public static void endWorker(String id) {
         Map<String, AttributeValue> item = newDeadWorkerItem(id, "dead");
         PutItemRequest putItemRequest = new PutItemRequest(WORKERS_TABLE, item);
         PutItemResult putItemResult = db.dynamoDB.putItem(putItemRequest);
-        return 1;
     }
 
     // put messages in Workers table
@@ -124,20 +121,29 @@ public class Messenger {
         return item;
     }
 
-    public static List<String> getWorkersIds() {
+    public static void resetWorkers(){
+        List<String> result = getWorkersIds();
+
+        for (String  s : result) {
+            endWorker(s);
+        }
+
+    }
+
+    public static List<String> getWorkersIds(){
         // get messages from workers table
-        List<String> result = null;
+        List<String> result = new ArrayList();
         try {
 
             ScanRequest scanRequest = new ScanRequest(WORKERS_TABLE);
             ScanResult scanResult = db.dynamoDB.scan(scanRequest);
             for (Map<String, AttributeValue> i : scanResult.getItems()) {
-                logger.info(scanResult.getItems());
                 result.add((String) i.get("id").getS());
             }
             return result;
         } catch (Exception e) {
             logger.error("exception: " + e.getMessage());
+            e.printStackTrace();
         }
         return result;
     }
