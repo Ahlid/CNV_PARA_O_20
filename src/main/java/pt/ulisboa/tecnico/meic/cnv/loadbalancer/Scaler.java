@@ -133,7 +133,7 @@ public class Scaler extends Thread {
             // destroy instances ??
             if (workers.size() > maxWorkers){
                 WorkerInstance workerToDestroy = lessRelevant();
-                if (workerToDestroy.getJobs() == 0){
+                if (workerToDestroy.getJobsSize() == 0){
                     terminateWorker(workerToDestroy);
                 }
                 else{
@@ -161,15 +161,10 @@ public class Scaler extends Thread {
         WorkerInstance worker = workers.get(0);
         
         for (WorkerInstance w : workers) {
-            logger.info(w.getJobs());
-            if (w.getJobsSize() < w.getJobsSize()){
+            if (w.getBBtoBeProcessed()< w.getBBtoBeProcessed()){
                 worker = w;
             }
-            
         }
-
-        logger.info(worker.getId());
-
         return worker;
     }
     
