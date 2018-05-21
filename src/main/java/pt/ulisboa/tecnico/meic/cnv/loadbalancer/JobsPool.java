@@ -42,4 +42,7 @@ public class JobsPool {
         }
     }
 
+    public List<WorkerInstance.Job> getJobs() {
+        return jobs;
+    }
 }
