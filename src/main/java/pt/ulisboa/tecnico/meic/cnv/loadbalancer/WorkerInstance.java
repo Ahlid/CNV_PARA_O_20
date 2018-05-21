@@ -44,6 +44,10 @@ public class WorkerInstance {
         return jobs;
     }
 
+    public Integer getJobsSize() {
+        return this.myJobs.size();
+    }
+
     public Boolean working() {
         return working;
     }

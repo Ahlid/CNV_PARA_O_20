@@ -95,10 +95,12 @@ public class Scaler extends Thread {
     }
     
     public void ping() {
+        synchronized (this.workers) {
         
         Boolean createInstance = false;
         Boolean destroyInstance = false;
         double sizeBB = 0;
+        cpu = 0.0;
 
         try {
             // check every timer*cleanup seconds if is alive
@@ -107,28 +109,32 @@ public class Scaler extends Thread {
                 updateAliveWorkers();
             }
             cleanCounter++;
-
-            workers = aws.getInstances();
             syncJobs();
             
             if (workers.size() < minWorkers) {
-                createInstance = true;
+                
             }
 
             for (WorkerInstance w : this.workers) {
                 sizeBB += w.getBBtoBeProcessed();   
+                cpu += w.getCPU();
             }
 
-            if (sizeBB >= (3*shortRequestLimit+longRequestLimit) || sizeBB >= (shortRequestLimit+2*longRequestLimit)){
+            if(Double.valueOf(cpu)/Double.valueOf(workers.size())>CPU_THRESHOLD){ 
+                createInstance = true; 
+            }
+
+            if (sizeBB >= 3*shortRequestLimit+longRequestLimit || sizeBB >= shortRequestLimit+2*longRequestLimit){
                 createInstance = true;
             }
+
+            lessRelevant();
             
             // destroy instances ??
             if (workers.size() > maxWorkers){
                 // destroy instance
                 // TODO
-                WorkerInstance workerToDestroy = new WorkerInstance();
-                //worker = workerWithLessJobs() or getBBtoBeProcessed();
+                WorkerInstance workerToDestroy = lessRelevant();
                 if (workerToDestroy.getJobs() == 0){
                     terminateWorker(workerToDestroy);
                 }
@@ -137,7 +143,7 @@ public class Scaler extends Thread {
                 }
             }
 
-            if(createInstance &&((int)System.currentTimeMillis() - lastCreation) > timeLimit || lastCreation == 0 || workers.size() < minWorkers) {
+            if(createInstance &&((int)System.currentTimeMillis() - lastCreation) > timeLimit || lastCreation == 0 && workers.size() < minWorkers) {
                 startWorker();
                 lastCreation = (int) System.currentTimeMillis();
             }
@@ -150,6 +156,25 @@ public class Scaler extends Thread {
             logger.info("Id: " + w.getId() + " | State: " + w.getStatus() + " | CPU: " + w.getCPU().toString() + "| Working: " + w.working());
             messenger.putMessage(w);
         }
+    }
+}
+
+    public WorkerInstance lessRelevant(){
+        logger.info("less relevant");
+        logger.info(workers.size());
+        WorkerInstance worker = workers.get(0);
+        
+        for (WorkerInstance w : workers) {
+            logger.info(w.getJobs());
+            if (w.getJobsSize() < w.getJobsSize()){
+                worker = w;
+            }
+            
+        }
+
+        logger.info(worker.getId());
+
+        return worker;
     }
     
     public void updateAliveWorkers(){
