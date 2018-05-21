@@ -180,18 +180,20 @@ public class Messenger {
     public static LinkedHashMap<String, Map<String, String>> getCacheTable() {
         // get messages from workers table
         LinkedHashMap<String, Map<String, String>> result = new LinkedHashMap<>();
-        Map<String, String> stats = new LinkedHashMap<>();
+
         try {
 
             ScanRequest scanRequest = new ScanRequest(CACHE_TABLE);
             ScanResult scanResult = db.dynamoDB.scan(scanRequest);
             for (Map<String, AttributeValue> i : scanResult.getItems()) {
+                Map<String, String> stats = new LinkedHashMap<>();
                 stats.put("request", i.get("id").getS());
                 stats.put("bb", i.get("bb").getS());
                 stats.put("strategy", i.get("strategy").getS());
                 stats.put("maze", i.get("maze").getS());
                 result.put((String) i.get("id").getS(), stats);
             }
+
             return result;
         } catch (Exception e) {
             e.printStackTrace();
