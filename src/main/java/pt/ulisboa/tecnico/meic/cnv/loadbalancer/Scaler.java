@@ -35,6 +35,9 @@ public class Scaler extends Thread {
     private AWS aws = null;
     private Integer cleanCounter = 0;
     private Double cpu = 0.0;
+    private Integer minWorkers = 0;
+    private Integer maxWorkers = 0;
+
     private ArrayList<WorkerInstance> workers;
     private LinkedHashMap<String, String> configs = new LinkedHashMap<>();
     private AmazonAutoScaling autoScaler = null;
@@ -71,6 +74,9 @@ public class Scaler extends Thread {
             // Setup AMI Name
             configs = messenger.fetchConfig();
             logger.info(configs);
+
+            minWorkers = Integer.parseInt(configs.get("MIN_WORKERS"));
+            maxWorkers = Integer.parseInt(configs.get("MAX_WORKERS"));
             
             // TODO use configs from dynamo
             
@@ -91,40 +97,33 @@ public class Scaler extends Thread {
     
     public void ping() {
         
-        cpu = 0.0;
         Boolean createInstance = false;
+        Boolean destroyInstance = false;
+
         try {
+            // check every timer*cleanup seconds if is alive
             if (cleanCounter == CLEANUP) {
                 cleanCounter = 0;
-                
-                
-                
-                // TODO we need to remove dead instances from dynamoDB
-                workers = aws.getInstances();
+                updateAliveWorkers();
             }
-            syncWorkers();
             cleanCounter++;
-            
+
+            workers = aws.getInstances();
             syncJobs();
-            updateAliveWorkers();
             
-            // THIS SHOULD NOT BE DONE EVERY TIME
-            //workers = aws.getInstances();
-            
-            if (workers.size() < 1) {
+            if (workers.size() < minWorkers) {
                 createInstance = true;
             }
-            
-            // TODO we need to check if we need new workers
-            // or to delete unused workers
-            for (WorkerInstance w : workers) {
-                
-                if (w.getJobs() >= SIZE_THRESHOLD) {
-                    
-                    createInstance = true;
-                }
-                
+            else if (workers.size() > maxWorkers){
+                destroyInstance = true;
             }
+
+            if (destroyInstance) {
+                // TODO choose instance to destroy
+                }
+            }
+            
+            
             logger.info("Create instance?: " + createInstance + " | Threshold: " + (Double.valueOf(cpu) / Double.valueOf(workers.size()) > CPU_THRESHOLD));
             if (createInstance || (Double.valueOf(cpu) / Double.valueOf(workers.size()) > CPU_THRESHOLD)) {
                 startWorker();
@@ -166,25 +165,6 @@ public class Scaler extends Thread {
         }
     }
     
-    public List<WorkerInstance> syncWorkers() {
-        // LinkedHashMap<String, Map<String, String>> workerData = messenger.getWorkersTable();
-        List<WorkerInstance> w = new ArrayList<>();
-        // logger.info("sync data: " + workerData.toString());
-        
-        // for (WorkerInstance wo : workers) {
-            //     logger.info("exists:" + workerData.containsKey(wo.getId()));
-            // }
-            
-            // for (Map.Entry<String, Map<String,String>> entry : workerData.entrySet()) {
-                //     String key = entry.getKey();
-                //     Map<String,String> value = entry.getValue();
-                //     logger.info("id: " + key + " value: " + value.get("status"));
-                //     logger.info("exists: " + workers.contains(key));
-                //     //messenger.endWorker(key);
-                // }
-                return w;
-            }
-            
             public void syncJobs() {
                 
                 Messenger m = Messenger.getInstance();
@@ -274,6 +254,8 @@ public class Scaler extends Thread {
                 configs = messenger.fetchConfig();
                 aws.setWorkerAmiId(configs.get("AMI_Name"));
                 aws.setupInstances();
+                minWorkers = Integer.parseInt(configs.get("MIN_WORKERS"));
+                maxWorkers = Integer.parseInt(configs.get("MAX_WORKERS"));
                 
                 //aws.setupInstanceRequest(1, 1);
             }
