@@ -127,11 +127,20 @@ public class Scaler extends Thread {
             if (sizeBB >= 3*shortRequestLimit+longRequestLimit || sizeBB >= shortRequestLimit+2*longRequestLimit){
                 createInstance = true;
             }
-
-            lessRelevant();
             
             // destroy instances ??
-            if (workers.size() > maxWorkers){
+            if (workers.size() > maxWorkers &&((int)System.currentTimeMillis() - lastCreation) > timeLimit || sizeBB < 3*shortRequestLimit+longRequestLimit || sizeBB < shortRequestLimit+2*longRequestLimit){
+                WorkerInstance workerToDestroy = lessRelevant();
+                if (workerToDestroy.getJobsSize() == 0){
+                    terminateWorker(workerToDestroy);
+                }
+                else{
+                    workerToDestroy.setAcceptingRequests(false);
+                }
+            }
+
+            // destroy instances ??
+            if (sizeBB < 3*shortRequestLimit+longRequestLimit || sizeBB < shortRequestLimit+2*longRequestLimit && ((int)System.currentTimeMillis() - lastCreation) > timeLimit){
                 WorkerInstance workerToDestroy = lessRelevant();
                 if (workerToDestroy.getJobsSize() == 0){
                     terminateWorker(workerToDestroy);
