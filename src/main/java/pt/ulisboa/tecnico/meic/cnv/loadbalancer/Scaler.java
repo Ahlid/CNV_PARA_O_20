@@ -38,7 +38,8 @@ public class Scaler extends Thread {
     private Double cpu = 0.0;
     private Integer minWorkers = 0;
     private Integer maxWorkers = 0;
-    private Timestamp time = new Timestamp(0);
+    private Integer timeLimit = 300000;
+    private Integer lastCreation = 0;
 
     private ArrayList<WorkerInstance> workers;
     private LinkedHashMap<String, String> configs = new LinkedHashMap<>();
@@ -136,18 +137,11 @@ public class Scaler extends Thread {
                 }
             }
 			
-            if(createInstance){
-                // TODO check time (if time)
+            if(createInstance && (System.currentTimeMillis() - lastCreation) > timeLimit) {
                 startWorker();
+                lastCreation = (int) System.currentTimeMillis();
             }
 
-            
-            
-            // logger.info("Create instance?: " + createInstance + " | Threshold: " + (Double.valueOf(cpu) / Double.valueOf(workers.size()) > CPU_THRESHOLD));
-            // if (createInstance || (Double.valueOf(cpu) / Double.valueOf(workers.size()) > CPU_THRESHOLD)) {
-            //     startWorker();
-            // }
-            
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("Error retreiving workers:" + e.getMessage());
