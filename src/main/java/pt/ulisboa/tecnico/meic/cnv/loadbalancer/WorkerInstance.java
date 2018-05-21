@@ -215,6 +215,18 @@ public class WorkerInstance {
             return MEDIUM_REQUEST;
         }
 
+        @Override
+        public String toString() {
+            return "Job{" +
+                    "id='" + id + '\'' +
+                    ", expecteCost=" + expecteCost +
+                    ", currentBBprocessed=" + currentBBprocessed +
+                    ", workerInstance=" + workerInstance +
+                    ", finished=" + finished +
+                    ", requestType='" + requestType + '\'' +
+                    '}';
+        }
+
     }
 }
 

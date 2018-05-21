@@ -89,7 +89,7 @@ public class AWS {
         WorkerInstance worker = new WorkerInstance();
         
         worker.setId(instanceResult.getReservation().getInstances().get(0).getInstanceId());
-        worker.setStatus(instanceResult.getReservation().getInstances().get(0).getState().toString());
+        worker.setStatus(instanceResult.getReservation().getInstances().get(0).getState().getName());
         worker.setAddress(instanceResult.getReservation().getInstances().get(0).getPublicDnsName());
         return worker;
     }

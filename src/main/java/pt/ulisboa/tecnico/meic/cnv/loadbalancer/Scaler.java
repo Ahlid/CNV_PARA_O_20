@@ -2,6 +2,9 @@ package pt.ulisboa.tecnico.meic.cnv.loadbalancer;
 
 import com.amazonaws.services.dynamodbv2.xspec.M;
 import org.apache.log4j.Logger;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.SocketTimeoutException;
 
 import java.util.*;
 
@@ -23,9 +26,9 @@ public class Scaler extends Thread {
     private final static Integer SIZE_THRESHOLD = 500;
     public final static Long longRequesLimit = 2000000000L;
     public final static Long rapidRequesLimit = 20000000L;
-
+    
     private static final String METRICS_TOPIC = "Metrics";
-
+    
     private Balancer balancer = null;
     private boolean running = true;
     private Messenger messenger = null;
@@ -36,8 +39,8 @@ public class Scaler extends Thread {
     private LinkedHashMap<String, String> configs = new LinkedHashMap<>();
     private AmazonAutoScaling autoScaler = null;
     private static final String WORKER_TEMPLATE_NAME = "CNV-worker-template";
-
-
+    
+    
     TimerTask sayHello = new TimerTask() {
         @Override
         public void run() {
@@ -48,12 +51,12 @@ public class Scaler extends Thread {
             }
         }
     };
-
-
+    
+    
     /**
-     * Default constructor, initialize AWS and if no instances are running, start one.
-     */
-
+    * Default constructor, initialize AWS and if no instances are running, start one.
+    */
+    
     public Scaler() {
         try {
             logger.info("Initializing Scaler...");
@@ -68,16 +71,16 @@ public class Scaler extends Thread {
             // Setup AMI Name
             configs = messenger.fetchConfig();
             logger.info(configs);
-
+            
             // TODO use configs from dynamo
-
+            
             //logger.info(Integer.parseInt(configs.get("MIN_WORKER")) + ":" + Integer.parseInt(configs.get("MAX_WORKER")));
             //aws.setupInstanceRequest(1, 1);
             aws.setWorkerAmiId(configs.get("AMI_Name"));
             aws.setupInstances();
             
             workers = aws.getInstances();
-
+            
             resetPool();
             logger.info("Starting with " + workers.size() + " workers.");
         } catch (Exception e) {
@@ -85,43 +88,47 @@ public class Scaler extends Thread {
             logger.fatal(getDefaultUncaughtExceptionHandler().toString());
         }
     }
-
+    
     public void ping() {
-
+        
         cpu = 0.0;
         Boolean createInstance = false;
         try {
             if (cleanCounter == CLEANUP) {
                 cleanCounter = 0;
+                
                 syncWorkers();
-                syncJobs();
+                
                 // TODO we need to remove dead instances from dynamoDB
                 workers = aws.getInstances();
             }
             cleanCounter++;
-
+            
+            syncJobs();
+            updateAliveWorkers();
+            
             // THIS SHOULD NOT BE DONE EVERY TIME
             //workers = aws.getInstances();
-
+            
             if (workers.size() < 1) {
                 createInstance = true;
             }
-
+            
             // TODO we need to check if we need new workers
             // or to delete unused workers
             for (WorkerInstance w : workers) {
-
+                
                 if (w.getJobs() >= SIZE_THRESHOLD) {
-
+                    
                     createInstance = true;
                 }
-
+                
             }
             logger.info("Create instance?: " + createInstance + " | Threshold: " + (Double.valueOf(cpu) / Double.valueOf(workers.size()) > CPU_THRESHOLD));
             if (createInstance || (Double.valueOf(cpu) / Double.valueOf(workers.size()) > CPU_THRESHOLD)) {
                 startWorker();
             }
-
+            
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("Error retreiving workers:" + e.getMessage());
@@ -131,121 +138,149 @@ public class Scaler extends Thread {
             messenger.putMessage(w);
         }
     }
+    
+    public void updateAliveWorkers(){
+        List<WorkerInstance> wrks = getWorkers();
+        HttpURLConnection conn = null;
 
+        
+        
+        for (WorkerInstance w : wrks) {
+            logger.info(w.getId() + ":" + w.getStatus());
+            if(w.getStatus().equals("running")){
+                try{
+                    URL url = new URL("http://" + w.getAddress() + ":8000/health" );
+                    conn = (HttpURLConnection) url.openConnection();
+                    conn.setConnectTimeout(5000);
+                    conn.connect();
+                }
+                catch(SocketTimeoutException e){
+                    terminateWorker(w);
+                    //logger.error("Exception:" + e.getMessage());
+                }
+                catch (Exception e){
+                    logger.error("Exception:" + e.getMessage());
+                }
+            }   
+        }
+    }
+    
     public List<WorkerInstance> syncWorkers() {
         // LinkedHashMap<String, Map<String, String>> workerData = messenger.getWorkersTable();
         List<WorkerInstance> w = new ArrayList<>();
         // logger.info("sync data: " + workerData.toString());
-
+        
         // for (WorkerInstance wo : workers) {
-        //     logger.info("exists:" + workerData.containsKey(wo.getId()));
-        // }
-
-        // for (Map.Entry<String, Map<String,String>> entry : workerData.entrySet()) {
-        //     String key = entry.getKey();
-        //     Map<String,String> value = entry.getValue();
-        //     logger.info("id: " + key + " value: " + value.get("status"));
-        //     logger.info("exists: " + workers.contains(key));
-        //     //messenger.endWorker(key);
-        // }
-        return w;
-    }
-
-    public void syncJobs() {
-
-        Messenger m = Messenger.getInstance();
-
-        synchronized (this.workers) {
-            for (WorkerInstance w : this.workers) {
-                HashMap<String, Long> jobStatus = m.getMetrics(w.getId());
-
-                Set<String> jobIds = jobStatus.keySet();
-                Iterator<String> it = jobIds.iterator();
-
-                while (it.hasNext()) {
-                    String id = it.next();
-                    JobsPool.getInstance().serJobBBWork(id, jobStatus.get(id));
+            //     logger.info("exists:" + workerData.containsKey(wo.getId()));
+            // }
+            
+            // for (Map.Entry<String, Map<String,String>> entry : workerData.entrySet()) {
+                //     String key = entry.getKey();
+                //     Map<String,String> value = entry.getValue();
+                //     logger.info("id: " + key + " value: " + value.get("status"));
+                //     logger.info("exists: " + workers.contains(key));
+                //     //messenger.endWorker(key);
+                // }
+                return w;
+            }
+            
+            public void syncJobs() {
+                
+                Messenger m = Messenger.getInstance();
+                
+                synchronized (this.workers) {
+                    for (WorkerInstance w : this.workers) {
+                        HashMap<String, Long> jobStatus = m.getMetrics(w.getId());
+                        
+                        Set<String> jobIds = jobStatus.keySet();
+                        Iterator<String> it = jobIds.iterator();
+                        
+                        while (it.hasNext()) {
+                            String id = it.next();
+                            JobsPool.getInstance().serJobBBWork(id, jobStatus.get(id));
+                        }
+                        
+                    }
+                    
+                    logger.info(JobsPool.getInstance().getJobs().toString());
                 }
-
+                
+                
             }
-
-            System.out.println(JobsPool.getInstance().getJobs());
-        }
-
-
-    }
-
-    public List<WorkerInstance> getWorkers() {
-        return this.workers;
-    }
-
-    public ArrayList<WorkerInstance> getInstances() {
-        try {
-            return aws.getInstances();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    public void startWorker() {
-        WorkerInstance worker = aws.createInstance();
-        workers.add(worker);
-        // instances start with and empty address
-        // dynamodb doesnt support empty
-        worker.setAddress("empty");
-        messenger.putMessage(worker);
-        balancer.addWorkerBalancer(worker);
-    }
-
-    public void terminateWorker(WorkerInstance worker) {
-        balancer.removeWorkerBalancer(worker);
-        aws.terminateInstance(worker.getId());
-    }
-
-    public synchronized void resetPool() {
-
-        messenger.resetWorkers();
-
-        for (WorkerInstance w : workers) {
-            if (!w.getStatus().equals("running")) {
-                terminateWorker(w);
-                w.setStatus("dead");
-                messenger.putMessage(w);
+            
+            public List<WorkerInstance> getWorkers() {
+                return this.workers;
             }
-        }
-        // clean and delete everything
-    }
-
-    /**
-     * Takes a balancer as argument to be able
-     * to notify it when a new instance is running
-     */
-    public Scaler(Balancer balancer) throws Exception {
-        this();
-        this.balancer = balancer;
-    }
-
-    public void setState(Boolean state) {
-        this.running = state;
-    }
-
-    public void setupConfig(LinkedHashMap<String, String> configs) {
-        for (Map.Entry<String, String> entry : configs.entrySet()) {
-            String name = entry.getKey();
-            String value = entry.getValue();
-            messenger.changeConfig(name, value);
+            
+            public ArrayList<WorkerInstance> getInstances() {
+                try {
+                    return aws.getInstances();
+                } catch (Exception e) {
+                    return null;
+                }
+            }
+            
+            public void startWorker() {
+                WorkerInstance worker = aws.createInstance();
+                workers.add(worker);
+                // instances start with and empty address
+                // dynamodb doesnt support empty
+                worker.setAddress("empty");
+                messenger.putMessage(worker);
+                balancer.addWorkerBalancer(worker);
+            }
+            
+            public void terminateWorker(WorkerInstance worker) {
+                workers.remove(worker);
+                balancer.removeWorkerBalancer(worker);
+                aws.terminateInstance(worker.getId());
+            }
+            
+            public synchronized void resetPool() {
+                
+                messenger.resetWorkers();
+                
+                for (WorkerInstance w : workers) {
+                    if (!w.getStatus().equals("running")) {
+                        terminateWorker(w);
+                        w.setStatus("dead");
+                        messenger.putMessage(w);
+                    }
+                }
+                // clean and delete everything
+            }
+            
+            /**
+            * Takes a balancer as argument to be able
+            * to notify it when a new instance is running
+            */
+            public Scaler(Balancer balancer) throws Exception {
+                this();
+                this.balancer = balancer;
+            }
+            
+            public void setState(Boolean state) {
+                this.running = state;
+            }
+            
+            public void setupConfig(LinkedHashMap<String, String> configs) {
+                for (Map.Entry<String, String> entry : configs.entrySet()) {
+                    String name = entry.getKey();
+                    String value = entry.getValue();
+                    messenger.changeConfig(name, value);
+                }
+                
+                configs = messenger.fetchConfig();
+                aws.setWorkerAmiId(configs.get("AMI_Name"));
+                aws.setupInstances();
+                
+                //aws.setupInstanceRequest(1, 1);
+            }
+            
+            public LinkedHashMap<String, String> getConfigs() {
+                return configs;
+            }
+            
+            
         }
         
-        configs = messenger.fetchConfig();
-        aws.setWorkerAmiId(configs.get("AMI_Name"));
-        aws.setupInstances();
-
-        //aws.setupInstanceRequest(1, 1);
-    }
-
-    public LinkedHashMap<String, String> getConfigs() {
-        return configs;
-    }
-
-
-}
