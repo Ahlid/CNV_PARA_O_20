@@ -32,4 +32,14 @@ public class JobsPool {
         }
     }
 
+    public void serJobBBWork(String jobId, long bb) {
+        synchronized (this.jobs) {
+            for (WorkerInstance.Job job : this.jobs) {
+                if (job.getId().equals(jobId)) {
+                    job.setCurrentBBprocessed(bb);
+                }
+            }
+        }
+    }
+
 }
