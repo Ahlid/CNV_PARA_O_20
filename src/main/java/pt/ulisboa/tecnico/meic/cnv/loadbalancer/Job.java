@@ -54,4 +54,9 @@ public class Job {
     public void setFinished(boolean finished) {
         this.finished = finished;
     }
+
+    public void endJob() {
+        if (this.workerInstance != null)
+            this.workerInstance.removeJob(this);
+    }
 }

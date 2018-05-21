@@ -25,7 +25,11 @@ public class JobsPool {
     }
 
     public boolean endJob(Job b) {
-        return this.jobs.remove(b);
+        synchronized (jobs) {
+            b.setFinished(true);
+            b.endJob();
+            return this.jobs.remove(b);
+        }
     }
 
 }

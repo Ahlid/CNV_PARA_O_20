@@ -76,7 +76,7 @@ public class HandleRequest implements HttpHandler {
                     }
                 }
 
-                thisJob.setFinished(true);
+                JobsPool.getInstance().endJob(thisJob);
 
                 if (response != "") {
                     t.sendResponseHeaders(responseCode_OK, response.length());
